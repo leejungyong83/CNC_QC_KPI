@@ -1,0 +1,28 @@
+{
+  "inspectors": [
+    {
+      "id": "1212",
+      "name": "이정용",
+      "department": "CNC_1",
+      "months_of_service": 12,
+      "grade": "사원",
+      "registered_date": "2025-02-27"
+    },
+    {
+      "id": "131313",
+      "name": "조진욱",
+      "department": "CNC_2",
+      "months_of_service": 11,
+      "grade": "사원",
+      "registered_date": "2025-02-27"
+    },
+    {
+      "id": "141414",
+      "name": "김동희",
+      "department": "CNC_2",
+      "months_of_service": 48,
+      "grade": "사원",
+      "registered_date": "2025-02-28"
+    }
+  ]
+}
