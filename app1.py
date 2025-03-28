@@ -97,10 +97,11 @@ init_session_state()
 def verify_login(username, password):
     """로그인 검증"""
     try:
-        user_data = load_data(DATA_DIR / "user_data.json", {"users": []})
-        for user in user_data["users"]:
-            if user["username"] == username and user["password"] == password:
-                return True, user.get("role", "일반")
+        # Streamlit Cloud의 secrets에서 사용자 정보 가져오기
+        if username in st.secrets["users"]:
+            if password == st.secrets["users"][username]:
+                user_role = st.secrets["roles"].get(username, "일반")
+                return True, user_role
         return False, None
     except Exception as e:
         st.error(f"로그인 검증 중 오류 발생: {str(e)}")
