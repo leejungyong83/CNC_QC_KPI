@@ -11,10 +11,17 @@ from pathlib import Path
 import os
 
 # Supabase 초기화
-supabase = create_client(
-    st.secrets["supabase"]["url"],
-    st.secrets["supabase"]["key"]
-)
+try:
+    # Streamlit Cloud에서 secrets를 사용하는 경우
+    supabase_url = st.secrets["supabase"]["url"]
+    supabase_key = st.secrets["supabase"]["key"]
+except KeyError:
+    # 로컬 개발 또는 secrets가 설정되지 않은 경우
+    supabase_url = "https://czfvtkbndsfoznmknwsx.supabase.co"
+    supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
+
+# Supabase 클라이언트 생성
+supabase = create_client(supabase_url, supabase_key)
 
 # 페이지 설정을 가장 먼저 실행
 st.set_page_config(
@@ -106,10 +113,21 @@ init_session_state()
 def verify_login(username, password):
     """로그인 검증"""
     try:
+        # 기본 사용자 정보
+        default_users = {"admin": "admin123"}
+        default_roles = {"admin": "관리자"}
+        
         # Streamlit Cloud의 secrets에서 사용자 정보 가져오기
-        if username in st.secrets["users"]:
-            if password == st.secrets["users"][username]:
-                user_role = st.secrets["roles"].get(username, "일반")
+        try:
+            users = st.secrets.get("users", default_users)
+            roles = st.secrets.get("roles", default_roles)
+        except:
+            users = default_users
+            roles = default_roles
+            
+        if username in users:
+            if password == users[username]:
+                user_role = roles.get(username, "일반")
                 return True, user_role
         return False, None
     except Exception as e:
@@ -286,4 +304,20 @@ if st.session_state.get('basic_info_valid', False):
             st.session_state.registered_defects = []
             st.rerun()
         else:
-            st.warning("저장할 불량 데이터가 없습니다.") 
+            st.warning("저장할 불량 데이터가 없습니다.")
+
+def password_entered():
+    try:
+        # Streamlit Cloud에서 secrets를 사용하는 경우
+        credentials_usernames = st.secrets["credentials"]["usernames"]
+        credentials_passwords = st.secrets["credentials"]["passwords"]
+    except KeyError:
+        # 기본 인증 정보
+        credentials_usernames = ["admin"]
+        credentials_passwords = ["admin123"]
+        
+    if st.session_state["username"] in credentials_usernames and st.session_state["password"] == credentials_passwords[credentials_usernames.index(st.session_state["username"])]:
+        st.session_state["password_correct"] = True
+        del st.session_state["password"]
+    else:
+        st.session_state["password_correct"] = False 
