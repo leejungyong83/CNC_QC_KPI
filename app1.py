@@ -1,4 +1,5 @@
 import streamlit as st
+from supabase import create_client
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -8,6 +9,12 @@ import time
 import json
 from pathlib import Path
 import os
+
+# Supabase 초기화
+supabase = create_client(
+    st.secrets["supabase"]["url"],
+    st.secrets["supabase"]["key"]
+)
 
 # 페이지 설정을 가장 먼저 실행
 st.set_page_config(
@@ -149,4 +156,134 @@ def check_password():
                     st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
                 return False
 
-    return False 
+    return False
+
+if not check_password():
+    st.stop()
+
+# 검사원 정보 가져오기
+def load_inspectors():
+    response = supabase.table('inspectors').select("*").execute()
+    return pd.DataFrame(response.data)
+
+# 검사 데이터 저장
+def save_inspection_data(data):
+    response = supabase.table('inspection_data').insert(data).execute()
+    return response
+
+# 불량 데이터 저장
+def save_defect_data(data):
+    response = supabase.table('defect_data').insert(data).execute()
+    return response
+
+# 세션 상태 초기화
+if 'inspectors' not in st.session_state:
+    st.session_state.inspectors = load_inspectors()
+
+if 'registered_defects' not in st.session_state:
+    st.session_state.registered_defects = []
+
+# 메인 앱 UI
+st.title("CNC 품질관리 시스템")
+
+# 기본 정보 입력
+with st.form("basic_info"):
+    st.subheader("기본 정보 입력")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        inspector = st.selectbox("검사원", options=st.session_state.inspectors['name'].tolist())
+        process = st.selectbox("공정", options=["선삭", "밀링"])
+        
+    with col2:
+        date = st.date_input("검사일자")
+        time = st.time_input("검사시간")
+        
+    lot_number = st.text_input("LOT 번호")
+    total_quantity = st.number_input("전체 수량", min_value=1, value=1)
+    
+    submit_basic = st.form_submit_button("기본 정보 등록")
+    
+if submit_basic:
+    st.session_state.basic_info_valid = True
+    st.success("기본 정보가 등록되었습니다.")
+else:
+    st.session_state.basic_info_valid = False
+
+# 불량 정보 입력
+if st.session_state.get('basic_info_valid', False):
+    with st.form("defect_info"):
+        st.subheader("불량 정보 입력")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            defect_type = st.selectbox("불량 유형", 
+                options=["치수", "표면거칠기", "칩핑", "기타"])
+        
+        with col2:
+            defect_quantity = st.number_input("불량 수량", 
+                min_value=1, max_value=total_quantity, value=1)
+            
+        submit_defect = st.form_submit_button("불량 등록")
+        
+    if submit_defect:
+        new_defect = {
+            "type": defect_type,
+            "quantity": defect_quantity
+        }
+        st.session_state.registered_defects.append(new_defect)
+        st.success(f"{defect_type} 불량이 {defect_quantity}개 등록되었습니다.")
+        
+    # 등록된 불량 정보 표시
+    if st.session_state.registered_defects:
+        st.subheader("등록된 불량 정보")
+        defects_df = pd.DataFrame(st.session_state.registered_defects)
+        st.dataframe(defects_df)
+        
+        total_defects = defects_df['quantity'].sum()
+        defect_rate = (total_defects / total_quantity) * 100
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("총 불량 수량", f"{total_defects}개")
+        with col2:
+            st.metric("불량률", f"{defect_rate:.2f}%")
+            
+    # 불량 목록 초기화 버튼
+    if st.button("불량 목록 초기화"):
+        st.session_state.registered_defects = []
+        st.success("불량 목록이 초기화되었습니다.")
+        st.rerun()
+        
+    # 검사 데이터 저장
+    if st.button("검사 데이터 저장"):
+        if st.session_state.registered_defects:
+            inspection_datetime = datetime.combine(date, time)
+            inspector_data = st.session_state.inspectors[st.session_state.inspectors['name'] == inspector].iloc[0]
+            
+            inspection_data = {
+                "inspector_id": inspector_data['id'],
+                "process": process,
+                "inspection_datetime": inspection_datetime.isoformat(),
+                "lot_number": lot_number,
+                "total_quantity": total_quantity
+            }
+            
+            # 검사 데이터 저장
+            inspection_response = save_inspection_data(inspection_data)
+            inspection_id = inspection_response.data[0]['id']
+            
+            # 불량 데이터 저장
+            for defect in st.session_state.registered_defects:
+                defect_data = {
+                    "inspection_id": inspection_id,
+                    "defect_type": defect['type'],
+                    "quantity": defect['quantity']
+                }
+                save_defect_data(defect_data)
+            
+            st.success("검사 데이터가 성공적으로 저장되었습니다.")
+            st.session_state.registered_defects = []
+            st.rerun()
+        else:
+            st.warning("저장할 불량 데이터가 없습니다.") 
