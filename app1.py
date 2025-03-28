@@ -17,9 +17,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 현재 스크립트의 디렉토리를 기준으로 경로 설정
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
+# 데이터 파일 경로 설정
+if 'data_path' in st.secrets.get('database', {}):
+    DATA_DIR = Path(st.secrets['database']['data_path'])
+else:
+    DATA_DIR = Path(__file__).resolve().parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 # 데이터 파일 경로
