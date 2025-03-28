@@ -122,6 +122,10 @@ init_session_state()
 
 def verify_login(username, password):
     """로그인 검증"""
+    # 하드코딩된 사용자 정보로 먼저 확인
+    if username == "admin" and password == "admin123":
+        return True, "관리자"
+        
     try:
         # 기본 사용자 정보
         default_users = {"admin": "admin123"}
@@ -146,11 +150,24 @@ def verify_login(username, password):
 
 def check_password():
     """비밀번호 확인 및 로그인 처리"""
+    # 디버그 모드 - 개발 환경에서만 사용 (프로덕션에서는 제거 필요)
+    if st.sidebar.button("디버그 모드로 로그인"):
+        st.session_state.logged_in = True
+        st.session_state.user_role = "관리자"
+        st.session_state.username = "admin_debug"
+        st.session_state.login_attempts = 0
+        st.session_state.show_welcome_popup = True
+        st.session_state.page = "dashboard"
+        st.rerun()
+        return True
+    
     if "login_attempts" not in st.session_state:
         st.session_state.login_attempts = 0
 
     if st.session_state.login_attempts >= 3:
         st.error("로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.")
+        time.sleep(1)  # 잠시 지연
+        st.session_state.login_attempts = 0  # 제한 시간 후 리셋
         return False
 
     # 로그인 폼
@@ -175,6 +192,8 @@ def check_password():
                 st.session_state.login_attempts = 0
                 st.session_state.show_welcome_popup = True
                 st.session_state.page = "dashboard"
+                st.success(f"{username}님 환영합니다!")
+                time.sleep(1)  # 잠시 환영 메시지 보여주기
                 st.rerun()
                 return True
             else:
