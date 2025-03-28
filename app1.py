@@ -1,5 +1,5 @@
 import streamlit as st
-from supabase import create_client
+from supabase import create_client, Client
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -20,8 +20,18 @@ except KeyError:
     supabase_url = "https://czfvtkbndsfoznmknwsx.supabase.co"
     supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
 
-# Supabase 클라이언트 생성
-supabase = create_client(supabase_url, supabase_key)
+# Supabase 클라이언트 생성 - 최신 버전 호환성 고려
+try:
+    supabase: Client = create_client(supabase_url, supabase_key)
+except TypeError:
+    # 이전 버전 호환성을 위한 대체 방법
+    import httpx
+    from supabase._sync.client import SyncClient
+    supabase = SyncClient(
+        supabase_url=supabase_url,
+        supabase_key=supabase_key,
+        http_client=httpx.Client()
+    )
 
 # 페이지 설정을 가장 먼저 실행
 st.set_page_config(
