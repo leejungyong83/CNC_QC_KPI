@@ -3,11 +3,11 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import sqlite3
 import numpy as np
 import time
 import json
 from pathlib import Path
+import os
 
 try:
     import gspread
@@ -24,53 +24,37 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# 현재 스크립트의 디렉토리를 기준으로 경로 설정
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
+
+# 데이터 파일 경로
+INSPECTION_DATA_FILE = DATA_DIR / "inspection_data.json"
+INSPECTOR_DATA_FILE = DATA_DIR / "inspector_data.json"
+DEFECT_DATA_FILE = DATA_DIR / "defect_data.json"
+
 # 데이터베이스 초기화
 def init_db():
     """
-    SQLite 데이터베이스 초기화 및 필요한 테이블 생성
+    JSON 파일 기반 데이터베이스 초기화
     """
     try:
-        conn = sqlite3.connect('inspection_data.db')
-        cursor = conn.cursor()
+        # 검사원 데이터 초기화
+        if not INSPECTOR_DATA_FILE.exists():
+            with open(INSPECTOR_DATA_FILE, 'w', encoding='utf-8') as f:
+                json.dump({"inspectors": []}, f, ensure_ascii=False, indent=2)
         
-        # 검사원(Inspector) 테이블 생성
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS inspectors (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            department TEXT NOT NULL,
-            process TEXT NOT NULL,
-            years_of_service REAL DEFAULT 0
-        )
-        """)
+        # 검사 데이터 초기화
+        if not INSPECTION_DATA_FILE.exists():
+            with open(INSPECTION_DATA_FILE, 'w', encoding='utf-8') as f:
+                json.dump({"inspections": []}, f, ensure_ascii=False, indent=2)
         
-        # 검사 데이터(Inspection Data) 테이블 생성
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS inspection_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            inspector_id TEXT NOT NULL,
-            date TEXT NOT NULL,
-            department TEXT NOT NULL,
-            process TEXT NOT NULL,
-            inspection_count INTEGER NOT NULL,
-            work_minutes INTEGER NOT NULL,
-            FOREIGN KEY (inspector_id) REFERENCES inspectors(id)
-        )
-        """)
+        # 불량 데이터 초기화
+        if not DEFECT_DATA_FILE.exists():
+            with open(DEFECT_DATA_FILE, 'w', encoding='utf-8') as f:
+                json.dump({"defects": []}, f, ensure_ascii=False, indent=2)
         
-        # 불량 데이터(Defect Data) 테이블 생성
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS defect_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            inspection_id INTEGER NOT NULL,
-            defect_type TEXT NOT NULL,
-            count INTEGER NOT NULL,
-            FOREIGN KEY (inspection_id) REFERENCES inspection_data(id)
-        )
-        """)
-        
-        conn.commit()
-        conn.close()
         print("데이터베이스 초기화 완료!")
     except Exception as e:
         print(f"데이터베이스 초기화 중 오류 발생: {str(e)}")
@@ -121,31 +105,6 @@ if 'user_role' not in st.session_state:
 
 # 세션 상태 초기화 실행
 init_session_state()
-
-# 데이터 저장 경로 설정
-DATA_PATH = Path("data")
-DATA_PATH.mkdir(exist_ok=True)
-INSPECTION_DATA_FILE = DATA_PATH / "inspection_data.json"
-INSPECTOR_DATA_FILE = DATA_PATH / "inspector_data.json"
-
-# 데이터 저장 함수
-def save_inspection_data(data):
-    try:
-    with open(INSPECTION_DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2, default=str)
-    except Exception as e:
-        st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
-
-# 데이터 로드 함수
-def load_inspection_data():
-    try:
-    if INSPECTION_DATA_FILE.exists():
-        with open(INSPECTION_DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {"inspections": []}
-    except Exception as e:
-        st.error(f"데이터 로드 중 오류가 발생했습니다: {str(e)}")
-        return {"inspections": []}
 
 # CSS 스타일
 st.markdown("""
@@ -1479,8 +1438,8 @@ def show_inspector_form():
             ),
                     "담당공정": st.column_config.TextColumn(
                         "🔧 담당공정",
-                        width=120
-                    ),
+                width=120
+            ),
             "근속개월수": st.column_config.NumberColumn(
                 "⏳ 근속개월수",
                 width=100,
@@ -2821,6 +2780,80 @@ def get_defect_counts_by_date(start_date, end_date=None):
         print(f"데이터 조회 중 오류 발생: {str(e)}")
         return pd.DataFrame(columns=['date', 'defect_type', 'total_count'])
 
+# 데이터베이스 관련 함수들
+def save_data(file_path, data):
+    """데이터를 JSON 파일로 저장"""
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2, default=str)
+    except Exception as e:
+        st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
+
+def load_data(file_path, default_data):
+    """JSON 파일에서 데이터 로드"""
+    try:
+        if file_path.exists():
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return default_data
+    except Exception as e:
+        st.error(f"데이터 로드 중 오류가 발생했습니다: {str(e)}")
+        return default_data
+
+def get_inspectors():
+    """모든 검사원 정보 조회"""
+    data = load_data(INSPECTOR_DATA_FILE, {"inspectors": []})
+    return pd.DataFrame(data["inspectors"])
+
+def add_inspector(inspector_data):
+    """새로운 검사원 추가"""
+    data = load_data(INSPECTOR_DATA_FILE, {"inspectors": []})
+    data["inspectors"].append(inspector_data)
+    save_data(INSPECTOR_DATA_FILE, data)
+    return True, "검사원이 성공적으로 등록되었습니다."
+
+def update_inspector(inspector_id, updated_data):
+    """검사원 정보 업데이트"""
+    data = load_data(INSPECTOR_DATA_FILE, {"inspectors": []})
+    for inspector in data["inspectors"]:
+        if inspector["id"] == inspector_id:
+            inspector.update(updated_data)
+            save_data(INSPECTOR_DATA_FILE, data)
+            return True, "검사원 정보가 성공적으로 업데이트되었습니다."
+    return False, "해당 ID의 검사원을 찾을 수 없습니다."
+
+def delete_inspector(inspector_id):
+    """검사원 삭제"""
+    data = load_data(INSPECTOR_DATA_FILE, {"inspectors": []})
+    data["inspectors"] = [i for i in data["inspectors"] if i["id"] != inspector_id]
+    save_data(INSPECTOR_DATA_FILE, data)
+    return True, "검사원이 성공적으로 삭제되었습니다."
+
+def get_inspector(inspector_id):
+    """특정 검사원 정보 조회"""
+    data = load_data(INSPECTOR_DATA_FILE, {"inspectors": []})
+    for inspector in data["inspectors"]:
+        if inspector["id"] == inspector_id:
+            return inspector
+    return None
+
+def search_inspectors_by_name(name):
+    """이름으로 검사원 검색"""
+    data = load_data(INSPECTOR_DATA_FILE, {"inspectors": []})
+    matching_inspectors = [i for i in data["inspectors"] if name.lower() in i["name"].lower()]
+    return pd.DataFrame(matching_inspectors)
+
+def get_inspectors_by_department(department):
+    """부서별 검사원 조회"""
+    data = load_data(INSPECTOR_DATA_FILE, {"inspectors": []})
+    department_inspectors = [i for i in data["inspectors"] if i["department"] == department]
+    return pd.DataFrame(department_inspectors)
+
+def save_inspection(inspection_data):
+    """검사 데이터 저장"""
+    data = load_data(INSPECTION_DATA_FILE, {"inspections": []})
+    data["inspections"].append(inspection_data)
+    save_data(INSPECTION_DATA_FILE, data)
 if __name__ == "__main__":
     # 메인 앱 실행
     main() 
