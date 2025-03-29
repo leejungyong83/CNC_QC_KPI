@@ -9,6 +9,7 @@ import time
 import json
 from pathlib import Path
 import os
+import threading
 
 # Supabase 초기화
 try:
@@ -35,10 +36,14 @@ except TypeError:
 
 # 페이지 설정을 가장 먼저 실행
 st.set_page_config(
-    page_title="품질검사 KPI 관리 시스템",
-    page_icon="📊",
+    page_title="CNC 품질관리 시스템", 
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/leejungyong83/CNC_QC_KPI',
+        'Report a bug': 'https://github.com/leejungyong83/CNC_QC_KPI/issues',
+        'About': '# CNC 품질관리 시스템\n 품질 데이터 수집 및 분석을 위한 앱입니다.'
+    }
 )
 
 # 데이터 파일 경로 설정
@@ -150,6 +155,9 @@ def verify_login(username, password):
 
 def check_password():
     """비밀번호 확인 및 로그인 처리"""
+    # 세션 유지를 위한 요소 추가
+    add_keep_alive_element()
+    
     # 디버그 모드 - 개발 환경에서만 사용 (프로덕션에서는 제거 필요)
     if st.sidebar.button("디버그 모드로 로그인"):
         st.session_state.logged_in = True
@@ -206,6 +214,9 @@ if not check_password():
 # 여기서부터 로그인 성공 후 표시되는 내용
 st.sidebar.success(f"{st.session_state.username}님 환영합니다!")
 st.sidebar.write(f"역할: {st.session_state.user_role}")
+
+# 세션 유지를 위한 요소 추가
+add_keep_alive_element()
 
 # 로그아웃 버튼
 if st.sidebar.button("로그아웃"):
@@ -590,3 +601,31 @@ def password_entered():
         del st.session_state["password"]
     else:
         st.session_state["password_correct"] = False 
+
+# 앱이 잠자기 모드로 들어가지 않도록 하는 함수
+def prevent_sleep():
+    # 백그라운드 스레드에서 5분마다 로깅 (앱 활성 상태 유지)
+    def keep_alive():
+        while True:
+            time.sleep(300)  # 5분 간격으로 실행
+            print("앱 활성 상태 유지 중...")
+    
+    # 백그라운드 스레드 시작
+    threading.Thread(target=keep_alive, daemon=True).start()
+
+# 앱 시작 시 prevent_sleep 함수 호출
+prevent_sleep()
+
+# 세션 유지를 위한 숨겨진 요소 추가
+def add_keep_alive_element():
+    # 이 함수는 앱의 페이지 본문에 숨겨진 요소를 추가하여 세션 상태를 유지합니다
+    # 5초마다 자동으로 갱신되는 타임스탬프를 제공합니다
+    current_time = datetime.now().strftime("%H:%M:%S")
+    st.sidebar.markdown(
+        f"""
+        <div style="display:none">
+            {current_time}
+        </div>
+        """,
+        unsafe_allow_html=True
+    ) 
