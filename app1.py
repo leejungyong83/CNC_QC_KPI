@@ -401,22 +401,22 @@ if st.session_state.page == "dashboard":
     cols = st.columns(4)
     with cols[0]:
         st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("📝 총 검사 건수", "152", "+12")
+        st.metric("총 검사 건수", "152", "+12")
         st.markdown("<div style='text-align: center; padding-top: 5px;'>전월 대비 검사 건수가 증가하고 있습니다.</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
     with cols[1]:
         st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.metric("⚠️ 평균 불량률", "0.8%", "-0.2%")
+        st.metric("평균 불량률", "0.8%", "-0.2%")
         st.markdown("<div style='text-align: center; padding-top: 5px;'>전월 대비 불량률이 개선되었습니다.</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
     with cols[2]:
         st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.metric("🔍 최다 불량 유형", "치수불량", "")
+        st.metric("최다 불량 유형", "치수불량", "")
         st.markdown("<div style='text-align: center; padding-top: 5px;'>가장 많이 발생하는 불량 유형입니다.</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
     with cols[3]:
         st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.metric("⚙️ 진행 중인 작업", "3", "+1")
+        st.metric("진행 중인 작업", "3", "+1")
         st.markdown("<div style='text-align: center; padding-top: 5px;'>현재 진행 중인 작업 건수입니다.</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
