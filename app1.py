@@ -127,28 +127,14 @@ init_session_state()
 
 # 앱이 잠자기 모드로 들어가지 않도록 하는 함수
 def prevent_sleep():
-    # 백그라운드 스레드에서 5분마다 로깅 (앱 활성 상태 유지)
-    def keep_alive():
-        while True:
-            time.sleep(300)  # 5분 간격으로 실행
-            print("앱 활성 상태 유지 중...")
-    
-    # 백그라운드 스레드 시작
-    threading.Thread(target=keep_alive, daemon=True).start()
+    # 백그라운드 로깅 - 스레딩 사용하지 않음
+    print("앱 활성 상태 유지 모드 활성화")
 
 # 세션 유지를 위한 숨겨진 요소 추가
 def add_keep_alive_element():
-    # 이 함수는 앱의 페이지 본문에 숨겨진 요소를 추가하여 세션 상태를 유지합니다
-    # 5초마다 자동으로 갱신되는 타임스탬프를 제공합니다
+    # 타임스탬프 표시 (숨김 처리하지 않음)
     current_time = datetime.now().strftime("%H:%M:%S")
-    st.sidebar.markdown(
-        f"""
-        <div style="display:none">
-            {current_time}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.sidebar.markdown(f"<small>세션 활성 상태: {current_time}</small>", unsafe_allow_html=True)
 
 # 앱 시작 시 prevent_sleep 함수 호출
 prevent_sleep()
@@ -375,86 +361,86 @@ elif st.session_state.page == "input_inspection":
     else:
         st.session_state.basic_info_valid = False
 
-# 불량 정보 입력
-if st.session_state.get('basic_info_valid', False):
-    with st.form("defect_info"):
-        st.subheader("불량 정보 입력")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            defect_type = st.selectbox("불량 유형", 
-                options=["치수", "표면거칠기", "칩핑", "기타"])
-        
-        with col2:
-            defect_quantity = st.number_input("불량 수량", 
-                min_value=1, max_value=total_quantity, value=1)
+    # 불량 정보 입력
+    if st.session_state.get('basic_info_valid', False):
+        with st.form("defect_info"):
+            st.subheader("불량 정보 입력")
             
-        submit_defect = st.form_submit_button("불량 등록")
-        
-    if submit_defect:
-        new_defect = {
-            "type": defect_type,
-            "quantity": defect_quantity
-        }
-        st.session_state.registered_defects.append(new_defect)
-        st.success(f"{defect_type} 불량이 {defect_quantity}개 등록되었습니다.")
-        
-    # 등록된 불량 정보 표시
-    if st.session_state.registered_defects:
-        st.subheader("등록된 불량 정보")
-        defects_df = pd.DataFrame(st.session_state.registered_defects)
-        st.dataframe(defects_df)
-        
-        total_defects = defects_df['quantity'].sum()
-        defect_rate = (total_defects / total_quantity) * 100
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("총 불량 수량", f"{total_defects}개")
-        with col2:
-            st.metric("불량률", f"{defect_rate:.2f}%")
+            col1, col2 = st.columns(2)
+            with col1:
+                defect_type = st.selectbox("불량 유형", 
+                    options=["치수", "표면거칠기", "칩핑", "기타"])
             
-    # 불량 목록 초기화 버튼
-    if st.button("불량 목록 초기화"):
-        st.session_state.registered_defects = []
-        st.success("불량 목록이 초기화되었습니다.")
-        st.rerun()
-        
-    # 검사 데이터 저장
-    if st.button("검사 데이터 저장"):
-        if st.session_state.registered_defects:
-            inspection_datetime = datetime.combine(date, time)
-            inspector_data = st.session_state.inspectors[st.session_state.inspectors['name'] == inspector].iloc[0]
+            with col2:
+                defect_quantity = st.number_input("불량 수량", 
+                    min_value=1, max_value=total_quantity, value=1)
+                
+            submit_defect = st.form_submit_button("불량 등록")
             
-            inspection_data = {
-                "inspector_id": inspector_data['id'],
-                "process": process,
-                "inspection_datetime": inspection_datetime.isoformat(),
-                "lot_number": lot_number,
-                "total_quantity": total_quantity
+        if submit_defect:
+            new_defect = {
+                "type": defect_type,
+                "quantity": defect_quantity
             }
+            st.session_state.registered_defects.append(new_defect)
+            st.success(f"{defect_type} 불량이 {defect_quantity}개 등록되었습니다.")
             
-            try:
-                # 검사 데이터 저장
-                inspection_response = save_inspection_data(inspection_data)
-                inspection_id = inspection_response.data[0]['id']
+        # 등록된 불량 정보 표시
+        if st.session_state.registered_defects:
+            st.subheader("등록된 불량 정보")
+            defects_df = pd.DataFrame(st.session_state.registered_defects)
+            st.dataframe(defects_df)
+            
+            total_defects = defects_df['quantity'].sum()
+            defect_rate = (total_defects / total_quantity) * 100
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("총 불량 수량", f"{total_defects}개")
+            with col2:
+                st.metric("불량률", f"{defect_rate:.2f}%")
                 
-                # 불량 데이터 저장
-                for defect in st.session_state.registered_defects:
-                    defect_data = {
-                        "inspection_id": inspection_id,
-                        "defect_type": defect['type'],
-                        "quantity": defect['quantity']
-                    }
-                    save_defect_data(defect_data)
+        # 불량 목록 초기화 버튼
+        if st.button("불량 목록 초기화"):
+            st.session_state.registered_defects = []
+            st.success("불량 목록이 초기화되었습니다.")
+            st.rerun()
+            
+        # 검사 데이터 저장
+        if st.button("검사 데이터 저장"):
+            if st.session_state.registered_defects:
+                inspection_datetime = datetime.combine(date, time)
+                inspector_data = st.session_state.inspectors[st.session_state.inspectors['name'] == inspector].iloc[0]
                 
-                st.success("검사 데이터가 성공적으로 저장되었습니다.")
-                st.session_state.registered_defects = []
-                st.rerun()
-            except Exception as e:
-                st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
-        else:
-            st.warning("저장할 불량 데이터가 없습니다.")
+                inspection_data = {
+                    "inspector_id": inspector_data['id'],
+                    "process": process,
+                    "inspection_datetime": inspection_datetime.isoformat(),
+                    "lot_number": lot_number,
+                    "total_quantity": total_quantity
+                }
+                
+                try:
+                    # 검사 데이터 저장
+                    inspection_response = save_inspection_data(inspection_data)
+                    inspection_id = inspection_response.data[0]['id']
+                    
+                    # 불량 데이터 저장
+                    for defect in st.session_state.registered_defects:
+                        defect_data = {
+                            "inspection_id": inspection_id,
+                            "defect_type": defect['type'],
+                            "quantity": defect['quantity']
+                        }
+                        save_defect_data(defect_data)
+                    
+                    st.success("검사 데이터가 성공적으로 저장되었습니다.")
+                    st.session_state.registered_defects = []
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
+            else:
+                st.warning("저장할 불량 데이터가 없습니다.")
 
 elif st.session_state.page == "view_inspection":
     st.title("검사 데이터 조회")
@@ -612,20 +598,4 @@ elif st.session_state.page == "settings":
             st.info("데이터베이스 백업 기능은 준비 중입니다.")
     with col2:
         if st.button("테스트 데이터 생성"):
-            st.info("테스트 데이터 생성 기능은 준비 중입니다.")
-
-def password_entered():
-    try:
-        # Streamlit Cloud에서 secrets를 사용하는 경우
-        credentials_usernames = st.secrets["credentials"]["usernames"]
-        credentials_passwords = st.secrets["credentials"]["passwords"]
-    except KeyError:
-        # 기본 인증 정보
-        credentials_usernames = ["admin"]
-        credentials_passwords = ["admin123"]
-        
-    if st.session_state["username"] in credentials_usernames and st.session_state["password"] == credentials_passwords[credentials_usernames.index(st.session_state["username"])]:
-        st.session_state["password_correct"] = True
-        del st.session_state["password"]
-    else:
-        st.session_state["password_correct"] = False 
+            st.info("테스트 데이터 생성 기능은 준비 중입니다.") 
