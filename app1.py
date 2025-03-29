@@ -27,31 +27,65 @@ st.set_page_config(
 st.markdown("""
 <style>
     .card {
-        border-radius: 8px;
-        padding: 20px;
+        border-radius: 12px;
+        padding: 22px;
         background-color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+        border-top: 4px solid #4e8df5;
+        transition: transform 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
     }
     .metric-card {
-        border-radius: 8px;
-        padding: 15px;
+        border-radius: 10px;
+        padding: 18px;
         background-color: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.06);
         text-align: center;
-        border-left: 4px solid #4e8df5;
+        border-left: 5px solid #4e8df5;
+        transition: all 0.3s ease;
+    }
+    .metric-card:hover {
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
     }
     .title-area {
-        padding: 10px 0;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #f0f2f5;
+        padding: 12px 0;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #f0f2f5;
     }
     .sub-text {
         color: #637381;
         font-size: 14px;
+        margin-top: 4px;
     }
     .dashboard-divider {
-        height: 20px;
+        height: 24px;
+    }
+    .emoji-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #1f2937;
+    }
+    .emoji-icon {
+        font-size: 22px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+    /* 각 지표별 색상 */
+    .blue-indicator {
+        border-left-color: #4361ee;
+    }
+    .green-indicator {
+        border-left-color: #4cb782;
+    }
+    .orange-indicator {
+        border-left-color: #fb8c00;
+    }
+    .purple-indicator {
+        border-left-color: #7c3aed;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -344,15 +378,15 @@ if 'registered_defects' not in st.session_state:
 
 # 현재 페이지에 따라 다른 내용 표시
 if st.session_state.page == "dashboard":
-    st.markdown("<div class='title-area'><h1>CNC 품질관리 시스템 - 대시보드</h1></div>", unsafe_allow_html=True)
+    st.markdown("<div class='title-area'><h1>🏭 CNC 품질관리 시스템 - 대시보드</h1></div>", unsafe_allow_html=True)
     
     # 날짜 필터 (카드 형태)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 1, 2])
     with col1:
-        start_date = st.date_input("시작일", datetime.now() - timedelta(days=30))
+        start_date = st.date_input("📅 시작일", datetime.now() - timedelta(days=30))
     with col2:
-        end_date = st.date_input("종료일", datetime.now())
+        end_date = st.date_input("📅 종료일", datetime.now())
     with col3:
         st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
         st.markdown("<span class='sub-text'>📊 선택한 기간의 품질 데이터를 확인하세요</span>", unsafe_allow_html=True)
@@ -360,26 +394,26 @@ if st.session_state.page == "dashboard":
     
     # 주요 품질 지표 (새로운 카드 디자인)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("### 주요 품질 지표")
+    st.markdown("<div class='emoji-title'>📈 주요 품질 지표</div>", unsafe_allow_html=True)
     st.markdown("<span class='sub-text'>최근 30일간의 주요 품질 지표 현황</span>", unsafe_allow_html=True)
     
     # 샘플 데이터
     cols = st.columns(4)
     with cols[0]:
-        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-        st.metric("총 검사 건수", "152", "+12")
+        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
+        st.metric("📝 총 검사 건수", "152", "+12")
         st.markdown("</div>", unsafe_allow_html=True)
     with cols[1]:
-        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-        st.metric("평균 불량률", "0.8%", "-0.2%")
+        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
+        st.metric("⚠️ 평균 불량률", "0.8%", "-0.2%")
         st.markdown("</div>", unsafe_allow_html=True)
     with cols[2]:
-        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-        st.metric("최다 불량 유형", "치수불량", "")
+        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
+        st.metric("🔍 최다 불량 유형", "치수불량", "")
         st.markdown("</div>", unsafe_allow_html=True)
     with cols[3]:
-        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-        st.metric("진행 중인 작업", "3", "+1")
+        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
+        st.metric("⚙️ 진행 중인 작업", "3", "+1")
         st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
     
@@ -389,68 +423,164 @@ if st.session_state.page == "dashboard":
     with col1:
         # 공정별 불량률 추이 차트
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("### 공정별 불량률 추이")
+        st.markdown("<div class='emoji-title'>📊 공정별 불량률 추이</div>", unsafe_allow_html=True)
         st.markdown("<span class='sub-text'>선택한 기간의 공정별 불량률 변화 추이</span>", unsafe_allow_html=True)
         
-        # 샘플 차트 데이터
-        chart_data = pd.DataFrame({
-            "날짜": pd.date_range(start=start_date, end=end_date, freq="D"),
-            "선삭": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 2,
-            "밀링": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 1.5,
-        }).melt("날짜", var_name="공정", value_name="불량률")
+        # 복합 그래프를 위한 샘플 데이터 준비
+        chart_dates = pd.date_range(start=start_date, end=end_date, freq="D")
+        dates_str = [d.strftime("%m/%d") for d in chart_dates]
         
-        fig = px.line(chart_data, x="날짜", y="불량률", color="공정")
+        # 밀링 데이터 (막대 그래프)
+        milling_data = np.random.rand(len(chart_dates)) * 1.5
+        # 선삭 데이터 (라인 차트)
+        turning_data = np.random.rand(len(chart_dates)) * 2
+        
+        # 복합 그래프 생성
+        fig = go.Figure()
+        
+        # 밀링 공정 (막대 그래프)
+        fig.add_trace(go.Bar(
+            x=dates_str,
+            y=milling_data,
+            name="밀링",
+            marker_color="#4361ee",
+            opacity=0.7
+        ))
+        
+        # 선삭 공정 (선 그래프)
+        fig.add_trace(go.Scatter(
+            x=dates_str,
+            y=turning_data,
+            mode='lines+markers',
+            name='선삭',
+            line=dict(color='#fb8c00', width=3),
+            marker=dict(size=8)
+        ))
+        
+        # 평균 불량률 (점선)
+        avg_defect = np.mean(np.concatenate([milling_data, turning_data]))
+        fig.add_trace(go.Scatter(
+            x=dates_str,
+            y=[avg_defect] * len(dates_str),
+            mode='lines',
+            name='평균',
+            line=dict(color='#4cb782', width=2, dash='dash'),
+        ))
+        
+        # 레이아웃 업데이트
         fig.update_layout(
-            margin=dict(l=20, r=20, t=30, b=20),
+            title=None,
+            margin=dict(l=20, r=20, t=10, b=20),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            xaxis=dict(showgrid=False),
-            yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.05)")
+            xaxis=dict(
+                showgrid=False,
+                title="날짜",
+                tickangle=-45,
+                tickmode='array',
+                tickvals=dates_str[::max(1, len(dates_str)//5)]  # 날짜가 많을 경우 간격 조정
+            ),
+            yaxis=dict(
+                showgrid=True, 
+                gridcolor="rgba(0,0,0,0.05)",
+                title="불량률 (%)"
+            ),
+            hovermode="x unified"
         )
+        
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
         # 불량 유형 분포 차트
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("### 불량 유형 분포")
+        st.markdown("<div class='emoji-title'>🍩 불량 유형 분포</div>", unsafe_allow_html=True)
         st.markdown("<span class='sub-text'>불량 유형별 발생 비율</span>", unsafe_allow_html=True)
         
         # 불량 유형 분포
-        defect_types = ["치수", "표면거칠기", "칩핑", "기타"]
+        defect_types = ["치수 불량", "표면 거칠기", "칩핑", "기타"]
         defect_counts = np.random.randint(5, 30, size=len(defect_types))
         
-        fig = px.pie(values=defect_counts, names=defect_types, hole=0.4)
+        # 도넛 차트에 아이콘 지정 (이모티콘)
+        defect_icons = ["📏", "🔍", "🔨", "❓"]
+        custom_labels = [f"{icon} {label}" for icon, label in zip(defect_icons, defect_types)]
+        
+        fig = px.pie(
+            values=defect_counts, 
+            names=custom_labels, 
+            hole=0.6,
+            color_discrete_sequence=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"]
+        )
+        
+        # 중앙에 총 불량 수 표시
+        total_defects = sum(defect_counts)
+        fig.add_annotation(
+            text=f"총 불량<br>{total_defects}건",
+            x=0.5, y=0.5,
+            font_size=15,
+            font_family="Arial",
+            showarrow=False
+        )
+        
         fig.update_layout(
-            margin=dict(l=20, r=20, t=30, b=20),
+            margin=dict(l=20, r=20, t=10, b=10),
             legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
             paper_bgcolor="rgba(0,0,0,0)"
         )
-        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_traces(
+            textposition='outside', 
+            textinfo='percent',
+            hovertemplate='%{label}<br>수량: %{value}<br>비율: %{percent}',
+        )
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
     
     # 최근 검사 데이터 섹션
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("### 최근 검사 데이터")
-    st.markdown("<span class='sub-text'>가장 최근에 등록된 검사 데이터</span>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>📋 최근 검사 데이터</div>", unsafe_allow_html=True)
+    st.markdown("<span class='sub-text'>가장 최근에 등록된 검사 데이터 현황</span>", unsafe_allow_html=True)
     
     # 최근 데이터를 위한 샘플 테이블
     recent_data = {
-        "검사일자": pd.date_range(end=datetime.now(), periods=5).strftime("%Y-%m-%d"),
-        "LOT번호": [f"LOT{i:04d}" for i in range(1, 6)],
-        "검사원": np.random.choice(["홍길동", "김철수", "이영희"], 5),
-        "공정": np.random.choice(["선삭", "밀링"], 5),
-        "전체수량": np.random.randint(50, 200, 5),
-        "불량수량": np.random.randint(0, 10, 5),
+        "📅 검사일자": pd.date_range(end=datetime.now(), periods=5).strftime("%Y-%m-%d"),
+        "🔢 LOT번호": [f"LOT{i:04d}" for i in range(1, 6)],
+        "👨‍🔧 검사원": np.random.choice(["홍길동", "김철수", "이영희"], 5),
+        "⚙️ 공정": np.random.choice(["선삭", "밀링"], 5),
+        "📦 전체수량": np.random.randint(50, 200, 5),
+        "⚠️ 불량수량": np.random.randint(0, 10, 5),
     }
     
     df = pd.DataFrame(recent_data)
-    df["불량률(%)"] = (df["불량수량"] / df["전체수량"] * 100).round(2)
+    df["📊 불량률(%)"] = (df["⚠️ 불량수량"] / df["📦 전체수량"] * 100).round(2)
     
-    # 데이터프레임의 스타일 개선
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    # 데이터프레임에 스타일 적용
+    st.dataframe(
+        df, 
+        use_container_width=True, 
+        hide_index=True,
+        column_config={
+            "📊 불량률(%)": st.column_config.ProgressColumn(
+                "📊 불량률(%)",
+                help="불량률 퍼센트",
+                format="%.1f%%",
+                min_value=0,
+                max_value=5,  # 대부분의 불량률은 5% 이하로 가정
+            ),
+        }
+    )
+    
+    # 최근 검사 데이터 요약 지표
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        avg_defect_rate = df["📊 불량률(%)"].mean()
+        st.metric("⚠️ 평균 불량률", f"{avg_defect_rate:.2f}%")
+    with col2:
+        min_defect_rate = df["📊 불량률(%)"].min()
+        st.metric("🟢 최소 불량률", f"{min_defect_rate:.2f}%")
+    with col3:
+        max_defect_rate = df["📊 불량률(%)"].max()
+        st.metric("🔴 최대 불량률", f"{max_defect_rate:.2f}%")
+    
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "input_inspection":
