@@ -297,48 +297,161 @@ if 'inspectors' not in st.session_state:
 if 'registered_defects' not in st.session_state:
     st.session_state.registered_defects = []
 
+# 페이지 설정을 가장 먼저 실행
+st.set_page_config(
+    page_title="CNC 품질관리 시스템", 
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/leejungyong83/CNC_QC_KPI',
+        'Report a bug': 'https://github.com/leejungyong83/CNC_QC_KPI/issues',
+        'About': '# CNC 품질관리 시스템\n 품질 데이터 수집 및 분석을 위한 앱입니다.'
+    }
+)
+
+# 카드 스타일 CSS 추가
+st.markdown("""
+<style>
+    .card {
+        border-radius: 8px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .metric-card {
+        border-radius: 8px;
+        padding: 15px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        border-left: 4px solid #4e8df5;
+    }
+    .title-area {
+        padding: 10px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #f0f2f5;
+    }
+    .sub-text {
+        color: #637381;
+        font-size: 14px;
+    }
+    .dashboard-divider {
+        height: 20px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # 현재 페이지에 따라 다른 내용 표시
 if st.session_state.page == "dashboard":
-    st.title("CNC 품질관리 시스템 - 대시보드")
+    st.markdown("<div class='title-area'><h1>CNC 품질관리 시스템 - 대시보드</h1></div>", unsafe_allow_html=True)
     
-    # 날짜 필터
-    start_date = st.date_input("시작일", datetime.now() - timedelta(days=30))
-    end_date = st.date_input("종료일", datetime.now())
+    # 날짜 필터 (카드 형태)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1, 2])
+    with col1:
+        start_date = st.date_input("시작일", datetime.now() - timedelta(days=30))
+    with col2:
+        end_date = st.date_input("종료일", datetime.now())
+    with col3:
+        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+        st.markdown("<span class='sub-text'>📊 선택한 기간의 품질 데이터를 확인하세요</span>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
     
-    # 대시보드 콘텐츠
-    st.write("### 주요 품질 지표")
+    # 주요 품질 지표 (새로운 카드 디자인)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("### 주요 품질 지표")
+    st.markdown("<span class='sub-text'>최근 30일간의 주요 품질 지표 현황</span>", unsafe_allow_html=True)
     
     # 샘플 데이터
     cols = st.columns(4)
     with cols[0]:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
         st.metric("총 검사 건수", "152", "+12")
+        st.markdown("</div>", unsafe_allow_html=True)
     with cols[1]:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
         st.metric("평균 불량률", "0.8%", "-0.2%")
+        st.markdown("</div>", unsafe_allow_html=True)
     with cols[2]:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
         st.metric("최다 불량 유형", "치수불량", "")
+        st.markdown("</div>", unsafe_allow_html=True)
     with cols[3]:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
         st.metric("진행 중인 작업", "3", "+1")
+        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
     
-    st.write("### 공정별 불량률 추이")
-    # 샘플 차트 데이터
-    chart_data = pd.DataFrame({
-        "날짜": pd.date_range(start=start_date, end=end_date, freq="D"),
-        "선삭": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 2,
-        "밀링": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 1.5,
-    }).melt("날짜", var_name="공정", value_name="불량률")
+    # 차트 영역
+    col1, col2 = st.columns(2)
     
-    fig = px.line(chart_data, x="날짜", y="불량률", color="공정", 
-                 title="공정별 불량률 추이")
-    st.plotly_chart(fig, use_container_width=True)
+    with col1:
+        # 공정별 불량률 추이 차트
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("### 공정별 불량률 추이")
+        st.markdown("<span class='sub-text'>선택한 기간의 공정별 불량률 변화 추이</span>", unsafe_allow_html=True)
+        
+        # 샘플 차트 데이터
+        chart_data = pd.DataFrame({
+            "날짜": pd.date_range(start=start_date, end=end_date, freq="D"),
+            "선삭": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 2,
+            "밀링": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 1.5,
+        }).melt("날짜", var_name="공정", value_name="불량률")
+        
+        fig = px.line(chart_data, x="날짜", y="불량률", color="공정")
+        fig.update_layout(
+            margin=dict(l=20, r=20, t=30, b=20),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.05)")
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
     
-    # 불량 유형 분포
-    st.write("### 불량 유형 분포")
-    defect_types = ["치수", "표면거칠기", "칩핑", "기타"]
-    defect_counts = np.random.randint(5, 30, size=len(defect_types))
+    with col2:
+        # 불량 유형 분포 차트
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("### 불량 유형 분포")
+        st.markdown("<span class='sub-text'>불량 유형별 발생 비율</span>", unsafe_allow_html=True)
+        
+        # 불량 유형 분포
+        defect_types = ["치수", "표면거칠기", "칩핑", "기타"]
+        defect_counts = np.random.randint(5, 30, size=len(defect_types))
+        
+        fig = px.pie(values=defect_counts, names=defect_types, hole=0.4)
+        fig.update_layout(
+            margin=dict(l=20, r=20, t=30, b=20),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+            paper_bgcolor="rgba(0,0,0,0)"
+        )
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
     
-    fig = px.pie(values=defect_counts, names=defect_types, 
-                title="불량 유형 분포")
-    st.plotly_chart(fig, use_container_width=True)
+    # 최근 검사 데이터 섹션
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("### 최근 검사 데이터")
+    st.markdown("<span class='sub-text'>가장 최근에 등록된 검사 데이터</span>", unsafe_allow_html=True)
+    
+    # 최근 데이터를 위한 샘플 테이블
+    recent_data = {
+        "검사일자": pd.date_range(end=datetime.now(), periods=5).strftime("%Y-%m-%d"),
+        "LOT번호": [f"LOT{i:04d}" for i in range(1, 6)],
+        "검사원": np.random.choice(["홍길동", "김철수", "이영희"], 5),
+        "공정": np.random.choice(["선삭", "밀링"], 5),
+        "전체수량": np.random.randint(50, 200, 5),
+        "불량수량": np.random.randint(0, 10, 5),
+    }
+    
+    df = pd.DataFrame(recent_data)
+    df["불량률(%)"] = (df["불량수량"] / df["전체수량"] * 100).round(2)
+    
+    # 데이터프레임의 스타일 개선
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "input_inspection":
     st.title("검사 데이터 입력")
