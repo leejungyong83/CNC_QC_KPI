@@ -11,6 +11,51 @@ from pathlib import Path
 import os
 import threading
 
+# 페이지 설정을 가장 먼저 실행
+st.set_page_config(
+    page_title="CNC 품질관리 시스템", 
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/leejungyong83/CNC_QC_KPI',
+        'Report a bug': 'https://github.com/leejungyong83/CNC_QC_KPI/issues',
+        'About': '# CNC 품질관리 시스템\n 품질 데이터 수집 및 분석을 위한 앱입니다.'
+    }
+)
+
+# 카드 스타일 CSS 추가
+st.markdown("""
+<style>
+    .card {
+        border-radius: 8px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .metric-card {
+        border-radius: 8px;
+        padding: 15px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        border-left: 4px solid #4e8df5;
+    }
+    .title-area {
+        padding: 10px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #f0f2f5;
+    }
+    .sub-text {
+        color: #637381;
+        font-size: 14px;
+    }
+    .dashboard-divider {
+        height: 20px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Supabase 초기화
 try:
     # Streamlit Cloud에서 secrets를 사용하는 경우
@@ -173,7 +218,7 @@ def check_password():
         st.session_state.login_attempts = 0
         st.session_state.page = "dashboard"
         # 페이지 새로고침
-        st.experimental_rerun()
+        st.rerun()
         return True
     
     # 로그인 시도 횟수 확인
@@ -210,7 +255,7 @@ def check_password():
             st.session_state.page = "dashboard"
             st.success(f"{username}님 환영합니다!")
             time.sleep(1)  # 1초 후 리로드
-            st.experimental_rerun()
+            st.rerun()
             return True
         else:
             # 로그인 실패 처리
@@ -240,7 +285,7 @@ if st.sidebar.button("로그아웃"):
     st.session_state.username = ""
     st.session_state.user_role = "일반"
     st.session_state.page = "login"
-    st.experimental_rerun()
+    st.rerun()
 
 # 페이지 네비게이션
 pages = {
@@ -290,57 +335,12 @@ def save_defect_data(data):
     response = supabase.table('defect_data').insert(data).execute()
     return response
 
-# 세션 상태 초기화
+# 세션 상태 초기화 (앱 최초 로드 시 한 번만 실행)
 if 'inspectors' not in st.session_state:
     st.session_state.inspectors = load_inspectors()
 
 if 'registered_defects' not in st.session_state:
     st.session_state.registered_defects = []
-
-# 페이지 설정을 가장 먼저 실행
-st.set_page_config(
-    page_title="CNC 품질관리 시스템", 
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://github.com/leejungyong83/CNC_QC_KPI',
-        'Report a bug': 'https://github.com/leejungyong83/CNC_QC_KPI/issues',
-        'About': '# CNC 품질관리 시스템\n 품질 데이터 수집 및 분석을 위한 앱입니다.'
-    }
-)
-
-# 카드 스타일 CSS 추가
-st.markdown("""
-<style>
-    .card {
-        border-radius: 8px;
-        padding: 20px;
-        background-color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-    }
-    .metric-card {
-        border-radius: 8px;
-        padding: 15px;
-        background-color: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        text-align: center;
-        border-left: 4px solid #4e8df5;
-    }
-    .title-area {
-        padding: 10px 0;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #f0f2f5;
-    }
-    .sub-text {
-        color: #637381;
-        font-size: 14px;
-    }
-    .dashboard-divider {
-        height: 20px;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # 현재 페이지에 따라 다른 내용 표시
 if st.session_state.page == "dashboard":
@@ -523,7 +523,7 @@ elif st.session_state.page == "input_inspection":
         if st.button("불량 목록 초기화"):
             st.session_state.registered_defects = []
             st.success("불량 목록이 초기화되었습니다.")
-            st.experimental_rerun()
+            st.stop()  # 현재 실행을 중지하고 페이지를 다시 로드합니다
             
         # 검사 데이터 저장
         if st.button("검사 데이터 저장"):
@@ -557,7 +557,7 @@ elif st.session_state.page == "input_inspection":
                     
                     st.success("검사 데이터가 성공적으로 저장되었습니다.")
                     st.session_state.registered_defects = []
-                    st.experimental_rerun()
+                    st.stop()  # 현재 실행을 중지하고 페이지를 다시 로드합니다
                 except Exception as e:
                     st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
             else:
@@ -690,9 +690,15 @@ elif st.session_state.page == "manage_inspectors":
                     else:
                         st.session_state.inspectors_df = temp_df
                     
+                    # 기존 inspectors 업데이트
+                    if 'inspectors' in st.session_state:
+                        new_inspectors = st.session_state.inspectors.copy()
+                        new_inspectors = pd.concat([new_inspectors, temp_df], ignore_index=True)
+                        st.session_state.inspectors = new_inspectors
+                    
                     st.success(f"{name} 검사원이 성공적으로 등록되었습니다. (로컬 저장)")
                     st.info("현재 Supabase RLS 정책으로 인해 데이터는 로컬 세션에만 저장됩니다.")
-                    st.experimental_rerun()
+                    
                 except Exception as e:
                     st.error(f"검사원 등록 중 오류가 발생했습니다: {str(e)}")
     except Exception as e:
