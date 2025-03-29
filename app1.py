@@ -87,6 +87,100 @@ st.markdown("""
     .purple-indicator {
         border-left-color: #7c3aed;
     }
+    
+    /* 사이드바 스타일 추가 */
+    .sidebar .sidebar-content {
+        background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
+        color: white;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+    
+    .sidebar .sidebar-content .stRadio > label {
+        color: white;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+    
+    .sidebar .sidebar-content .stRadio > div {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .sidebar .sidebar-content .stRadio > div > label {
+        color: white;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar .sidebar-content .stRadio > div > label:hover {
+        color: #56CCF2;
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .sidebar .sidebar-content .stButton > button {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-weight: 500;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar .sidebar-content .stButton > button:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* 로그아웃 버튼 특별 스타일 */
+    .logout-button {
+        position: fixed;
+        bottom: 20px;
+        left: 30px;
+        width: calc(100% - 60px);
+    }
+    
+    .logout-button button {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    .logout-button button:hover {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+    }
+    
+    /* 사이드바 사용자 정보 스타일 */
+    .user-info {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .user-info h3 {
+        color: white;
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+    }
+    
+    .user-info p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 5px 0 0 0;
+        font-size: 14px;
+    }
+    
+    /* 메뉴 아이콘 스타일 */
+    .menu-icon {
+        display: inline-block;
+        width: 24px;
+        text-align: center;
+        margin-right: 8px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -307,33 +401,39 @@ if not check_password():
     st.stop()
 
 # 여기서부터 로그인 성공 후 표시되는 내용
-st.sidebar.success(f"{st.session_state.username}님 환영합니다!")
-st.sidebar.write(f"역할: {st.session_state.user_role}")
+st.sidebar.markdown("""
+<div class="user-info">
+    <h3>👤 {0}님 환영합니다!</h3>
+    <p>역할: {1}</p>
+</div>
+""".format(st.session_state.username, st.session_state.user_role), unsafe_allow_html=True)
 
 # 세션 유지를 위한 요소 추가
 add_keep_alive_element()
 
-# 로그아웃 버튼
+# 페이지 네비게이션
+pages = {
+    "📊 대시보드": "dashboard",
+    "📝 검사 데이터 입력": "input_inspection",
+    "🔍 검사 데이터 조회": "view_inspection",
+}
+
+if st.session_state.user_role == "관리자":
+    pages["👨‍💼 검사원 관리"] = "manage_inspectors"
+    pages["⚙️ 시스템 설정"] = "settings"
+
+selected_page = st.sidebar.radio("메뉴", list(pages.keys()))
+st.session_state.page = pages[selected_page]
+
+# 로그아웃 버튼 - 페이지 하단에 배치
+st.sidebar.markdown('<div class="logout-button">', unsafe_allow_html=True)
 if st.sidebar.button("로그아웃"):
     st.session_state.logged_in = False
     st.session_state.username = ""
     st.session_state.user_role = "일반"
     st.session_state.page = "login"
     st.rerun()
-
-# 페이지 네비게이션
-pages = {
-    "대시보드": "dashboard",
-    "검사 데이터 입력": "input_inspection",
-    "검사 데이터 조회": "view_inspection",
-}
-
-if st.session_state.user_role == "관리자":
-    pages["검사원 관리"] = "manage_inspectors"
-    pages["시스템 설정"] = "settings"
-
-selected_page = st.sidebar.radio("메뉴", list(pages.keys()))
-st.session_state.page = pages[selected_page]
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 # 검사원 정보 가져오기
 def load_inspectors():
