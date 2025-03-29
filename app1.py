@@ -34,93 +34,6 @@ except TypeError:
         http_client=httpx.Client()
     )
 
-# 세션 상태 강제 재설정 함수 
-def force_rerun():
-    """페이지를 강제로 다시 로드하는 함수"""
-    # 안전한 방식으로 페이지 리로드
-    st.experimental_rerun()
-
-# 페이지 설정을 가장 먼저 실행
-st.set_page_config(
-    page_title="CNC 품질관리 시스템", 
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://github.com/leejungyong83/CNC_QC_KPI',
-        'Report a bug': 'https://github.com/leejungyong83/CNC_QC_KPI/issues',
-        'About': '# CNC 품질관리 시스템\n 품질 데이터 수집 및 분석을 위한 앱입니다.'
-    }
-)
-
-# CSS 스타일 적용
-st.markdown("""
-<style>
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background-color: #f0f2f6;
-        border-radius: 4px 4px 0px 0px;
-        padding: 10px 20px;
-        font-weight: 600;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #e6f3ff;
-        border-bottom: 2px solid #4da6ff;
-    }
-    .stButton > button {
-        width: 100%;
-    }
-    .login-container {
-        max-width: 500px;
-        margin: 0 auto;
-        padding: 2rem;
-        border-radius: 10px;
-        background-color: #f8f9fa;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .success-message {
-        padding: 10px;
-        background-color: #d4edda;
-        color: #155724;
-        border-radius: 4px;
-        margin-bottom: 10px;
-    }
-    .error-message {
-        padding: 10px;
-        background-color: #f8d7da;
-        color: #721c24;
-        border-radius: 4px;
-        margin-bottom: 10px;
-    }
-    /* 메인 콘텐츠 영역 */
-    .main {
-        flex: 1;
-        overflow-y: auto;
-    }
-    /* 대시보드 카드 스타일 */
-    .dashboard-card {
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 1.5rem;
-        background-color: white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        margin-bottom: 1rem;
-    }
-    /* 폼 컨테이너 스타일 */
-    .form-container {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 # 데이터 파일 경로 설정
 if 'data_path' in st.secrets.get('database', {}):
     DATA_DIR = Path(st.secrets['database']['data_path'])
@@ -207,7 +120,7 @@ def prevent_sleep():
 
 # 세션 유지를 위한 숨겨진 요소 추가
 def add_keep_alive_element():
-    # 타임스탬프 표시 (숨김 처리하지 않음)
+    # 타임스탬프 표시 (작게 표시)
     current_time = datetime.now().strftime("%H:%M:%S")
     st.sidebar.markdown(f"<small>세션 활성 상태: {current_time}</small>", unsafe_allow_html=True)
 
@@ -271,53 +184,42 @@ def check_password():
         return False
 
     # 로그인 UI
-    st.markdown("<h1 style='text-align: center; margin-bottom: 2rem;'>CNC 품질관리 시스템</h1>", unsafe_allow_html=True)
+    st.title("CNC 품질관리 시스템")
+    st.subheader("로그인")
     
-    # 로그인 컨테이너
-    st.markdown("<div class='login-container'>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; margin-bottom: 1.5rem;'>로그인</h3>", unsafe_allow_html=True)
+    # 로그인 입력 필드
+    username = st.text_input("아이디", key="login_username")
+    password = st.text_input("비밀번호", type="password", key="login_password")
+    login_button = st.button("로그인", key="login_button")
     
-    # 로그인 폼
-    col1, col2, col3 = st.columns([1, 3, 1])
-    with col2:
-        username = st.text_input("아이디", key="login_username")
-        password = st.text_input("비밀번호", type="password", key="login_password")
-        
-        submit_button = st.button("로그인", key="login_button", use_container_width=True)
-        
-        if submit_button:
-            if not username:
-                st.error("아이디를 입력하세요.")
-                return False
-            if not password:
-                st.error("비밀번호를 입력하세요.")
-                return False
+    if login_button:
+        if not username:
+            st.error("아이디를 입력하세요.")
+            return False
+        if not password:
+            st.error("비밀번호를 입력하세요.")
+            return False
 
-            success, user_role = verify_login(username, password)
-            if success:
-                # 로그인 성공 상태 설정
-                st.session_state.logged_in = True
-                st.session_state.user_role = user_role
-                st.session_state.username = username
-                st.session_state.login_attempts = 0
-                st.session_state.page = "dashboard"
-                
-                # 성공 메시지 표시
-                st.success(f"{username}님 환영합니다!")
-                
-                # 1초 후 페이지 리로드
-                time.sleep(1)
-                st.experimental_rerun()
-                return True
-            else:
-                # 로그인 실패 처리
-                st.session_state.login_attempts = login_attempts + 1
-                st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
-                if st.session_state.login_attempts >= 3:
-                    st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
-                return False
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+        success, user_role = verify_login(username, password)
+        if success:
+            # 로그인 성공 상태 설정
+            st.session_state.logged_in = True
+            st.session_state.user_role = user_role
+            st.session_state.username = username
+            st.session_state.login_attempts = 0
+            st.session_state.page = "dashboard"
+            st.success(f"{username}님 환영합니다!")
+            time.sleep(1)  # 1초 후 리로드
+            st.experimental_rerun()
+            return True
+        else:
+            # 로그인 실패 처리
+            st.session_state.login_attempts = login_attempts + 1
+            st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
+            if st.session_state.login_attempts >= 3:
+                st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
+            return False
+
     return False
 
 # 로그인 상태 확인 및 페이지 표시
@@ -325,9 +227,7 @@ if not check_password():
     # 로그인 실패 시 여기서 멈춤
     st.stop()
 
-# ------ 여기서부터 로그인 성공 후 표시되는 내용 ------
-
-# 사이드바 정보 표시
+# 여기서부터 로그인 성공 후 표시되는 내용
 st.sidebar.success(f"{st.session_state.username}님 환영합니다!")
 st.sidebar.write(f"역할: {st.session_state.user_role}")
 
@@ -335,13 +235,11 @@ st.sidebar.write(f"역할: {st.session_state.user_role}")
 add_keep_alive_element()
 
 # 로그아웃 버튼
-if st.sidebar.button("로그아웃", key="logout_button"):
-    # 세션 상태 초기화
+if st.sidebar.button("로그아웃"):
     st.session_state.logged_in = False
     st.session_state.username = ""
     st.session_state.user_role = "일반"
     st.session_state.page = "login"
-    # 페이지 강제 리로드
     st.experimental_rerun()
 
 # 페이지 네비게이션
@@ -351,13 +249,11 @@ pages = {
     "검사 데이터 조회": "view_inspection",
 }
 
-# 관리자 전용 페이지 추가
 if st.session_state.user_role == "관리자":
     pages["검사원 관리"] = "manage_inspectors"
     pages["시스템 설정"] = "settings"
 
-# 메뉴 선택
-selected_page = st.sidebar.radio("메뉴", list(pages.keys()), key="menu_selection")
+selected_page = st.sidebar.radio("메뉴", list(pages.keys()))
 st.session_state.page = pages[selected_page]
 
 # 검사원 정보 가져오기
@@ -406,97 +302,49 @@ if st.session_state.page == "dashboard":
     st.title("CNC 품질관리 시스템 - 대시보드")
     
     # 날짜 필터
-    col1, col2, col3 = st.columns([2, 2, 6])
-    with col1:
-        start_date = st.date_input("시작일", datetime.now() - timedelta(days=30))
-    with col2:
-        end_date = st.date_input("종료일", datetime.now())
-    with col3:
-        st.write("")  # 빈 공간
+    start_date = st.date_input("시작일", datetime.now() - timedelta(days=30))
+    end_date = st.date_input("종료일", datetime.now())
     
     # 대시보드 콘텐츠
-    st.markdown("<h3>주요 품질 지표</h3>", unsafe_allow_html=True)
+    st.write("### 주요 품질 지표")
     
-    # 주요 지표 카드
-    metric_cols = st.columns(4)
-    with metric_cols[0]:
-        st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
+    # 샘플 데이터
+    cols = st.columns(4)
+    with cols[0]:
         st.metric("총 검사 건수", "152", "+12")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with metric_cols[1]:
-        st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
+    with cols[1]:
         st.metric("평균 불량률", "0.8%", "-0.2%")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with metric_cols[2]:
-        st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
+    with cols[2]:
         st.metric("최다 불량 유형", "치수불량", "")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with metric_cols[3]:
-        st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
+    with cols[3]:
         st.metric("진행 중인 작업", "3", "+1")
-        st.markdown("</div>", unsafe_allow_html=True)
     
-    # 공백
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.write("### 공정별 불량률 추이")
+    # 샘플 차트 데이터
+    chart_data = pd.DataFrame({
+        "날짜": pd.date_range(start=start_date, end=end_date, freq="D"),
+        "선삭": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 2,
+        "밀링": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 1.5,
+    }).melt("날짜", var_name="공정", value_name="불량률")
     
-    # 차트 영역
-    chart_cols = st.columns(2)
+    fig = px.line(chart_data, x="날짜", y="불량률", color="공정", 
+                 title="공정별 불량률 추이")
+    st.plotly_chart(fig, use_container_width=True)
     
-    with chart_cols[0]:
-        st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
-        st.markdown("<h4>공정별 불량률 추이</h4>", unsafe_allow_html=True)
-        # 샘플 차트 데이터
-        chart_data = pd.DataFrame({
-            "날짜": pd.date_range(start=start_date, end=end_date, freq="D"),
-            "선삭": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 2,
-            "밀링": np.random.rand(len(pd.date_range(start=start_date, end=end_date, freq="D"))) * 1.5,
-        }).melt("날짜", var_name="공정", value_name="불량률")
-        
-        fig = px.line(chart_data, x="날짜", y="불량률", color="공정")
-        fig.update_layout(margin=dict(l=20, r=20, t=30, b=20))
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+    # 불량 유형 분포
+    st.write("### 불량 유형 분포")
+    defect_types = ["치수", "표면거칠기", "칩핑", "기타"]
+    defect_counts = np.random.randint(5, 30, size=len(defect_types))
     
-    with chart_cols[1]:
-        st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
-        st.markdown("<h4>불량 유형 분포</h4>", unsafe_allow_html=True)
-        # 불량 유형 분포
-        defect_types = ["치수", "표면거칠기", "칩핑", "기타"]
-        defect_counts = np.random.randint(5, 30, size=len(defect_types))
-        
-        fig = px.pie(values=defect_counts, names=defect_types)
-        fig.update_layout(margin=dict(l=20, r=20, t=30, b=20))
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    # 공백
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 최근 검사 데이터
-    st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
-    st.markdown("<h4>최근 검사 데이터</h4>", unsafe_allow_html=True)
-    
-    # 샘플 데이터 생성
-    recent_data = {
-        "검사일자": pd.date_range(end=datetime.now(), periods=5).strftime("%Y-%m-%d"),
-        "LOT번호": [f"LOT{i:04d}" for i in range(1, 6)],
-        "검사원": np.random.choice(["홍길동", "김철수", "이영희"], 5),
-        "공정": np.random.choice(["선삭", "밀링"], 5),
-        "전체수량": np.random.randint(50, 200, 5),
-        "불량수량": np.random.randint(0, 10, 5),
-    }
-    
-    df = pd.DataFrame(recent_data)
-    df["불량률(%)"] = (df["불량수량"] / df["전체수량"] * 100).round(2)
-    st.dataframe(df, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    fig = px.pie(values=defect_counts, names=defect_types, 
+                title="불량 유형 분포")
+    st.plotly_chart(fig, use_container_width=True)
 
 elif st.session_state.page == "input_inspection":
     st.title("검사 데이터 입력")
     
     # 기본 정보 입력
-    st.markdown("<div class='form-container'>", unsafe_allow_html=True)
-    with st.form("basic_info", clear_on_submit=False):
+    with st.form("basic_info"):
         st.subheader("기본 정보 입력")
         
         col1, col2 = st.columns(2)
@@ -511,8 +359,7 @@ elif st.session_state.page == "input_inspection":
         lot_number = st.text_input("LOT 번호")
         total_quantity = st.number_input("전체 수량", min_value=1, value=1)
         
-        submit_basic = st.form_submit_button("기본 정보 등록", use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+        submit_basic = st.form_submit_button("기본 정보 등록")
         
     if submit_basic:
         st.session_state.basic_info_valid = True
@@ -522,8 +369,7 @@ elif st.session_state.page == "input_inspection":
 
     # 불량 정보 입력
     if st.session_state.get('basic_info_valid', False):
-        st.markdown("<div class='form-container'>", unsafe_allow_html=True)
-        with st.form("defect_info", clear_on_submit=False):
+        with st.form("defect_info"):
             st.subheader("불량 정보 입력")
             
             col1, col2 = st.columns(2)
@@ -535,8 +381,7 @@ elif st.session_state.page == "input_inspection":
                 defect_quantity = st.number_input("불량 수량", 
                     min_value=1, max_value=total_quantity, value=1)
                 
-            submit_defect = st.form_submit_button("불량 등록", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            submit_defect = st.form_submit_button("불량 등록")
             
         if submit_defect:
             new_defect = {
@@ -548,10 +393,9 @@ elif st.session_state.page == "input_inspection":
             
         # 등록된 불량 정보 표시
         if st.session_state.registered_defects:
-            st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
             st.subheader("등록된 불량 정보")
             defects_df = pd.DataFrame(st.session_state.registered_defects)
-            st.dataframe(defects_df, use_container_width=True)
+            st.dataframe(defects_df)
             
             total_defects = defects_df['quantity'].sum()
             defect_rate = (total_defects / total_quantity) * 100
@@ -561,56 +405,50 @@ elif st.session_state.page == "input_inspection":
                 st.metric("총 불량 수량", f"{total_defects}개")
             with col2:
                 st.metric("불량률", f"{defect_rate:.2f}%")
-            st.markdown("</div>", unsafe_allow_html=True)
                 
-        # 버튼 영역
-        st.markdown("<br>", unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        with col1:
-            # 불량 목록 초기화 버튼
-            if st.button("불량 목록 초기화", use_container_width=True):
-                st.session_state.registered_defects = []
-                st.success("불량 목록이 초기화되었습니다.")
-                st.experimental_rerun()
+        # 불량 목록 초기화 버튼
+        if st.button("불량 목록 초기화"):
+            st.session_state.registered_defects = []
+            st.success("불량 목록이 초기화되었습니다.")
+            st.experimental_rerun()
+            
+        # 검사 데이터 저장
+        if st.button("검사 데이터 저장"):
+            if st.session_state.registered_defects:
+                inspection_datetime = datetime.combine(date, time)
+                inspector_data = st.session_state.inspectors[st.session_state.inspectors['name'] == inspector].iloc[0]
                 
-        with col2:
-            # 검사 데이터 저장
-            if st.button("검사 데이터 저장", type="primary", use_container_width=True):
-                if st.session_state.registered_defects:
-                    inspection_datetime = datetime.combine(date, time)
-                    inspector_data = st.session_state.inspectors[st.session_state.inspectors['name'] == inspector].iloc[0]
+                inspection_data = {
+                    "inspector_id": inspector_data['id'],
+                    "process": process,
+                    "inspection_datetime": inspection_datetime.isoformat(),
+                    "lot_number": lot_number,
+                    "total_quantity": total_quantity
+                }
+                
+                try:
+                    # 검사 데이터 저장 (로컬 세션 상태에만 저장)
+                    st.session_state.last_inspection = inspection_data
                     
-                    inspection_data = {
-                        "inspector_id": inspector_data['id'],
-                        "process": process,
-                        "inspection_datetime": inspection_datetime.isoformat(),
-                        "lot_number": lot_number,
-                        "total_quantity": total_quantity
-                    }
+                    # 불량 데이터 저장 (로컬 세션 상태에만 저장)
+                    if 'saved_defects' not in st.session_state:
+                        st.session_state.saved_defects = []
+                        
+                    for defect in st.session_state.registered_defects:
+                        defect_data = {
+                            "inspection_id": lot_number,  # 임시 ID로 LOT 번호 사용
+                            "defect_type": defect['type'],
+                            "quantity": defect['quantity']
+                        }
+                        st.session_state.saved_defects.append(defect_data)
                     
-                    try:
-                        # 검사 데이터 저장 (로컬 세션 상태에만 저장)
-                        st.session_state.last_inspection = inspection_data
-                        
-                        # 불량 데이터 저장 (로컬 세션 상태에만 저장)
-                        if 'saved_defects' not in st.session_state:
-                            st.session_state.saved_defects = []
-                            
-                        for defect in st.session_state.registered_defects:
-                            defect_data = {
-                                "inspection_id": lot_number,  # 임시 ID로 LOT 번호 사용
-                                "defect_type": defect['type'],
-                                "quantity": defect['quantity']
-                            }
-                            st.session_state.saved_defects.append(defect_data)
-                        
-                        st.success("검사 데이터가 성공적으로 저장되었습니다.")
-                        st.session_state.registered_defects = []
-                        st.experimental_rerun()
-                    except Exception as e:
-                        st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
-                else:
-                    st.warning("저장할 불량 데이터가 없습니다.")
+                    st.success("검사 데이터가 성공적으로 저장되었습니다.")
+                    st.session_state.registered_defects = []
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
+            else:
+                st.warning("저장할 불량 데이터가 없습니다.")
 
 elif st.session_state.page == "view_inspection":
     st.title("검사 데이터 조회")
