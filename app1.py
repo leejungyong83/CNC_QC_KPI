@@ -421,26 +421,30 @@ if st.session_state.page == "dashboard":
     col1, col2 = st.columns(2)
     
     with col1:
-        # 공정별 불량률 추이 차트
+        # 공정별 불량률 추이 차트 (1주일 기준으로 변경)
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>📊 공정별 불량률 추이</div>", unsafe_allow_html=True)
-        st.markdown("<span class='sub-text'>선택한 기간의 공정별 불량률 변화 추이</span>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>📊 일별 불량률 추이 (최근 7일)</div>", unsafe_allow_html=True)
+        st.markdown("<span class='sub-text'>최근 7일간의 공정별 일일 불량률 변화</span>", unsafe_allow_html=True)
         
-        # 복합 그래프를 위한 샘플 데이터 준비
-        chart_dates = pd.date_range(start=start_date, end=end_date, freq="D")
-        dates_str = [d.strftime("%m/%d") for d in chart_dates]
+        # 일주일 데이터 준비 (현재 날짜부터 7일 전까지)
+        last_week = pd.date_range(end=datetime.now(), periods=7)
+        weekdays = [d.strftime("%a") for d in last_week]  # 요일 약자 (월,화,수...)
+        dates_str = [d.strftime("%m/%d") for d in last_week]  # 날짜 형식 (월/일)
+        
+        # 날짜와 요일 결합
+        x_labels = [f"{d} ({w})" for d, w in zip(dates_str, weekdays)]
         
         # 밀링 데이터 (막대 그래프)
-        milling_data = np.random.rand(len(chart_dates)) * 1.5
+        milling_data = np.random.rand(7) * 1.5
         # 선삭 데이터 (라인 차트)
-        turning_data = np.random.rand(len(chart_dates)) * 2
+        turning_data = np.random.rand(7) * 2
         
         # 복합 그래프 생성
         fig = go.Figure()
         
         # 밀링 공정 (막대 그래프)
         fig.add_trace(go.Bar(
-            x=dates_str,
+            x=x_labels,
             y=milling_data,
             name="밀링",
             marker_color="#4361ee",
@@ -449,7 +453,7 @@ if st.session_state.page == "dashboard":
         
         # 선삭 공정 (선 그래프)
         fig.add_trace(go.Scatter(
-            x=dates_str,
+            x=x_labels,
             y=turning_data,
             mode='lines+markers',
             name='선삭',
@@ -460,8 +464,8 @@ if st.session_state.page == "dashboard":
         # 평균 불량률 (점선)
         avg_defect = np.mean(np.concatenate([milling_data, turning_data]))
         fig.add_trace(go.Scatter(
-            x=dates_str,
-            y=[avg_defect] * len(dates_str),
+            x=x_labels,
+            y=[avg_defect] * 7,
             mode='lines',
             name='평균',
             line=dict(color='#4cb782', width=2, dash='dash'),
@@ -476,17 +480,41 @@ if st.session_state.page == "dashboard":
             paper_bgcolor="rgba(0,0,0,0)",
             xaxis=dict(
                 showgrid=False,
-                title="날짜",
-                tickangle=-45,
-                tickmode='array',
-                tickvals=dates_str[::max(1, len(dates_str)//5)]  # 날짜가 많을 경우 간격 조정
+                title="날짜 (요일)",
+                tickangle=-30,
             ),
             yaxis=dict(
                 showgrid=True, 
                 gridcolor="rgba(0,0,0,0.05)",
                 title="불량률 (%)"
             ),
-            hovermode="x unified"
+            hovermode="x unified",
+            barmode='group'
+        )
+        
+        # 불량률 목표선 (예: 1%)
+        target_rate = 1.0
+        fig.add_shape(
+            type="line",
+            x0=x_labels[0],
+            y0=target_rate,
+            x1=x_labels[-1],
+            y1=target_rate,
+            line=dict(color="red", width=1, dash="dot"),
+        )
+        
+        # 목표선 주석 추가
+        fig.add_annotation(
+            x=x_labels[1],
+            y=target_rate,
+            text="목표선 (1%)",
+            showarrow=True,
+            arrowhead=2,
+            arrowcolor="red",
+            arrowsize=1,
+            arrowwidth=1,
+            ax=-40,
+            ay=-30
         )
         
         st.plotly_chart(fig, use_container_width=True)
