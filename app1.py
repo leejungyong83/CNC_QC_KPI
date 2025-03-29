@@ -125,6 +125,34 @@ def init_session_state():
 # 세션 상태 초기화 실행
 init_session_state()
 
+# 앱이 잠자기 모드로 들어가지 않도록 하는 함수
+def prevent_sleep():
+    # 백그라운드 스레드에서 5분마다 로깅 (앱 활성 상태 유지)
+    def keep_alive():
+        while True:
+            time.sleep(300)  # 5분 간격으로 실행
+            print("앱 활성 상태 유지 중...")
+    
+    # 백그라운드 스레드 시작
+    threading.Thread(target=keep_alive, daemon=True).start()
+
+# 세션 유지를 위한 숨겨진 요소 추가
+def add_keep_alive_element():
+    # 이 함수는 앱의 페이지 본문에 숨겨진 요소를 추가하여 세션 상태를 유지합니다
+    # 5초마다 자동으로 갱신되는 타임스탬프를 제공합니다
+    current_time = datetime.now().strftime("%H:%M:%S")
+    st.sidebar.markdown(
+        f"""
+        <div style="display:none">
+            {current_time}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# 앱 시작 시 prevent_sleep 함수 호출
+prevent_sleep()
+
 def verify_login(username, password):
     """로그인 검증"""
     # 하드코딩된 사용자 정보로 먼저 확인
@@ -601,31 +629,3 @@ def password_entered():
         del st.session_state["password"]
     else:
         st.session_state["password_correct"] = False 
-
-# 앱이 잠자기 모드로 들어가지 않도록 하는 함수
-def prevent_sleep():
-    # 백그라운드 스레드에서 5분마다 로깅 (앱 활성 상태 유지)
-    def keep_alive():
-        while True:
-            time.sleep(300)  # 5분 간격으로 실행
-            print("앱 활성 상태 유지 중...")
-    
-    # 백그라운드 스레드 시작
-    threading.Thread(target=keep_alive, daemon=True).start()
-
-# 앱 시작 시 prevent_sleep 함수 호출
-prevent_sleep()
-
-# 세션 유지를 위한 숨겨진 요소 추가
-def add_keep_alive_element():
-    # 이 함수는 앱의 페이지 본문에 숨겨진 요소를 추가하여 세션 상태를 유지합니다
-    # 5초마다 자동으로 갱신되는 타임스탬프를 제공합니다
-    current_time = datetime.now().strftime("%H:%M:%S")
-    st.sidebar.markdown(
-        f"""
-        <div style="display:none">
-            {current_time}
-        </div>
-        """,
-        unsafe_allow_html=True
-    ) 
