@@ -191,34 +191,34 @@ def check_password():
         return False
 
     # 로그인 폼
-    with st.form("login_form"):
-        username = st.text_input("아이디")
-        password = st.text_input("비밀번호", type="password")
-        submitted = st.form_submit_button("로그인")
+    username = st.text_input("아이디", key="login_username")
+    password = st.text_input("비밀번호", type="password", key="login_password")
+    login_button = st.button("로그인")
 
-        if submitted:
-            if not username:
-                st.error("아이디를 입력하세요.")
-                return False
-            if not password:
-                st.error("비밀번호를 입력하세요.")
-                return False
+    if login_button:
+        if not username:
+            st.error("아이디를 입력하세요.")
+            return False
+        if not password:
+            st.error("비밀번호를 입력하세요.")
+            return False
 
-            success, user_role = verify_login(username, password)
-            if success:
-                st.session_state.logged_in = True
-                st.session_state.user_role = user_role
-                st.session_state.username = username
-                st.session_state.login_attempts = 0
-                st.session_state.page = "dashboard"
-                st.rerun()
-                return True
-            else:
-                st.session_state.login_attempts += 1
-                st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
-                if st.session_state.login_attempts >= 3:
-                    st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
-                return False
+        success, user_role = verify_login(username, password)
+        if success:
+            st.session_state.logged_in = True
+            st.session_state.user_role = user_role
+            st.session_state.username = username
+            st.session_state.login_attempts = 0
+            st.session_state.page = "dashboard"
+            st.success(f"{username}님 환영합니다!")
+            st.rerun()
+            return True
+        else:
+            st.session_state.login_attempts += 1
+            st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
+            if st.session_state.login_attempts >= 3:
+                st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
+            return False
 
     return False
 
