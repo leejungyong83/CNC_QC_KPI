@@ -34,6 +34,18 @@ except TypeError:
         http_client=httpx.Client()
     )
 
+# 세션 상태 강제 재설정 함수 
+def force_rerun():
+    """페이지를 강제로 다시 로드하는 함수"""
+    st.markdown(
+        """
+        <script>
+            window.parent.document.querySelector('iframe[title="streamlit_app"]').srcdoc = window.parent.document.querySelector('iframe[title="streamlit_app"]').srcdoc;
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
 # 페이지 설정을 가장 먼저 실행
 st.set_page_config(
     page_title="CNC 품질관리 시스템", 
@@ -169,63 +181,94 @@ def verify_login(username, password):
 
 def check_password():
     """비밀번호 확인 및 로그인 처리"""
+    # 이미 로그인되어 있다면 바로 성공 반환
+    if st.session_state.get('logged_in', False):
+        return True
+        
     # 세션 유지를 위한 요소 추가
     add_keep_alive_element()
     
     # 디버그 모드 - 개발 환경에서만 사용 (프로덕션에서는 제거 필요)
     if st.sidebar.button("디버그 모드로 로그인"):
+        # 로그인 성공 상태 설정
         st.session_state.logged_in = True
         st.session_state.user_role = "관리자"
         st.session_state.username = "admin_debug"
         st.session_state.login_attempts = 0
         st.session_state.page = "dashboard"
-        st.rerun()
+        # 페이지 새로고침
+        force_rerun()
         return True
     
-    if "login_attempts" not in st.session_state:
-        st.session_state.login_attempts = 0
-
-    if st.session_state.login_attempts >= 3:
+    # 로그인 시도 횟수 확인
+    login_attempts = st.session_state.get('login_attempts', 0)
+    if login_attempts >= 3:
         st.error("로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.")
         st.session_state.login_attempts = 0  # 제한 시간 후 리셋
         return False
 
-    # 로그인 폼
-    username = st.text_input("아이디", key="login_username")
-    password = st.text_input("비밀번호", type="password", key="login_password")
-    login_button = st.button("로그인")
+    # 로그인 UI - 헤더 추가
+    st.title("CNC 품질관리 시스템")
+    st.subheader("로그인")
+    
+    # 로그인 입력 필드
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        username = st.text_input("아이디", key="login_username")
+        password = st.text_input("비밀번호", type="password", key="login_password")
+        login_button = st.button("로그인", key="login_button", use_container_width=True)
+        
+        # 로그인 버튼 클릭 시
+        if login_button:
+            if not username:
+                st.error("아이디를 입력하세요.")
+                return False
+            if not password:
+                st.error("비밀번호를 입력하세요.")
+                return False
 
-    if login_button:
-        if not username:
-            st.error("아이디를 입력하세요.")
-            return False
-        if not password:
-            st.error("비밀번호를 입력하세요.")
-            return False
-
-        success, user_role = verify_login(username, password)
-        if success:
-            st.session_state.logged_in = True
-            st.session_state.user_role = user_role
-            st.session_state.username = username
-            st.session_state.login_attempts = 0
-            st.session_state.page = "dashboard"
-            st.success(f"{username}님 환영합니다!")
-            st.rerun()
-            return True
-        else:
-            st.session_state.login_attempts += 1
-            st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
-            if st.session_state.login_attempts >= 3:
-                st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
-            return False
+            success, user_role = verify_login(username, password)
+            if success:
+                # 로그인 성공 상태 설정
+                st.session_state.logged_in = True
+                st.session_state.user_role = user_role
+                st.session_state.username = username
+                st.session_state.login_attempts = 0
+                st.session_state.page = "dashboard"
+                
+                # 성공 메시지 표시
+                st.success(f"{username}님 환영합니다!")
+                
+                # 1초 후 페이지 리로드
+                st.markdown("""
+                <script>
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                </script>
+                """, unsafe_allow_html=True)
+                
+                # 페이지 새로고침
+                force_rerun()
+                return True
+            else:
+                # 로그인 실패 처리
+                st.session_state.login_attempts = login_attempts + 1
+                st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
+                if st.session_state.login_attempts >= 3:
+                    st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
+                return False
 
     return False
 
+# 로그인 상태 확인 및 페이지 표시
 if not check_password():
+    # 로그인 실패 시 여기서 멈춤
     st.stop()
 
-# 여기서부터 로그인 성공 후 표시되는 내용
+# ------ 여기서부터 로그인 성공 후 표시되는 내용 ------
+
+# 사이드바 정보 표시
 st.sidebar.success(f"{st.session_state.username}님 환영합니다!")
 st.sidebar.write(f"역할: {st.session_state.user_role}")
 
@@ -233,12 +276,15 @@ st.sidebar.write(f"역할: {st.session_state.user_role}")
 add_keep_alive_element()
 
 # 로그아웃 버튼
-if st.sidebar.button("로그아웃"):
+if st.sidebar.button("로그아웃", key="logout_button"):
+    # 세션 상태 초기화
     st.session_state.logged_in = False
     st.session_state.username = ""
     st.session_state.user_role = "일반"
     st.session_state.page = "login"
-    st.rerun()
+    # 페이지 강제 리로드
+    force_rerun()
+    st.rerun()  # 백업 리로드 방법
 
 # 페이지 네비게이션
 pages = {
@@ -247,11 +293,13 @@ pages = {
     "검사 데이터 조회": "view_inspection",
 }
 
+# 관리자 전용 페이지 추가
 if st.session_state.user_role == "관리자":
     pages["검사원 관리"] = "manage_inspectors"
     pages["시스템 설정"] = "settings"
 
-selected_page = st.sidebar.radio("메뉴", list(pages.keys()))
+# 메뉴 선택
+selected_page = st.sidebar.radio("메뉴", list(pages.keys()), key="menu_selection")
 st.session_state.page = pages[selected_page]
 
 # 검사원 정보 가져오기
