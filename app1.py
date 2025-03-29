@@ -37,14 +37,8 @@ except TypeError:
 # 세션 상태 강제 재설정 함수 
 def force_rerun():
     """페이지를 강제로 다시 로드하는 함수"""
-    st.markdown(
-        """
-        <script>
-            window.parent.document.querySelector('iframe[title="streamlit_app"]').srcdoc = window.parent.document.querySelector('iframe[title="streamlit_app"]').srcdoc;
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
+    # 안전한 방식으로 페이지 리로드
+    st.experimental_rerun()
 
 # 페이지 설정을 가장 먼저 실행
 st.set_page_config(
@@ -78,7 +72,7 @@ st.markdown("""
         background-color: #e6f3ff;
         border-bottom: 2px solid #4da6ff;
     }
-    .stButton>button {
+    .stButton > button {
         width: 100%;
     }
     .login-container {
@@ -103,11 +97,10 @@ st.markdown("""
         border-radius: 4px;
         margin-bottom: 10px;
     }
-    .info-card {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        padding: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* 메인 콘텐츠 영역 */
+    .main {
+        flex: 1;
+        overflow-y: auto;
     }
     /* 대시보드 카드 스타일 */
     .dashboard-card {
@@ -116,6 +109,7 @@ st.markdown("""
         padding: 1.5rem;
         background-color: white;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 1rem;
     }
     /* 폼 컨테이너 스타일 */
     .form-container {
@@ -266,7 +260,7 @@ def check_password():
         st.session_state.login_attempts = 0
         st.session_state.page = "dashboard"
         # 페이지 새로고침
-        force_rerun()
+        st.experimental_rerun()
         return True
     
     # 로그인 시도 횟수 확인
@@ -311,10 +305,9 @@ def check_password():
                 # 성공 메시지 표시
                 st.success(f"{username}님 환영합니다!")
                 
-                # 2초 후 페이지 리로드
+                # 1초 후 페이지 리로드
                 time.sleep(1)
-                force_rerun()
-                st.rerun()
+                st.experimental_rerun()
                 return True
             else:
                 # 로그인 실패 처리
@@ -349,8 +342,7 @@ if st.sidebar.button("로그아웃", key="logout_button"):
     st.session_state.user_role = "일반"
     st.session_state.page = "login"
     # 페이지 강제 리로드
-    force_rerun()
-    st.rerun()  # 백업 리로드 방법
+    st.experimental_rerun()
 
 # 페이지 네비게이션
 pages = {
@@ -579,7 +571,7 @@ elif st.session_state.page == "input_inspection":
             if st.button("불량 목록 초기화", use_container_width=True):
                 st.session_state.registered_defects = []
                 st.success("불량 목록이 초기화되었습니다.")
-                st.rerun()
+                st.experimental_rerun()
                 
         with col2:
             # 검사 데이터 저장
@@ -614,7 +606,7 @@ elif st.session_state.page == "input_inspection":
                         
                         st.success("검사 데이터가 성공적으로 저장되었습니다.")
                         st.session_state.registered_defects = []
-                        st.rerun()
+                        st.experimental_rerun()
                     except Exception as e:
                         st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
                 else:
@@ -749,7 +741,7 @@ elif st.session_state.page == "manage_inspectors":
                     
                     st.success(f"{name} 검사원이 성공적으로 등록되었습니다. (로컬 저장)")
                     st.info("현재 Supabase RLS 정책으로 인해 데이터는 로컬 세션에만 저장됩니다.")
-                    st.rerun()
+                    st.experimental_rerun()
                 except Exception as e:
                     st.error(f"검사원 등록 중 오류가 발생했습니다: {str(e)}")
     except Exception as e:
