@@ -90,49 +90,59 @@ st.markdown("""
     
     /* 사이드바 스타일 추가 */
     .sidebar .sidebar-content {
-        background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
+        background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
         color: white;
         padding-top: 20px;
         padding-bottom: 20px;
+        box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.2);
     }
     
     .sidebar .sidebar-content .stRadio > label {
         color: white;
-        font-weight: 500;
-        margin-bottom: 10px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        font-size: 1.05rem;
+        letter-spacing: 0.5px;
     }
     
     .sidebar .sidebar-content .stRadio > div {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 15px;
+        background-color: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .sidebar .sidebar-content .stRadio > div > label {
-        color: white;
-        transition: all 0.2s ease;
+        color: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-weight: 500;
     }
     
     .sidebar .sidebar-content .stRadio > div > label:hover {
-        color: #56CCF2;
-        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.15);
+        transform: translateX(5px);
     }
     
     .sidebar .sidebar-content .stButton > button {
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.15);
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 10px 15px;
-        font-weight: 500;
+        border-radius: 10px;
+        padding: 12px 15px;
+        font-weight: 600;
         width: 100%;
         transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
     
     .sidebar .sidebar-content .stButton > button:hover {
-        background-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
+        background-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
     
     /* 로그아웃 버튼 특별 스타일 */
@@ -144,53 +154,59 @@ st.markdown("""
     }
     
     .logout-button button {
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        background-color: rgba(255, 77, 77, 0.2) !important;
+        border: 1px solid rgba(255, 77, 77, 0.3) !important;
+        font-weight: 600 !important;
     }
     
     .logout-button button:hover {
-        background-color: rgba(255, 255, 255, 0.25) !important;
+        background-color: rgba(255, 77, 77, 0.3) !important;
     }
     
     /* 사이드바 사용자 정보 스타일 */
     .user-info {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
+        background-color: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 25px;
         text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
     .user-info h3 {
         color: white;
         margin: 0;
-        font-size: 18px;
-        font-weight: 500;
+        font-size: 20px;
+        font-weight: 600;
     }
     
     .user-info p {
         color: rgba(255, 255, 255, 0.8);
-        margin: 5px 0 0 0;
+        margin: 8px 0 0 0;
         font-size: 14px;
     }
     
     /* 메뉴 아이콘 스타일 */
     .menu-icon {
         display: inline-block;
-        width: 24px;
+        width: 28px;
         text-align: center;
-        margin-right: 8px;
+        margin-right: 10px;
     }
     
     .menu-category {
-        background-color: rgba(255, 255, 255, 0.15);
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin-top: 20px;
-        margin-bottom: 10px;
-        font-weight: 600;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-top: 25px;
+        margin-bottom: 15px;
+        font-weight: 700;
         color: white;
         text-align: center;
+        letter-spacing: 1px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -387,19 +403,19 @@ def check_password():
         success, user_role = verify_login(username, password)
         if success:
             # 로그인 성공 상태 설정
-            st.session_state.logged_in = True
+                st.session_state.logged_in = True
             st.session_state.user_role = user_role
             st.session_state.username = username
             st.session_state.login_attempts = 0
-            st.session_state.page = "dashboard"
+                st.session_state.page = "dashboard"
             st.success(f"{username}님 환영합니다!")
             time.sleep(1)  # 1초 후 리로드
-            st.rerun()
+                st.rerun()
             return True
-        else:
+            else:
             # 로그인 실패 처리
             st.session_state.login_attempts = login_attempts + 1
-            st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
+                st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
             if st.session_state.login_attempts >= 3:
                 st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
             return False
@@ -416,7 +432,7 @@ st.sidebar.markdown("""
 <div class="user-info">
     <h3>👤 {0}님 환영합니다!</h3>
     <p>역할: {1}</p>
-</div>
+            </div>
 """.format(st.session_state.username, st.session_state.user_role), unsafe_allow_html=True)
 
 # 세션 유지를 위한 요소 추가
@@ -436,18 +452,36 @@ st.sidebar.markdown("""
     text-align: center;
 }
 </style>
-""", unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+        
+# 사용자 프로필 섹션 추가
+st.sidebar.markdown("""
+<div class="user-info">
+    <div style="margin-bottom: 12px;">
+        <img src="https://ui-avatars.com/api/?name={}&background=random&size=80&rounded=true" alt="프로필" style="border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.3);">
+    </div>
+    <h3>{}</h3>
+    <p>역할: {}</p>
+    <div style="height: 1px; background-color: rgba(255, 255, 255, 0.1); margin: 12px 0;"></div>
+    <p style="font-size: 12px;">최근 로그인: {}</p>
+</div>
+""".format(
+    st.session_state.username,
+    st.session_state.username,
+    st.session_state.user_role,
+    datetime.now().strftime('%Y-%m-%d %H:%M')
+), unsafe_allow_html=True)
 
 # 관리자 메뉴 카테고리
 st.sidebar.markdown('<div class="menu-category">👨‍💼 관리자 메뉴</div>', unsafe_allow_html=True)
 
 # 관리자 메뉴 항목
 admin_pages = {
-    "🔑 관리자 및 사용자 관리": "manage_user",
-    "📊 작업자 등록 및 관리": "manage_worker",
+    "👤 관리자 및 사용자 관리": "manage_user",
+    "👷 작업자 등록 및 관리": "manage_worker",
     "🏭 생산 모델 관리": "manage_model",
     "📋 생산 실적 관리": "manage_production",
-    "📉 데이터 관리": "manage_data"
+    "💾 데이터 관리": "manage_data"
 }
 
 # 관리자 메뉴 선택 라디오 버튼
@@ -459,29 +493,63 @@ st.sidebar.markdown('<div class="menu-category">📈 리포트 메뉴</div>', un
 # 리포트 메뉴 항목
 report_pages = {
     "📊 종합 대시보드": "dashboard",
-    "📅 일간 리포트": "daily_report",
-    "📆 주간 리포트": "weekly_report",
-    "🗓️ 월간 리포트": "monthly_report",
-    "📆 연간 리포트": "yearly_report"
+    "📈 일간 품질리포트": "daily_report",
+    "📆 주간 품질리포트": "weekly_report",
+    "📅 월간 품질리포트": "monthly_report",
+    "📚 연간 품질리포트": "yearly_report"
 }
 
-# 리포트 메뉴 선택 라디오 버튼
-selected_report_page = st.sidebar.radio("", list(report_pages.keys()), key="report_menu")
+# 리포트 메뉴 아이템을 더 현대적인 디자인으로 개선
+st.sidebar.markdown("""
+<style>
+.report-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+.report-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+    border-left: 3px solid rgba(255, 255, 255, 0.5);
+}
+.report-menu-item.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-left: 3px solid white;
+}
+.report-menu-icon {
+    font-size: 20px;
+    margin-right: 10px;
+    width: 24px;
+    text-align: center;
+}
+.report-menu-text {
+    font-weight: 500;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# 리포트 메뉴 선택 라디오 버튼 대신 커스텀 라디오 버튼과 유사한 UI
+selected_report = st.sidebar.radio("", list(report_pages.keys()), key="report_menu", label_visibility="collapsed")
 
 # 선택된 메뉴에 따라 페이지 설정
 if selected_admin_page in admin_pages:
     st.session_state.page = admin_pages[selected_admin_page]
-elif selected_report_page in report_pages:
-    st.session_state.page = report_pages[selected_report_page]
+elif selected_report in report_pages:
+    st.session_state.page = report_pages[selected_report]
 
 # 로그아웃 버튼 - 페이지 하단에 배치
 st.sidebar.markdown('<div class="logout-button">', unsafe_allow_html=True)
 if st.sidebar.button("로그아웃"):
-    st.session_state.logged_in = False
+            st.session_state.logged_in = False
     st.session_state.username = ""
     st.session_state.user_role = "일반"
-    st.session_state.page = "login"
-    st.rerun()
+            st.session_state.page = "login"
+            st.rerun()
 st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 # 검사원 정보 가져오기
@@ -490,7 +558,7 @@ def load_inspectors():
         response = supabase.table('inspectors').select("*").execute()
         if response.data:
             return pd.DataFrame(response.data)
-        else:
+    else:
             # 샘플 검사원 데이터 (실제 저장하지 않음)
             default_inspectors = [
                 {"id": "INS001", "name": "홍길동", "department": "CNC_1", "process": "선삭", "years_of_service": 5.5},
@@ -704,8 +772,8 @@ if st.session_state.page == "dashboard":
             text=f"총 불량<br>{total_defects}건",
             x=0.5, y=0.5,
             font_size=15,
-            font_family="Arial",
-            showarrow=False
+                font_family="Arial",
+                showarrow=False
         )
         
         fig.update_layout(
@@ -719,7 +787,7 @@ if st.session_state.page == "dashboard":
             hovertemplate='%{label}<br>수량: %{value}<br>비율: %{percent}',
         )
         st.plotly_chart(fig, use_container_width=True)
-    
+
     # 최근 검사 데이터 섹션
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='emoji-title'>📋 최근 검사 데이터</div>", unsafe_allow_html=True)
@@ -769,985 +837,17 @@ if st.session_state.page == "dashboard":
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "daily_report":
-    st.markdown("<div class='title-area'><h1>📅 일간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    daily_report()
     
-    # 날짜 선택
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        selected_date = st.date_input("조회 날짜", datetime.now())
-    
-    # 날짜 표시 카드
-    st.markdown(f"""
-    <div class='card'>
-        <div class='emoji-title'>📅 {selected_date.strftime('%Y년 %m월 %d일')} 품질 현황</div>
-        <span class='sub-text'>선택한 날짜의 품질 데이터를 확인하세요</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 주요 품질 지표 (일간)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 일별 주요 품질 지표</div>", unsafe_allow_html=True)
-    st.markdown("<span class='sub-text'>선택한 날짜의 시간대별 품질 지표 현황</span>", unsafe_allow_html=True)
-    
-    # 샘플 데이터
-    cols = st.columns(4)
-    with cols[0]:
-        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>당일 생산량</span></div>", unsafe_allow_html=True)
-        st.metric("", "458", "+23")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전일 대비 생산량이 증가했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>당일 불량률</span></div>", unsafe_allow_html=True)
-        st.metric("", "0.5%", "-0.3%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전일 대비 불량률이 감소했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[2]:
-        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>당일 주요 불량</span></div>", unsafe_allow_html=True)
-        st.metric("", "치수불량", "")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>가장 많이 발생한 불량 유형입니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[3]:
-        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>작업자 효율</span></div>", unsafe_allow_html=True)
-        st.metric("", "96.8%", "+1.2%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전일 대비 작업 효율이 향상되었습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 시간대별 생산량 및 불량률 차트
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>⏰ 시간대별 생산량 및 불량률</div>", unsafe_allow_html=True)
-    
-    # 시간대별 데이터
-    hours = list(range(8, 21))  # 8시부터 20시까지
-    labels = [f"{h}:00" for h in hours]
-    
-    # 시간대별 생산량 (랜덤 샘플 데이터)
-    production_data = np.random.randint(30, 60, len(hours))
-    # 시간대별 불량수량 (랜덤 샘플 데이터)
-    defect_data = np.random.randint(0, 5, len(hours))
-    # 불량률 계산
-    defect_rate = (defect_data / production_data * 100).round(2)
-    
-    # 복합 그래프 생성
-    fig = go.Figure()
-    
-    # 생산량 (막대 그래프)
-    fig.add_trace(go.Bar(
-        x=labels,
-        y=production_data,
-        name="생산량",
-        marker_color="#4361ee",
-        opacity=0.7
-    ))
-    
-    # 불량률 (선 그래프)
-    fig.add_trace(go.Scatter(
-        x=labels,
-        y=defect_rate,
-        mode='lines+markers',
-        name='불량률 (%)',
-        yaxis='y2',
-        line=dict(color='#fb8c00', width=3),
-        marker=dict(size=8)
-    ))
-    
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title=f"{selected_date.strftime('%Y년 %m월 %d일')} 시간대별 현황",
-        xaxis=dict(title="시간"),
-        yaxis=dict(title="생산량 (개)"),
-        yaxis2=dict(
-            title="불량률 (%)",
-            overlaying="y",
-            side="right",
-            range=[0, max(defect_rate) * 1.5 if max(defect_rate) > 0 else 5]
-        ),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=20, r=20, t=60, b=20),
-        hovermode="x"
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 불량 발생 유형 분석
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>🔍 일별 불량 유형 분석</div>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # 불량 유형 분포 도넛 차트
-        defect_types = ["치수불량", "표면거칠기", "칩핑", "기타불량"]
-        defect_counts = np.random.randint(1, 10, len(defect_types))
-        
-        fig = px.pie(
-            values=defect_counts, 
-            names=defect_types, 
-            hole=0.6,
-            color_discrete_sequence=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"]
-        )
-        
-        fig.update_layout(
-            title="불량 유형 분포",
-            margin=dict(l=20, r=20, t=40, b=20)
-        )
-        
-        # 중앙에 총 불량 수 표시
-        total_defects = sum(defect_counts)
-        fig.add_annotation(
-            text=f"총 불량<br>{total_defects}건",
-            x=0.5, y=0.5,
-            font_size=15,
-            showarrow=False
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        # 불량률 모니터링 트렌드
-        # 최근 7일 데이터 (오늘 포함)
-        last_7_days = [selected_date - timedelta(days=i) for i in range(6, -1, -1)]
-        days_labels = [d.strftime("%m/%d") for d in last_7_days]
-        
-        # 일별 불량률 트렌드 (임의 데이터)
-        defect_rates = np.random.uniform(0.3, 1.5, 7).round(2)
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=days_labels,
-            y=defect_rates,
-            mode='lines+markers',
-            name='일별 불량률',
-            line=dict(color='#4cb782', width=3),
-            fill='tozeroy',
-            fillcolor='rgba(76, 183, 130, 0.1)'
-        ))
-        
-        # 목표선 추가
-        fig.add_shape(
-            type="line",
-            x0=days_labels[0],
-            y0=1.0,
-            x1=days_labels[-1],
-            y1=1.0,
-            line=dict(color="red", width=1, dash="dash"),
-        )
-        
-        # 목표선 주석
-        fig.add_annotation(
-            x=days_labels[1],
-            y=1.0,
-            text="목표 불량률 (1%)",
-            showarrow=True,
-            arrowhead=2,
-            arrowcolor="red",
-            arrowsize=1,
-            arrowwidth=1,
-            ax=-40,
-            ay=-30
-        )
-        
-        fig.update_layout(
-            title="최근 7일 불량률 트렌드",
-            xaxis_title="날짜",
-            yaxis_title="불량률 (%)",
-            margin=dict(l=20, r=20, t=40, b=20)
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 작업자별 성능 분석
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>👨‍🔧 작업자별 생산 및 품질 현황</div>", unsafe_allow_html=True)
-    
-    # 작업자 샘플 데이터
-    workers = ["홍길동", "김철수", "이영희", "박민수", "최지영"]
-    production = np.random.randint(80, 120, len(workers))
-    defect_counts = np.random.randint(0, 5, len(workers))
-    defect_rates = (defect_counts / production * 100).round(2)
-    efficiency = np.random.uniform(90, 99, len(workers)).round(1)
-    
-    worker_data = pd.DataFrame({
-        "작업자": workers,
-        "생산량": production,
-        "불량수": defect_counts,
-        "불량률(%)": defect_rates,
-        "효율(%)": efficiency
-    })
-    
-    st.dataframe(
-        worker_data,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "불량률(%)": st.column_config.ProgressColumn(
-                "불량률(%)",
-                help="불량률 퍼센트",
-                format="%.1f%%",
-                min_value=0,
-                max_value=5,
-            ),
-            "효율(%)": st.column_config.ProgressColumn(
-                "효율(%)",
-                help="작업 효율",
-                format="%.1f%%",
-                min_value=0,
-                max_value=100,
-                width="medium"
-            ),
-        }
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-
 elif st.session_state.page == "weekly_report":
-    st.markdown("<div class='title-area'><h1>📆 주간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    weekly_report()
     
-    # 주차 선택
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        selected_date = st.date_input("기준 날짜", datetime.now())
-    
-    # 해당 날짜가 속한 주의 시작일과 종료일 계산
-    start_of_week = selected_date - timedelta(days=selected_date.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
-    
-    # 주차 표시 카드
-    st.markdown(f"""
-    <div class='card'>
-        <div class='emoji-title'>📆 {start_of_week.strftime('%Y년 %m월 %d일')} ~ {end_of_week.strftime('%Y년 %m월 %d일')} 주간 품질 현황</div>
-        <span class='sub-text'>선택한 주의 품질 데이터를 확인하세요</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 주요 품질 지표 (주간)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 주간 주요 품질 지표</div>", unsafe_allow_html=True)
-    st.markdown("<span class='sub-text'>선택한 주의 종합 품질 지표 현황</span>", unsafe_allow_html=True)
-    
-    # 샘플 데이터
-    cols = st.columns(4)
-    with cols[0]:
-        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>주간 생산량</span></div>", unsafe_allow_html=True)
-        st.metric("", "2,156", "+128")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전주 대비 생산량이 증가했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>주간 평균 불량률</span></div>", unsafe_allow_html=True)
-        st.metric("", "0.7%", "-0.1%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전주 대비 불량률이 감소했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[2]:
-        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>불량 감소율</span></div>", unsafe_allow_html=True)
-        st.metric("", "12.5%", "+3.2%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>불량 개선율이 증가했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[3]:
-        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>평균 생산성</span></div>", unsafe_allow_html=True)
-        st.metric("", "97.2%", "+0.8%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전주 대비 생산성이 향상되었습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 일별 생산량 및 불량률 추이
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📊 일별 생산량 및 불량률 추이</div>", unsafe_allow_html=True)
-    
-    # 일별 데이터
-    week_days = [(start_of_week + timedelta(days=i)).strftime("%m/%d (%a)") for i in range(7)]
-    
-    # 일별 생산량 (랜덤 샘플 데이터)
-    production_data = np.random.randint(250, 350, 7)
-    # 일별 불량수량 (랜덤 샘플 데이터)
-    defect_data = np.random.randint(1, 8, 7)
-    # 불량률 계산
-    defect_rate = (defect_data / production_data * 100).round(2)
-    
-    # 복합 그래프 생성
-    fig = go.Figure()
-    
-    # 생산량 (막대 그래프)
-    fig.add_trace(go.Bar(
-        x=week_days,
-        y=production_data,
-        name="생산량",
-        marker_color="#4361ee",
-        opacity=0.7
-    ))
-    
-    # 불량률 (선 그래프)
-    fig.add_trace(go.Scatter(
-        x=week_days,
-        y=defect_rate,
-        mode='lines+markers',
-        name='불량률 (%)',
-        yaxis='y2',
-        line=dict(color='#fb8c00', width=3),
-        marker=dict(size=8)
-    ))
-    
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title="주간 일별 생산량 및 불량률 추이",
-        xaxis=dict(title="날짜"),
-        yaxis=dict(title="생산량 (개)"),
-        yaxis2=dict(
-            title="불량률 (%)",
-            overlaying="y",
-            side="right",
-            range=[0, max(defect_rate) * 1.5 if max(defect_rate) > 0 else 5]
-        ),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=20, r=20, t=60, b=20),
-        hovermode="x"
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 주간 공정별 불량률 및 유형 분석
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>🏭 공정별 불량률</div>", unsafe_allow_html=True)
-        
-        # 공정별 불량률 데이터
-        processes = ["선삭", "밀링", "드릴링", "연삭", "조립"]
-        process_defect_rates = np.random.uniform(0.3, 1.8, len(processes)).round(2)
-        
-        # 가로 막대 차트
-        fig = go.Figure()
-        fig.add_trace(go.Bar(
-            y=processes,
-            x=process_defect_rates,
-            orientation='h',
-            marker_color=['#4361ee' if rate < 1.0 else '#fb8c00' for rate in process_defect_rates],
-            text=[f"{rate}%" for rate in process_defect_rates],
-            textposition='outside'
-        ))
-        
-        # 목표선 추가
-        fig.add_shape(
-            type="line",
-            x0=1.0,
-            y0=-0.5,
-            x1=1.0,
-            y1=len(processes) - 0.5,
-            line=dict(color="red", width=1, dash="dash"),
-        )
-        
-        fig.update_layout(
-            title="공정별 불량률 비교",
-            xaxis_title="불량률 (%)",
-            yaxis_title="공정",
-            margin=dict(l=20, r=20, t=60, b=20),
-            xaxis=dict(range=[0, max(process_defect_rates) * 1.2])
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>🔍 주간 주요 불량 유형</div>", unsafe_allow_html=True)
-        
-        # 불량 유형별 발생 건수
-        defect_types = ["치수불량", "표면거칠기", "칩핑", "조립불량", "외관불량"]
-        defect_counts = np.random.randint(5, 25, len(defect_types))
-        
-        # 불량 유형별 추세 표시 (전주 대비)
-        prev_counts = np.array([20, 15, 12, 18, 10])  # 전주 데이터 (샘플)
-        change_pct = ((defect_counts - prev_counts) / prev_counts * 100).round(1)
-        
-        # 데이터프레임 생성
-        defect_df = pd.DataFrame({
-            "불량유형": defect_types,
-            "발생건수": defect_counts,
-            "전주대비": change_pct,
-            "추세": ["⬆️" if c > 0 else "⬇️" if c < 0 else "➡️" for c in change_pct]
-        })
-        
-        # 발생 건수로 정렬
-        defect_df = defect_df.sort_values("발생건수", ascending=False).reset_index(drop=True)
-        
-        # 데이터프레임 표시
-        st.dataframe(
-            defect_df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "전주대비": st.column_config.NumberColumn(
-                    "전주대비(%)",
-                    format="%.1f%%"
-                )
-            }
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    # 품질 지표 개선 트렌드
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📉 품질 지표 개선 트렌드 (최근 8주)</div>", unsafe_allow_html=True)
-    
-    # 최근 8주 데이터
-    last_8_weeks = [(end_of_week - timedelta(days=7*i)).strftime("%m/%d") for i in range(7, -1, -1)]
-    
-    # 불량률 트렌드 (임의 데이터)
-    defect_rates = np.array([1.8, 1.6, 1.4, 1.2, 1.0, 0.9, 0.8, 0.7])
-    
-    # 목표값
-    target_rate = 1.0
-    
-    # 그래프 생성
-    fig = go.Figure()
-    
-    # 실제 불량률
-    fig.add_trace(go.Scatter(
-        x=last_8_weeks,
-        y=defect_rates,
-        mode='lines+markers',
-        name='불량률 추이',
-        line=dict(color='#4361ee', width=3),
-        marker=dict(size=8)
-    ))
-    
-    # 목표선
-    fig.add_trace(go.Scatter(
-        x=last_8_weeks,
-        y=[target_rate] * len(last_8_weeks),
-        mode='lines',
-        name='목표 불량률',
-        line=dict(color='red', width=2, dash='dash')
-    ))
-    
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title="주간 불량률 개선 추이",
-        xaxis_title="주차",
-        yaxis_title="불량률 (%)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=20, r=20, t=60, b=20),
-        hovermode="x"
-    )
-    
-    # 그래프 표시
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # 목표 달성 여부 표시
-    current_rate = defect_rates[-1]
-    if current_rate <= target_rate:
-        st.success(f"🎉 불량률 목표를 달성했습니다! (목표: {target_rate}%, 현재: {current_rate}%)")
-    else:
-        st.warning(f"⚠️ 불량률 목표를 달성하지 못했습니다. (목표: {target_rate}%, 현재: {current_rate}%)")
-        
-    st.markdown("</div>", unsafe_allow_html=True)
-
 elif st.session_state.page == "monthly_report":
-    st.markdown("<div class='title-area'><h1>🗓️ 월간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    monthly_report()
     
-    # 월 선택
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        selected_date = st.date_input("기준 날짜", datetime.now())
-    
-    # 월 표시 카드
-    st.markdown(f"""
-    <div class='card'>
-        <div class='emoji-title'>🗓️ {selected_date.strftime('%Y년 %m월')} 품질 현황</div>
-        <span class='sub-text'>선택한 월의 품질 데이터를 확인하세요</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 주요 품질 지표 (월간)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 월별 주요 품질 지표</div>", unsafe_allow_html=True)
-    st.markdown("<span class='sub-text'>선택한 월의 종합 품질 지표 현황</span>", unsafe_allow_html=True)
-    
-    # 샘플 데이터
-    cols = st.columns(4)
-    with cols[0]:
-        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>월간 생산량</span></div>", unsafe_allow_html=True)
-        st.metric("", "12,345", "+234")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전월 대비 생산량이 증가했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>월간 평균 불량률</span></div>", unsafe_allow_html=True)
-        st.metric("", "0.6%", "-0.1%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전월 대비 불량률이 감소했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[2]:
-        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>불량 감소율</span></div>", unsafe_allow_html=True)
-        st.metric("", "10.2%", "+2.1%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>불량 개선율이 증가했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[3]:
-        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>평균 생산성</span></div>", unsafe_allow_html=True)
-        st.metric("", "97.9%", "+0.7%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전월 대비 생산성이 향상되었습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 일별 생산량 및 불량률 추이
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📊 일별 생산량 및 불량률 추이</div>", unsafe_allow_html=True)
-    
-    # 일별 데이터
-    month_days = [f"{selected_date.strftime('%m/%d')} ({datetime(selected_date.year, selected_date.month, i).strftime('%a')})" for i in range(1, selected_date.day + 1)]
-    
-    # 일별 생산량 (랜덤 샘플 데이터)
-    production_data = np.random.randint(200, 400, len(month_days))
-    # 일별 불량수량 (랜덤 샘플 데이터)
-    defect_data = np.random.randint(0, 10, len(month_days))
-    # 불량률 계산
-    defect_rate = (defect_data / production_data * 100).round(2)
-    
-    # 복합 그래프 생성
-    fig = go.Figure()
-    
-    # 생산량 (막대 그래프)
-    fig.add_trace(go.Bar(
-        x=month_days,
-        y=production_data,
-        name="생산량",
-        marker_color="#4361ee",
-        opacity=0.7
-    ))
-    
-    # 불량률 (선 그래프)
-    fig.add_trace(go.Scatter(
-        x=month_days,
-        y=defect_rate,
-        mode='lines+markers',
-        name='불량률 (%)',
-        yaxis='y2',
-        line=dict(color='#fb8c00', width=3),
-        marker=dict(size=8)
-    ))
-    
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title="월간 일별 생산량 및 불량률 추이",
-        xaxis=dict(title="날짜"),
-        yaxis=dict(title="생산량 (개)"),
-        yaxis2=dict(
-            title="불량률 (%)",
-            overlaying="y",
-            side="right",
-            range=[0, max(defect_rate) * 1.5 if max(defect_rate) > 0 else 5]
-        ),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=20, r=20, t=60, b=20),
-        hovermode="x"
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 불량 발생 유형 분석
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>🔍 월별 불량 유형 분석</div>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # 불량 유형 분포 도넛 차트
-        defect_types = ["치수불량", "표면거칠기", "칩핑", "조립불량", "외관불량"]
-        defect_counts = np.random.randint(1, 10, len(defect_types))
-        
-        fig = px.pie(
-            values=defect_counts, 
-            names=defect_types, 
-            hole=0.6,
-            color_discrete_sequence=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"]
-        )
-        
-        fig.update_layout(
-            title="불량 유형 분포",
-            margin=dict(l=20, r=20, t=40, b=20)
-        )
-        
-        # 중앙에 총 불량 수 표시
-        total_defects = sum(defect_counts)
-        fig.add_annotation(
-            text=f"총 불량<br>{total_defects}건",
-            x=0.5, y=0.5,
-            font_size=15,
-            showarrow=False
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        # 불량률 모니터링 트렌드
-        # 최근 7일 데이터 (오늘 포함)
-        last_7_days = [selected_date - timedelta(days=i) for i in range(6, -1, -1)]
-        days_labels = [d.strftime("%m/%d") for d in last_7_days]
-        
-        # 일별 불량률 트렌드 (임의 데이터)
-        defect_rates = np.random.uniform(0.3, 1.5, 7).round(2)
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=days_labels,
-            y=defect_rates,
-            mode='lines+markers',
-            name='일별 불량률',
-            line=dict(color='#4cb782', width=3),
-            fill='tozeroy',
-            fillcolor='rgba(76, 183, 130, 0.1)'
-        ))
-        
-        # 목표선 추가
-        fig.add_shape(
-            type="line",
-            x0=days_labels[0],
-            y0=1.0,
-            x1=days_labels[-1],
-            y1=1.0,
-            line=dict(color="red", width=1, dash="dash"),
-        )
-        
-        # 목표선 주석
-        fig.add_annotation(
-            x=days_labels[1],
-            y=1.0,
-            text="목표 불량률 (1%)",
-            showarrow=True,
-            arrowhead=2,
-            arrowcolor="red",
-            arrowsize=1,
-            arrowwidth=1,
-            ax=-40,
-            ay=-30
-        )
-        
-        fig.update_layout(
-            title="최근 7일 불량률 트렌드",
-            xaxis_title="날짜",
-            yaxis_title="불량률 (%)",
-            margin=dict(l=20, r=20, t=40, b=20)
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 품질 지표 개선 트렌드
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>�� 품질 지표 개선 트렌드 (최근 8주)</div>", unsafe_allow_html=True)
-    
-    # 최근 8주 데이터
-    last_8_weeks = [(selected_date - timedelta(days=7*i)).strftime("%m/%d") for i in range(7, -1, -1)]
-    
-    # 불량률 트렌드 (임의 데이터)
-    defect_rates = np.array([1.8, 1.6, 1.4, 1.2, 1.0, 0.9, 0.8, 0.7])
-    
-    # 그래프 생성
-    fig = go.Figure()
-    
-    # 실제 불량률
-    fig.add_trace(go.Scatter(
-        x=last_8_weeks,
-        y=defect_rates,
-        mode='lines+markers',
-        name='불량률 추이',
-        line=dict(color='#4361ee', width=3),
-        marker=dict(size=8)
-    ))
-    
-    # 목표선
-    fig.add_trace(go.Scatter(
-        x=last_8_weeks,
-        y=[1.0] * len(last_8_weeks),
-        mode='lines',
-        name='목표 불량률',
-        line=dict(color='red', width=2, dash='dash')
-    ))
-    
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title="최근 8주 불량률 개선 추이",
-        xaxis_title="주차",
-        yaxis_title="불량률 (%)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=20, r=20, t=60, b=20),
-        hovermode="x"
-    )
-    
-    # 그래프 표시
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # 목표 달성 여부 표시
-    current_rate = defect_rates[-1]
-    if current_rate <= 1.0:
-        st.success(f"🎉 불량률 목표를 달성했습니다! (목표: 1%, 현재: {current_rate}%)")
-    else:
-        st.warning(f"⚠️ 불량률 목표를 달성하지 못했습니다. (목표: 1%, 현재: {current_rate}%)")
-        
-    st.markdown("</div>", unsafe_allow_html=True)
-
 elif st.session_state.page == "yearly_report":
-    st.markdown("<div class='title-area'><h1>📆 연간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    yearly_report()
     
-    # 연도 선택
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        selected_date = st.date_input("기준 날짜", datetime.now())
-    
-    # 연도 표시 카드
-    st.markdown(f"""
-    <div class='card'>
-        <div class='emoji-title'>📆 {selected_date.strftime('%Y년')} 품질 현황</div>
-        <span class='sub-text'>선택한 연도의 품질 데이터를 확인하세요</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 주요 품질 지표 (연간)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 연간 주요 품질 지표</div>", unsafe_allow_html=True)
-    st.markdown("<span class='sub-text'>선택한 연도의 종합 품질 지표 현황</span>", unsafe_allow_html=True)
-    
-    # 샘플 데이터
-    cols = st.columns(4)
-    with cols[0]:
-        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>연간 생산량</span></div>", unsafe_allow_html=True)
-        st.metric("", "145,678", "+12,345")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전년 대비 생산량이 증가했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>연간 평균 불량률</span></div>", unsafe_allow_html=True)
-        st.metric("", "0.5%", "-0.1%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전년 대비 불량률이 감소했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[2]:
-        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>불량 감소율</span></div>", unsafe_allow_html=True)
-        st.metric("", "8.2%", "+1.5%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>불량 개선율이 증가했습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[3]:
-        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center;'><span style='font-weight: bold;'>평균 생산성</span></div>", unsafe_allow_html=True)
-        st.metric("", "97.8%", "+0.7%")
-        st.markdown("<div style='text-align: center; padding-top: 5px;'>전년 대비 생산성이 향상되었습니다.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 일별 생산량 및 불량률 추이
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📊 일별 생산량 및 불량률 추이</div>", unsafe_allow_html=True)
-    
-    # 일별 데이터
-    year_days = [f"{selected_date.strftime('%m/%d')} ({datetime(selected_date.year, i, 1).strftime('%b')})" for i in range(1, 13)]
-    
-    # 일별 생산량 (랜덤 샘플 데이터)
-    production_data = np.random.randint(1000, 2000, len(year_days))
-    # 일별 불량수량 (랜덤 샘플 데이터)
-    defect_data = np.random.randint(0, 50, len(year_days))
-    # 불량률 계산
-    defect_rate = (defect_data / production_data * 100).round(2)
-    
-    # 복합 그래프 생성
-    fig = go.Figure()
-    
-    # 생산량 (막대 그래프)
-    fig.add_trace(go.Bar(
-        x=year_days,
-        y=production_data,
-        name="생산량",
-        marker_color="#4361ee",
-        opacity=0.7
-    ))
-    
-    # 불량률 (선 그래프)
-    fig.add_trace(go.Scatter(
-        x=year_days,
-        y=defect_rate,
-        mode='lines+markers',
-        name='불량률 (%)',
-        yaxis='y2',
-        line=dict(color='#fb8c00', width=3),
-        marker=dict(size=8)
-    ))
-    
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title="연간 일별 생산량 및 불량률 추이",
-        xaxis=dict(title="날짜"),
-        yaxis=dict(title="생산량 (개)"),
-        yaxis2=dict(
-            title="불량률 (%)",
-            overlaying="y",
-            side="right",
-            range=[0, max(defect_rate) * 1.5 if max(defect_rate) > 0 else 5]
-        ),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=20, r=20, t=60, b=20),
-        hovermode="x"
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 불량 발생 유형 분석
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>🔍 연간 불량 유형 분석</div>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # 불량 유형 분포 도넛 차트
-        defect_types = ["치수불량", "표면거칠기", "칩핑", "조립불량", "외관불량"]
-        defect_counts = np.random.randint(1, 10, len(defect_types))
-        
-        fig = px.pie(
-            values=defect_counts, 
-            names=defect_types, 
-            hole=0.6,
-            color_discrete_sequence=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"]
-        )
-        
-        fig.update_layout(
-            title="불량 유형 분포",
-            margin=dict(l=20, r=20, t=40, b=20)
-        )
-        
-        # 중앙에 총 불량 수 표시
-        total_defects = sum(defect_counts)
-        fig.add_annotation(
-            text=f"총 불량<br>{total_defects}건",
-            x=0.5, y=0.5,
-            font_size=15,
-            showarrow=False
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        # 불량률 모니터링 트렌드
-        # 최근 7일 데이터 (오늘 포함)
-        last_7_days = [selected_date - timedelta(days=i) for i in range(6, -1, -1)]
-        days_labels = [d.strftime("%m/%d") for d in last_7_days]
-        
-        # 일별 불량률 트렌드 (임의 데이터)
-        defect_rates = np.random.uniform(0.3, 1.5, 7).round(2)
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=days_labels,
-            y=defect_rates,
-            mode='lines+markers',
-            name='일별 불량률',
-            line=dict(color='#4cb782', width=3),
-            fill='tozeroy',
-            fillcolor='rgba(76, 183, 130, 0.1)'
-        ))
-        
-        # 목표선 추가
-        fig.add_shape(
-            type="line",
-            x0=days_labels[0],
-            y0=1.0,
-            x1=days_labels[-1],
-            y1=1.0,
-            line=dict(color="red", width=1, dash="dash"),
-        )
-        
-        # 목표선 주석
-        fig.add_annotation(
-            x=days_labels[1],
-            y=1.0,
-            text="목표 불량률 (1%)",
-            showarrow=True,
-            arrowhead=2,
-            arrowcolor="red",
-            arrowsize=1,
-            arrowwidth=1,
-            ax=-40,
-            ay=-30
-        )
-        
-        fig.update_layout(
-            title="최근 7일 불량률 트렌드",
-            xaxis_title="날짜",
-            yaxis_title="불량률 (%)",
-            margin=dict(l=20, r=20, t=40, b=20)
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 품질 지표 개선 트렌드
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📉 품질 지표 개선 트렌드 (최근 8주)</div>", unsafe_allow_html=True)
-    
-    # 최근 8주 데이터
-    last_8_weeks = [(selected_date - timedelta(days=7*i)).strftime("%m/%d") for i in range(7, -1, -1)]
-    
-    # 불량률 트렌드 (임의 데이터)
-    defect_rates = np.array([1.8, 1.6, 1.4, 1.2, 1.0, 0.9, 0.8, 0.7])
-    
-    # 그래프 생성
-    fig = go.Figure()
-    
-    # 실제 불량률
-    fig.add_trace(go.Scatter(
-        x=last_8_weeks,
-        y=defect_rates,
-        mode='lines+markers',
-        name='불량률 추이',
-        line=dict(color='#4361ee', width=3),
-        marker=dict(size=8)
-    ))
-    
-    # 목표선
-    fig.add_trace(go.Scatter(
-        x=last_8_weeks,
-        y=[1.0] * len(last_8_weeks),
-        mode='lines',
-        name='목표 불량률',
-        line=dict(color='red', width=2, dash='dash')
-    ))
-    
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title="최근 8주 불량률 개선 추이",
-        xaxis_title="주차",
-        yaxis_title="불량률 (%)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=20, r=20, t=60, b=20),
-        hovermode="x"
-    )
-    
-    # 그래프 표시
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # 목표 달성 여부 표시
-    current_rate = defect_rates[-1]
-    if current_rate <= 1.0:
-        st.success(f"🎉 불량률 목표를 달성했습니다! (목표: 1%, 현재: {current_rate}%)")
-    else:
-        st.warning(f"⚠️ 불량률 목표를 달성하지 못했습니다. (목표: 1%, 현재: {current_rate}%)")
-        
-    st.markdown("</div>", unsafe_allow_html=True)
-
 elif st.session_state.page == "input_inspection":
     st.title("검사 데이터 입력")
     
@@ -1781,7 +881,7 @@ elif st.session_state.page == "input_inspection":
             st.subheader("불량 정보 입력")
             
             col1, col2 = st.columns(2)
-            with col1:
+        with col1:
                 defect_type = st.selectbox("불량 유형", 
                     options=["치수", "표면거칠기", "칩핑", "기타"])
             
@@ -1811,7 +911,7 @@ elif st.session_state.page == "input_inspection":
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("총 불량 수량", f"{total_defects}개")
-            with col2:
+        with col2:
                 st.metric("불량률", f"{defect_rate:.2f}%")
                 
         # 불량 목록 초기화 버튼
@@ -1904,13 +1004,13 @@ elif st.session_state.page == "view_inspection":
             selected_row = df[df["inspection_id"] == inspection_id].iloc[0]
             
             col1, col2, col3 = st.columns(3)
-            with col1:
+        with col1:
                 st.metric("검사원", selected_row["inspector_name"])
                 st.metric("총 수량", f"{selected_row['total_quantity']}개")
-            with col2:
+        with col2:
                 st.metric("공정", selected_row["process"])
                 st.metric("불량 수량", f"{selected_row['defect_count']}개")
-            with col3:
+        with col3:
                 st.metric("검사일", selected_row["inspection_date"])
                 st.metric("불량률", f"{selected_row['defect_rate']}%")
                 
@@ -1953,10 +1053,10 @@ elif st.session_state.page == "manage_inspectors":
         st.subheader("새 검사원 등록")
         with st.form("new_inspector"):
             col1, col2 = st.columns(2)
-            with col1:
+        with col1:
                 inspector_id = st.text_input("검사원 ID")
                 name = st.text_input("이름")
-            with col2:
+        with col2:
                 department = st.selectbox("부서", options=["CNC_1", "CNC_2", "PQC_LINE", "CDC"])
                 process = st.selectbox("담당 공정", options=["선삭", "밀링", "검사", "기타"])
             
@@ -2028,3 +1128,668 @@ elif st.session_state.page == "settings":
     with col2:
         if st.button("테스트 데이터 생성"):
             st.info("테스트 데이터 생성 기능은 준비 중입니다.") 
+
+# 일간 리포트 페이지
+def daily_report():
+    st.markdown("<div class='title-area'><h1>📈 일간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 날짜 선택 기능
+    selected_date = st.date_input("날짜 선택", datetime.now())
+    
+    # 4개의 카드 레이아웃 생성
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="card">
+            <h3>불량률 일간 추이</h3>
+            <p>오늘의 시간대별 불량률 변화를 확인합니다.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 시간대별 불량률 차트 (예시 데이터)
+        hours = list(range(0, 24))
+        defect_rates = [1.2, 1.1, 0.8, 0.7, 0.9, 1.0, 1.3, 1.5, 1.8, 1.7, 1.6, 1.4, 
+                        1.3, 1.2, 1.4, 1.5, 1.6, 1.7, 1.5, 1.3, 1.1, 0.9, 0.8, 1.0]
+        
+        fig = px.line(x=hours, y=defect_rates, 
+                     labels={"x": "시간", "y": "불량률 (%)"},
+                     title="시간대별 불량률")
+        fig.update_layout(height=350)
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with col2:
+        st.markdown("""
+        <div class="card">
+            <h3>불량 유형 분석</h3>
+            <p>오늘 발생한 불량 유형별 비율입니다.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 불량 유형별 파이 차트 (예시 데이터)
+        defect_types = ["치수 불량", "표면 불량", "기능 불량", "기타"]
+        defect_counts = [45, 30, 15, 10]
+        
+        fig = px.pie(values=defect_counts, names=defect_types, 
+                    title="불량 유형 분포")
+        fig.update_layout(height=350)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    col3, col4 = st.columns(2)
+    
+    with col3:
+    st.markdown("""
+        <div class="card">
+            <h3>공정별 품질 지표</h3>
+            <p>각 공정별 품질 지표를 확인합니다.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+        # 공정별 불량률 막대 그래프 (예시 데이터)
+        processes = ["선삭", "밀링", "연삭", "조립", "검사"]
+        process_defect_rates = [1.5, 2.1, 0.8, 1.2, 0.5]
+        
+        fig = px.bar(x=processes, y=process_defect_rates,
+                    labels={"x": "공정", "y": "불량률 (%)"},
+                    title="공정별 불량률")
+        fig.update_layout(height=350)
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with col4:
+    st.markdown("""
+        <div class="card">
+            <h3>품질 개선 조치 현황</h3>
+            <p>일간 품질 개선 조치 현황을 확인합니다.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+        # 품질 개선 조치 현황 테이블 (예시 데이터)
+        data = {
+            "조치 내용": ["작업자 교육", "설비 점검", "공구 교체", "작업 방법 개선"],
+            "담당자": ["김철수", "이영희", "박지성", "최민수"],
+            "상태": ["완료", "진행중", "계획", "완료"]
+        }
+        df = pd.DataFrame(data)
+        st.dataframe(df, use_container_width=True, height=300)
+
+# 주간 리포트 페이지
+def weekly_report():
+    st.markdown("<div class='title-area'><h1>📆 주간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 주 선택 기능
+    today = datetime.now()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    st.subheader(f"{week_start.strftime('%Y-%m-%d')} ~ {week_end.strftime('%Y-%m-%d')}")
+    
+    # 주간 요약 지표
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+    st.markdown("""
+        <div class="metric-card">
+            <h3>주간 평균 불량률</h3>
+            <h2>1.23%</h2>
+            <p style="color: green">↓ 0.2% 전주 대비</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+        with col2:
+        st.markdown("""
+        <div class="metric-card">
+            <h3>주간 생산량</h3>
+            <h2>12,450개</h2>
+            <p style="color: green">↑ 5.2% 전주 대비</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="metric-card">
+            <h3>품질 조치건수</h3>
+            <h2>24건</h2>
+            <p style="color: red">↑ 3건 전주 대비</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+    st.markdown("""
+        <div class="metric-card">
+            <h3>고객 클레임</h3>
+            <h2>2건</h2>
+            <p style="color: green">↓ 1건 전주 대비</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # 주간 상세 분석
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["일별 추이", "제품별 분석", "품질 문제 요약"])
+    
+    with tab1:
+        # 일별 불량률 추이 (예시 데이터)
+        days = ["월", "화", "수", "목", "금", "토", "일"]
+        daily_defect_rates = [1.4, 1.2, 1.3, 1.1, 1.0, 0.9, 1.5]
+        daily_production = [2300, 2450, 2380, 2420, 2500, 200, 200]
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=days, 
+            y=daily_defect_rates,
+            mode='lines+markers',
+            name='불량률 (%)',
+            line=dict(color='red', width=2),
+            marker=dict(size=8)
+        ))
+        
+        fig.add_trace(go.Bar(
+            x=days,
+            y=daily_production,
+            name='생산량',
+            marker_color='lightblue',
+            opacity=0.7,
+            yaxis='y2'
+        ))
+        
+        fig.update_layout(
+            title='일별 생산량 및 불량률',
+            xaxis=dict(title='요일'),
+            yaxis=dict(title='불량률 (%)', range=[0, 2]),
+            yaxis2=dict(title='생산량', overlaying='y', side='right', range=[0, 3000]),
+            legend=dict(x=0.02, y=0.98),
+            height=400
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab2:
+        # 제품별 불량률 (예시 데이터)
+        products = ["A-1001", "B-2002", "C-3003", "D-4004", "E-5005"]
+        product_defect_rates = [1.8, 1.2, 0.7, 1.5, 2.1]
+        product_volumes = [3500, 2800, 1500, 2200, 2450]
+        
+        bubble_size = [v/100 for v in product_volumes]
+        
+        fig = px.scatter(
+            x=products,
+            y=product_defect_rates,
+            size=bubble_size,
+            color=product_defect_rates,
+            color_continuous_scale='RdYlGn_r',
+            labels={'x': '제품 모델', 'y': '불량률 (%)'},
+            title='제품별 불량률 및 생산량'
+        )
+        
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with tab3:
+        # 품질 문제 요약 (예시 데이터)
+        st.subheader("주요 품질 문제 및 조치사항")
+        
+        data = {
+            "문제 유형": ["치수 불량", "표면 스크래치", "조립 불량", "재료 결함", "기능 이상"],
+            "발생 건수": [32, 28, 15, 8, 12],
+            "영향 제품": ["A-1001, B-2002", "전 제품", "C-3003", "D-4004", "B-2002"],
+            "조치 상태": ["해결", "진행중", "해결", "조사중", "해결"],
+            "담당자": ["김철수", "이영희", "박지성", "최민수", "정동원"]
+        }
+        
+        df = pd.DataFrame(data)
+        st.dataframe(df, use_container_width=True)
+
+# 월간 리포트 페이지
+def monthly_report():
+    st.markdown("<div class='title-area'><h1>📅 월간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 월 선택 기능
+    current_month = datetime.now().replace(day=1)
+    months = []
+    month_labels = []
+    
+    for i in range(6):
+        month = current_month - timedelta(days=30*i)
+        months.append(month)
+        month_labels.append(month.strftime('%Y년 %m월'))
+    
+    selected_month = st.selectbox("월 선택", month_labels)
+    
+    # 월간 요약 차트
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("월간 품질 성과 요약")
+    
+    # 품질 KPI 달성도 게이지 차트
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number+delta",
+            value = 92,
+            title = {'text': "양품률 (%)"},
+            delta = {'reference': 90, 'increasing': {'color': "green"}},
+            gauge = {
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "green"},
+                'steps': [
+                    {'range': [0, 70], 'color': "red"},
+                    {'range': [70, 85], 'color': "orange"},
+                    {'range': [85, 100], 'color': "lightgreen"}
+                ],
+                'threshold': {
+                    'line': {'color': "black", 'width': 2},
+                    'thickness': 0.75,
+                    'value': 90
+                }
+            }
+        ))
+        fig.update_layout(height=250)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number+delta",
+            value = 85,
+            title = {'text': "납기 준수율 (%)"},
+            delta = {'reference': 90, 'decreasing': {'color': "red"}},
+            gauge = {
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "orange"},
+                'steps': [
+                    {'range': [0, 70], 'color': "red"},
+                    {'range': [70, 85], 'color': "orange"},
+                    {'range': [85, 100], 'color': "lightgreen"}
+                ],
+                'threshold': {
+                    'line': {'color': "black", 'width': 2},
+                    'thickness': 0.75,
+                    'value': 90
+                }
+            }
+        ))
+        fig.update_layout(height=250)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col3:
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number+delta",
+            value = 0.8,
+            title = {'text': "고객 클레임률 (%)"},
+            delta = {'reference': 1.0, 'decreasing': {'color': "green"}},
+            gauge = {
+                'axis': {'range': [0, 3]},
+                'bar': {'color': "green"},
+                'steps': [
+                    {'range': [0, 1], 'color': "lightgreen"},
+                    {'range': [1, 2], 'color': "orange"},
+                    {'range': [2, 3], 'color': "red"}
+                ],
+                'threshold': {
+                    'line': {'color': "black", 'width': 2},
+                    'thickness': 0.75,
+                    'value': 1.0
+                }
+            }
+        ))
+        fig.update_layout(height=250)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # 월간 트렌드 분석
+    st.subheader("월간 불량률 트렌드 분석")
+    
+    # 최근 6개월 불량률 트렌드 (예시 데이터)
+    months_trend = ["1월", "2월", "3월", "4월", "5월", "6월"]
+    defect_rate_trend = [1.8, 1.6, 1.4, 1.3, 1.2, 0.8]
+    target_line = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=months_trend,
+        y=defect_rate_trend,
+        mode='lines+markers',
+        name='실제 불량률',
+        line=dict(color='blue', width=3),
+        marker=dict(size=10)
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=months_trend,
+        y=target_line,
+        mode='lines',
+        name='목표 불량률',
+        line=dict(color='red', width=2, dash='dash')
+    ))
+    
+    fig.update_layout(
+        title="최근 6개월 불량률 추이",
+        xaxis_title="월",
+        yaxis_title="불량률 (%)",
+        legend=dict(y=0.99, x=0.01),
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # 월간 품질 개선 활동
+    st.subheader("품질 개선 활동 및 성과")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="card">
+            <h3>주요 품질 개선 활동</h3>
+            <ul>
+                <li>CNC 가공 정밀도 향상을 위한 설비 보정</li>
+                <li>품질 검사 프로세스 자동화 구축</li>
+                <li>작업자 품질 교육 프로그램 시행</li>
+                <li>공급업체 품질 관리 강화</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="card">
+            <h3>주요 개선 성과</h3>
+            <ul>
+                <li>치수 불량 30% 감소</li>
+                <li>표면 품질 불량 25% 감소</li>
+                <li>검사 공정 시간 40% 단축</li>
+                <li>재작업 비용 35% 절감</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+# 연간 리포트 페이지
+def yearly_report():
+    st.markdown("<div class='title-area'><h1>📚 연간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 연도 선택 기능
+    current_year = datetime.now().year
+    years = list(range(current_year-5, current_year+1))
+    selected_year = st.selectbox("연도 선택", years, index=5)
+    
+    # 연간 품질 성과 대시보드
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("연간 품질 성과 대시보드")
+    
+    # 주요 KPI 요약
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown("""
+        <div class="metric-card">
+            <h3>평균 불량률</h3>
+            <h2>0.92%</h2>
+            <p style="color: green">목표 대비 8% 개선</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="metric-card">
+            <h3>품질 조치건수</h3>
+            <h2>287건</h2>
+            <p style="color: orange">전년 대비 12% 증가</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="metric-card">
+            <h3>고객 품질 만족도</h3>
+            <h2>4.3/5.0</h2>
+            <p style="color: green">전년 대비 0.2점 향상</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("""
+        <div class="metric-card">
+            <h3>품질 비용</h3>
+            <h2>₩128M</h2>
+            <p style="color: green">전년 대비 7% 절감</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # 연간 불량률 추이
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # 분기별 불량률 히트맵 (예시 데이터)
+    quarters = ["Q1", "Q2", "Q3", "Q4"]
+    product_lines = ["A 라인", "B 라인", "C 라인", "D 라인", "E 라인"]
+    
+    # 히트맵용 데이터 생성 (예시)
+    heatmap_data = np.array([
+        [1.2, 1.0, 0.9, 0.7],
+        [1.5, 1.3, 1.2, 1.0],
+        [0.8, 0.7, 0.6, 0.5],
+        [1.8, 1.6, 1.4, 1.2],
+        [1.1, 1.0, 0.9, 0.8]
+    ])
+    
+    fig = px.imshow(
+        heatmap_data,
+        labels=dict(x="분기", y="생산 라인", color="불량률 (%)"),
+        x=quarters,
+        y=product_lines,
+        color_continuous_scale='RdYlGn_r',
+        title="생산 라인별 분기 불량률"
+    )
+    
+    fig.update_layout(height=400)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # 연간 품질 리스크 분석
+    st.subheader("품질 리스크 분석")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # 파레토 차트 (품질 문제 유형)
+        defect_types = ["치수 불량", "표면 스크래치", "조립 불량", "기능 불량", "재료 결함", "라벨링 오류", "포장 불량"]
+        defect_counts = [420, 350, 280, 190, 150, 120, 90]
+        cumulative_percent = np.cumsum(defect_counts) / np.sum(defect_counts) * 100
+        
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=defect_types,
+            y=defect_counts,
+            name="발생 건수",
+            marker_color="skyblue"
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=defect_types,
+            y=cumulative_percent,
+            name="누적 %",
+            marker=dict(color="red"),
+            mode="lines+markers",
+            yaxis="y2"
+        ))
+        
+        fig.update_layout(
+            title="품질 문제 유형별 파레토 분석",
+            xaxis_title="불량 유형",
+            yaxis_title="발생 건수",
+            yaxis2=dict(
+                title="누적 %",
+                overlaying="y",
+                side="right",
+                range=[0, 100]
+            ),
+            legend=dict(x=0.02, y=0.98),
+            height=400
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        # 품질 비용 분석
+        cost_categories = ["예방 비용", "평가 비용", "내부 실패 비용", "외부 실패 비용"]
+        cost_values = [35, 42, 30, 21]
+        cost_colors = ["green", "blue", "orange", "red"]
+        
+        fig = px.pie(
+            values=cost_values, 
+            names=cost_categories,
+            color=cost_categories,
+            color_discrete_sequence=cost_colors,
+            title="품질 비용 분석"
+        )
+        
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # 연간 품질 개선 성과
+    st.subheader("품질 개선 성과 및 다음 해 계획")
+    
+    tab1, tab2 = st.tabs(["주요 성과", "다음 해 계획"])
+    
+    with tab1:
+        st.markdown("""
+        <div class="card">
+            <h3>품질 개선 주요 성과</h3>
+            <ol>
+                <li><strong>공정 자동화 시스템 도입</strong>: CNC 가공 공정 자동화를 통해 품질 안정성 30% 향상</li>
+                <li><strong>품질 관리 시스템 고도화</strong>: 실시간 품질 모니터링 시스템 구축으로 불량 조기 감지 능력 강화</li>
+                <li><strong>공급업체 품질 관리 프로그램</strong>: 핵심 공급업체에 대한 품질 인증 프로그램을 통해 원자재 불량 25% 감소</li>
+                <li><strong>직원 역량 강화 프로그램</strong>: 품질 관련 교육 프로그램 시행으로 인적 오류 20% 감소</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with tab2:
+        st.markdown("""
+        <div class="card">
+            <h3>다음 해 품질 개선 계획</h3>
+            <ol>
+                <li><strong>AI 기반 품질 예측 모델 도입</strong>: 불량 예측 및 예방 시스템 구축</li>
+                <li><strong>디지털 트윈 기술 적용</strong>: 가상 시뮬레이션을 통한 품질 문제 사전 검증</li>
+                <li><strong>글로벌 품질 표준 인증 획득</strong>: ISO 9001:2015 및 산업별 특화 인증 확대</li>
+                <li><strong>친환경 생산 프로세스 도입</strong>: 환경 영향 최소화 및 지속가능한 품질 관리 체계 구축</li>
+                <li><strong>품질 비용 최적화 프로그램</strong>: 예방 활동 강화를 통한 실패 비용 최소화</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+
+def dashboard():
+    st.title("📊 종합 대시보드")
+    st.subheader("실시간 품질 현황 및 주요 지표")
+    
+    # 현재 날짜 표시
+    current_date = datetime.now().strftime("%Y년 %m월 %d일")
+    st.write(f"최종 업데이트: {current_date}")
+    
+    # 주요 KPI 지표 (4개 카드)
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(label="현재 불량률", value="1.2%", delta="-0.3%")
+    
+    with col2:
+        st.metric(label="일일 생산량", value="2,450개", delta="125개")
+    
+    with col3:
+        st.metric(label="품질 점수", value="94.5점", delta="2.1점")
+    
+    with col4:
+        st.metric(label="대응중인 이슈", value="3건", delta="-2건")
+    
+    # 실시간 모니터링 (2개 차트)
+    st.subheader("실시간 공정 모니터링")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # 공정별 품질 상태
+        processes = ["절단 공정", "가공 공정", "조립 공정", "도장 공정", "포장 공정"]
+        status = ["정상", "정상", "주의", "정상", "정상"]
+        status_color = {"정상": "#28a745", "주의": "#ffc107", "경고": "#dc3545"}
+        
+        status_df = pd.DataFrame({
+            "공정": processes,
+            "상태": status
+        })
+        
+        # 상태별 색상 지정
+        fig = go.Figure(data=[go.Table(
+            header=dict(values=["공정", "상태"],
+                        fill_color="#f8f9fa",
+                        align="center"),
+            cells=dict(values=[status_df["공정"], status_df["상태"]],
+                      fill_color=[[status_color.get(s, "#ffffff") for s in status_df["상태"]]],
+                      align="center"))
+        ])
+        
+        fig.update_layout(margin=dict(l=0, r=0, t=10, b=0), height=250)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        # 시간대별 불량률 추이
+        hours = list(range(8, 18))
+        defect_rates = [1.4, 1.3, 1.2, 1.5, 1.1, 1.3, 1.7, 1.4, 1.2, 1.0]
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=hours, y=defect_rates, mode='lines+markers', 
+                                name='불량률', line=dict(color='royalblue', width=3)))
+        
+        fig.update_layout(
+            title='시간대별 불량률 변화',
+            xaxis_title='시간',
+            yaxis_title='불량률(%)',
+            yaxis=dict(range=[0.8, 2.0]),
+            height=250,
+            margin=dict(l=0, r=0, t=40, b=0)
+        )
+        
+        # 경계선 추가
+        fig.add_shape(type="line",
+            x0=8, y0=1.5, x1=17, y1=1.5,
+            line=dict(color="red", width=1, dash="dot"),
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 품질 문제 요약
+    st.subheader("주요 품질 이슈 및 조치 현황")
+    
+    issues = [
+        {"이슈": "조립 공정 체결력 불량", "발생일": "2023-05-22", "상태": "대응중", "담당자": "김품질", "조치내용": "조립 장비 캘리브레이션 진행중"},
+        {"이슈": "도장 공정 색상 불일치", "발생일": "2023-05-21", "상태": "대응중", "담당자": "박공정", "조치내용": "도료 공급업체 컨택 및 샘플 테스트 진행"},
+        {"이슈": "포장재 파손", "발생일": "2023-05-20", "상태": "대응중", "담당자": "이포장", "조치내용": "포장 자재 변경 및 취급 방법 개선 중"},
+        {"이슈": "원자재 규격 이탈", "발생일": "2023-05-18", "상태": "완료", "담당자": "최자재", "조치내용": "공급업체 품질 회의 완료 및 개선 확인"},
+        {"이슈": "측정 장비 오차", "발생일": "2023-05-15", "상태": "완료", "담당자": "정측정", "조치내용": "장비 재교정 완료 및 측정 시스템 분석 실시"}
+    ]
+    
+    issues_df = pd.DataFrame(issues)
+    
+    # 테이블 색상 스타일링 함수
+    def highlight_status(s):
+        return ['background-color: #28a745; color: white' if v == '완료' else 'background-color: #ffc107; color: black' if v == '대응중' else '' for v in s]
+    
+    # 스타일이 적용된 테이블 표시
+    st.dataframe(issues_df.style.apply(highlight_status, subset=['상태']), height=300)
+
+# 페이지 선택에 따른 함수 호출
+if selected_option == "👨‍💼 사용자 관리":
+    user_management()
+elif selected_option == "👷 작업자 등록 및 관리":
+    worker_registration()
+elif selected_option == "🧪 자재 및 변수 관리":
+    material_management()
+elif selected_option == "📋 작업 지시 관리":
+    work_order_management()
+elif selected_option == "🔧 설비 관리":
+    equipment_management()
+elif selected_option == "📊 종합 대시보드":
+    dashboard()
+elif selected_option == "📈 일간 품질리포트":
+    daily_report()
+elif selected_option == "📆 주간 품질리포트":
+    weekly_report()
+elif selected_option == "📅 월간 품질리포트":
+    monthly_report()
+elif selected_option == "📚 연간 품질리포트":
+    yearly_report()
+else:
+    st.write("페이지를 선택해주세요.")
