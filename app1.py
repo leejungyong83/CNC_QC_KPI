@@ -216,23 +216,39 @@ try:
     # Streamlit Cloud에서 secrets를 사용하는 경우
     supabase_url = st.secrets["supabase"]["url"]
     supabase_key = st.secrets["supabase"]["key"]
-except KeyError:
+except:
     # 로컬 개발 또는 secrets가 설정되지 않은 경우
     supabase_url = "https://czfvtkbndsfoznmknwsx.supabase.co"
     supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
 
-# Supabase 클라이언트 생성 - 최신 버전 호환성 고려
+# Supabase 클라이언트 생성
 try:
+    from supabase import create_client, Client
     supabase: Client = create_client(supabase_url, supabase_key)
-except TypeError:
-    # 이전 버전 호환성을 위한 대체 방법
-    import httpx
-    from supabase._sync.client import SyncClient
-    supabase = SyncClient(
-        supabase_url=supabase_url,
-        supabase_key=supabase_key,
-        http_client=httpx.Client()
-    )
+except Exception as e:
+    print(f"Supabase 클라이언트 생성 중 오류: {str(e)}")
+    # 대체 방법 시도
+    try:
+        import httpx
+        from supabase.lib.client_options import ClientOptions
+        from supabase._sync.client import SyncClient
+        
+        options = ClientOptions(
+            schema='public',
+            headers={},
+            auto_refresh_token=True,
+            persist_session=True,
+            storage_key='supabase.auth.token',
+        )
+        
+        supabase = SyncClient(
+            supabase_url=supabase_url,
+            supabase_key=supabase_key,
+            options=options,
+        )
+    except Exception as e:
+        print(f"대체 Supabase 클라이언트 생성 중 오류: {str(e)}")
+        st.error("데이터베이스 연결에 실패했습니다. 관리자에게 문의하세요.")
 
 # 데이터 파일 경로 설정
 if 'data_path' in st.secrets.get('database', {}):
