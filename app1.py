@@ -14,10 +14,9 @@ import httpx
 
 # Supabase 초기화
 try:
-    # Streamlit Cloud에서는 st.secrets.supabase.url 형식으로 접근
-    # 로컬에서는 하드코딩된 값 사용
-    supabase_url = st.secrets.get("supabase", {}).get("url", "https://czfvtkbndsfoznmknwsx.supabase.co")
-    supabase_key = st.secrets.get("supabase", {}).get("key", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE")
+    # Streamlit Cloud의 secrets.toml에 저장된 [supabase] 섹션 사용
+    supabase_url = st.secrets["supabase"]["url"]
+    supabase_key = st.secrets["supabase"]["key"]
     
     # Supabase 클라이언트 생성 (매개변수 이름을 명시적으로 지정)
     supabase: Client = create_client(supabase_url=supabase_url, supabase_key=supabase_key)
