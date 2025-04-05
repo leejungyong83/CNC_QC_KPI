@@ -13,23 +13,13 @@ import threading
 
 # Supabase 초기화
 try:
-    supabase_url = st.secrets["supabase"]["url"]
-    supabase_key = st.secrets["supabase"]["key"]
-except KeyError:
-    st.error("Supabase 연결 정보가 설정되지 않았습니다. Streamlit Cloud의 Secrets 설정을 확인해주세요.")
-    st.stop()
-
-# Supabase 클라이언트 생성 (options 매개변수 추가)
-try:
-    options = {
-        'headers': {
-            'Authorization': f'Bearer {supabase_key}',
-            'apikey': supabase_key
-        },
-        'autoRefreshToken': False,
-        'persistSession': False
-    }
-    supabase: Client = create_client(supabase_url, supabase_key, options=options)
+    # 직접 URL과 키를 지정
+    supabase_url = "https://czfvtkbndsfoznmknwsx.supabase.co"
+    supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
+    
+    # Supabase 클라이언트 생성
+    supabase = create_client(supabase_url, supabase_key)
+    
 except Exception as e:
     st.error(f"데이터베이스 연결에 실패했습니다: {str(e)}")
     st.stop()
@@ -891,3 +881,17 @@ elif st.session_state.page == "settings":
     with col2:
         if st.button("테스트 데이터 생성"):
             st.info("테스트 데이터 생성 기능은 준비 중입니다.") 
+
+# 로컬에서 테스트용 코드
+from supabase import create_client
+
+url = "your-supabase-url"
+key = "your-supabase-key"
+
+try:
+    supabase = create_client(url, key)
+    # 간단한 쿼리 테스트
+    response = supabase.table('inspectors').select("*").execute()
+    print("연결 성공:", response)
+except Exception as e:
+    print("연결 실패:", str(e)) 
