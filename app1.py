@@ -14,12 +14,12 @@ import httpx
 
 # Supabase 초기화
 try:
-    # Streamlit Cloud의 secrets.toml에 저장된 [supabase] 섹션 사용
-    supabase_url = st.secrets["supabase"]["url"]
-    supabase_key = st.secrets["supabase"]["key"]
+    # 하드코딩된 값 사용
+    supabase_url = "https://czfvtkbndsfoznmknwsx.supabase.co"
+    supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
     
-    # Supabase 클라이언트 생성 (매개변수 이름을 명시적으로 지정)
-    supabase: Client = create_client(supabase_url=supabase_url, supabase_key=supabase_key)
+    # 매개변수 이름 없이 직접 값만 전달
+    supabase = create_client(supabase_url, supabase_key)
     
 except Exception as e:
     st.error(f"데이터베이스 연결에 실패했습니다: {str(e)}")
