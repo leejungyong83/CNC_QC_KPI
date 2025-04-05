@@ -14,12 +14,13 @@ import httpx
 
 # Supabase 초기화
 try:
-    # 직접 URL과 키를 지정
-    supabase_url = "https://czfvtkbndsfoznmknwsx.supabase.co"
-    supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
+    supabase_url = st.secrets["SUPABASE_URL"]
+    supabase_key = st.secrets["SUPABASE_KEY"]
     
-    # Supabase 클라이언트 생성 (옵션 제거)
-    supabase: Client = create_client(supabase_url, supabase_key)
+    supabase: Client = create_client(
+        supabase_url=supabase_url,
+        supabase_key=supabase_key
+    )
     
 except Exception as e:
     st.error(f"데이터베이스 연결에 실패했습니다: {str(e)}")
