@@ -18,8 +18,8 @@ try:
     supabase_url = "https://czfvtkbndsfoznmknwsx.supabase.co"
     supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
     
-    # Supabase 클라이언트 생성 (단순화된 버전)
-    supabase = create_client(supabase_url, supabase_key)
+    # Supabase 클라이언트 생성 (옵션 제거)
+    supabase: Client = create_client(supabase_url, supabase_key)
     
 except Exception as e:
     st.error(f"데이터베이스 연결에 실패했습니다: {str(e)}")
