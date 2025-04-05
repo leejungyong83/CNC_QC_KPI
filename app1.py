@@ -19,9 +19,17 @@ except KeyError:
     st.error("Supabase 연결 정보가 설정되지 않았습니다. Streamlit Cloud의 Secrets 설정을 확인해주세요.")
     st.stop()
 
-# Supabase 클라이언트 생성
+# Supabase 클라이언트 생성 (options 매개변수 추가)
 try:
-    supabase: Client = create_client(supabase_url, supabase_key)
+    options = {
+        'headers': {
+            'Authorization': f'Bearer {supabase_key}',
+            'apikey': supabase_key
+        },
+        'autoRefreshToken': False,
+        'persistSession': False
+    }
+    supabase: Client = create_client(supabase_url, supabase_key, options=options)
 except Exception as e:
     st.error(f"데이터베이스 연결에 실패했습니다: {str(e)}")
     st.stop()
