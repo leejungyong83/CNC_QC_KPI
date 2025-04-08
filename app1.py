@@ -373,19 +373,37 @@ with lang_col2:
 # 현재 선택된 언어의 번역 가져오기
 curr_lang = TRANSLATIONS[st.session_state.language]
 
-# 페이지 네비게이션
-pages = {
-    "대시보드": "dashboard",
-    "검사 데이터 입력": "input_inspection",
-    "검사 데이터 조회": "view_inspection",
-}
+# 메뉴 페이지 정의
+if 'page' not in st.session_state:
+    st.session_state.page = "total_dashboard"
 
-if st.session_state.user_role == "관리자":
-    pages["검사원 관리"] = "manage_inspectors"
-    pages["시스템 설정"] = "settings"
+# 관리자 메뉴 섹션
+st.sidebar.markdown(f"### {curr_lang['menu_groups']['admin']}")
+admin_menu = curr_lang['admin_menu']
+selected_admin = st.sidebar.radio(
+    label="",
+    options=list(admin_menu.keys()),
+    format_func=lambda x: admin_menu[x],
+    key="admin_menu", 
+    index=0
+)
 
-selected_page = st.sidebar.radio("메뉴", list(pages.keys()))
-st.session_state.page = pages[selected_page]
+# 리포트 메뉴 섹션
+st.sidebar.markdown(f"### {curr_lang['menu_groups']['report']}")
+report_menu = curr_lang['report_menu']
+selected_report = st.sidebar.radio(
+    label="",
+    options=list(report_menu.keys()),
+    format_func=lambda x: report_menu[x],
+    key="report_menu",
+    index=0
+)
+
+# 선택된 메뉴에 따라 페이지 상태 업데이트
+if selected_admin in admin_menu:
+    st.session_state.page = selected_admin
+elif selected_report in report_menu:
+    st.session_state.page = selected_report
 
 # 검사원 정보 가져오기
 def load_inspectors():
@@ -429,7 +447,7 @@ if 'registered_defects' not in st.session_state:
     st.session_state.registered_defects = []
 
 # 현재 페이지에 따라 다른 내용 표시
-if st.session_state.page == "dashboard":
+if st.session_state.page == "total_dashboard":
     # 상단 헤더 섹션
     st.markdown("<div class='title-area'><h1>🏭 CNC 품질관리 시스템 - 대시보드</h1></div>", unsafe_allow_html=True)
     
@@ -929,4 +947,793 @@ elif st.session_state.page == "settings":
             st.info("데이터베이스 백업 기능은 준비 중입니다.")
     with col2:
         if st.button("테스트 데이터 생성"):
-            st.info("테스트 데이터 생성 기능은 준비 중입니다.") 
+            st.info("테스트 데이터 생성 기능은 준비 중입니다.")
+
+elif st.session_state.page == "daily_report":
+    # 일간 리포트 페이지
+    st.markdown("<div class='title-area'><h1>📊 일간 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 날짜 선택
+    selected_date = st.date_input("📅 조회할 날짜 선택", datetime.now())
+    
+    # 데이터 로딩 표시
+    with st.spinner("데이터 불러오는 중..."):
+        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+        
+    # 일간 요약 지표
+    st.subheader("일간 품질 요약")
+    
+    # 4개의 주요 지표 카드
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
+        st.metric("당일 검사 건수", "28", "+3")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
+        st.metric("당일 불량률", "0.65%", "-0.1%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
+        st.metric("주요 불량 유형", "표면거칠기", "")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col4:
+        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
+        st.metric("평균 검사 시간", "8.2분", "-0.5분")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 시간대별 검사 추이
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>⏰ 시간대별 검사 건수</div>", unsafe_allow_html=True)
+    
+    # 시간대별 데이터 준비
+    hours = list(range(9, 18))  # 9시부터 17시까지
+    hourly_inspections = np.random.randint(3, 15, size=len(hours))
+    
+    # 시간대별 검사 건수 차트
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=[f"{h}:00" for h in hours],
+        y=hourly_inspections,
+        marker_color="#4361ee",
+        hovertemplate='시간: %{x}<br>검사 건수: %{y}건<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        title=None,
+        xaxis_title="시간",
+        yaxis_title="검사 건수",
+        margin=dict(l=20, r=20, t=10, b=20),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.05)")
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 불량 발생 현황
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>🔍 불량 발생 현황</div>", unsafe_allow_html=True)
+    
+    # 불량 타입별 데이터
+    defect_types = ["치수 불량", "표면 거칠기", "칩핑", "기타"]
+    defect_counts = np.random.randint(1, 8, size=len(defect_types))
+    
+    # 차트
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        # 막대 그래프
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=defect_types,
+            y=defect_counts,
+            orientation='h',
+            marker_color=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"],
+            hovertemplate='유형: %{y}<br>건수: %{x}건<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title=None,
+            xaxis_title="발생 건수",
+            margin=dict(l=20, r=20, t=10, b=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=300
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col2:
+        # 불량 요약 통계
+        total_defects = sum(defect_counts)
+        total_inspected = sum(hourly_inspections)
+        defect_rate = (total_defects / total_inspected) * 100
+        
+        st.markdown("<div style='text-align: center; padding: 20px;'>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='font-size: 24px;'>총 불량 건수</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='font-size: 36px; color: #4361ee;'>{total_defects}건</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='font-size: 18px;'>불량률: {defect_rate:.2f}%</h3>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 불량 세부 테이블
+    defect_details = {
+        "시간": [f"{np.random.choice(hours)}:00" for _ in range(total_defects)],
+        "LOT번호": [f"LOT{i:04d}" for i in range(1, total_defects + 1)],
+        "불량유형": np.random.choice(defect_types, total_defects),
+        "불량수량": np.random.randint(1, 5, total_defects)
+    }
+    
+    defect_df = pd.DataFrame(defect_details)
+    st.dataframe(defect_df, use_container_width=True, hide_index=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+elif st.session_state.page == "weekly_report":
+    # 주간 리포트 페이지
+    st.markdown("<div class='title-area'><h1>📅 주간 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 주간 선택기
+    today = datetime.now()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        week_start = st.date_input("📅 주간 시작일", start_of_week)
+    with col2:
+        week_end = st.date_input("📅 주간 종료일", end_of_week)
+    
+    # 데이터 로딩 표시
+    with st.spinner("주간 데이터 불러오는 중..."):
+        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+    
+    # 주간 요약 지표
+    st.subheader("주간 품질 요약")
+    
+    # 주요 지표 카드
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
+        st.metric("주간 검사 건수", "143", "+12")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
+        st.metric("주간 불량률", "0.72%", "-0.08%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
+        st.metric("주요 불량 유형", "치수불량", "")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col4:
+        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
+        st.metric("주간 목표 달성", "95.2%", "+2.1%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 일별 추이 차트
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>📈 일별 검사 및 불량 추이</div>", unsafe_allow_html=True)
+    
+    # 요일 데이터
+    weekdays = ["월", "화", "수", "목", "금", "토", "일"]
+    inspections = np.random.randint(15, 35, size=7)
+    defect_rates = np.random.rand(7) * 1.5  # 0~1.5% 사이의 불량률
+    
+    # 이중 Y축 차트
+    fig = go.Figure()
+    
+    # 첫 번째 Y축: 검사 건수 (막대)
+    fig.add_trace(go.Bar(
+        x=weekdays,
+        y=inspections,
+        name="검사 건수",
+        marker_color="#4361ee",
+        yaxis="y",
+        hovertemplate='%{x}요일<br>검사 건수: %{y}건<extra></extra>',
+        opacity=0.8
+    ))
+    
+    # 두 번째 Y축: 불량률 (선)
+    fig.add_trace(go.Scatter(
+        x=weekdays,
+        y=defect_rates,
+        name="불량률",
+        marker=dict(size=8),
+        line=dict(color="#fb8c00", width=3),
+        mode="lines+markers",
+        yaxis="y2",
+        hovertemplate='%{x}요일<br>불량률: %{y:.2f}%<extra></extra>'
+    ))
+    
+    # 목표 불량률 라인
+    target_rate = 1.0
+    fig.add_trace(go.Scatter(
+        x=weekdays,
+        y=[target_rate] * 7,
+        name="목표 불량률",
+        line=dict(color="red", width=2, dash="dash"),
+        mode="lines",
+        yaxis="y2",
+        hovertemplate='목표 불량률: %{y}%<extra></extra>'
+    ))
+    
+    # 레이아웃 설정
+    fig.update_layout(
+        title=None,
+        xaxis=dict(title="요일"),
+        yaxis=dict(
+            title="검사 건수",
+            side="left",
+            showgrid=False
+        ),
+        yaxis2=dict(
+            title="불량률 (%)",
+            side="right",
+            overlaying="y",
+            showgrid=False,
+            range=[0, max(defect_rates) * 1.2]  # Y축 범위 설정
+        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=20, r=60, t=10, b=20),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        hovermode="x unified"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 불량 유형 및 공정별 분석
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # 불량 유형 분석
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>🔍 불량 유형 분석</div>", unsafe_allow_html=True)
+        
+        # 불량 유형별 데이터
+        defect_types = ["치수 불량", "표면 거칠기", "칩핑", "기타"]
+        defect_counts = np.random.randint(5, 20, size=len(defect_types))
+        
+        # 수평 막대 그래프
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            y=defect_types,
+            x=defect_counts,
+            orientation='h',
+            marker_color=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"],
+            hovertemplate='유형: %{y}<br>건수: %{x}건<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title=None,
+            xaxis_title="발생 건수",
+            margin=dict(l=20, r=20, t=10, b=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=300
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col2:
+        # 공정별 불량률
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>⚙️ 공정별 불량률</div>", unsafe_allow_html=True)
+        
+        # 공정별 데이터
+        processes = ["선삭", "밀링", "연삭", "조립"]
+        process_rates = np.random.rand(len(processes)) * 1.8  # 0~1.8% 불량률
+        
+        # 공정별 불량률 차트
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=processes,
+            y=process_rates,
+            marker_color="#4cb782",
+            hovertemplate='공정: %{x}<br>불량률: %{y:.2f}%<extra></extra>'
+        ))
+        
+        # 평균 불량률 라인
+        avg_rate = np.mean(process_rates)
+        fig.add_trace(go.Scatter(
+            x=processes,
+            y=[avg_rate] * len(processes),
+            mode="lines",
+            name="평균",
+            line=dict(color="#fb8c00", width=2, dash="dash"),
+            hovertemplate='평균 불량률: %{y:.2f}%<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title=None,
+            xaxis_title="공정",
+            yaxis_title="불량률 (%)",
+            margin=dict(l=20, r=20, t=10, b=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=300,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 주간 검사 데이터 테이블
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>📋 주간 검사 데이터 요약</div>", unsafe_allow_html=True)
+    
+    # 샘플 데이터
+    weekly_data = {
+        "요일": weekdays,
+        "검사 건수": inspections,
+        "불량 건수": [int(rate * inspection / 100) for rate, inspection in zip(defect_rates, inspections)],
+        "불량률 (%)": defect_rates.round(2),
+        "주요 불량 유형": np.random.choice(defect_types, size=7)
+    }
+    
+    weekly_df = pd.DataFrame(weekly_data)
+    st.dataframe(weekly_df, use_container_width=True, hide_index=True)
+    
+    # 주간 요약 통계
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        avg_inspection = int(np.mean(inspections))
+        st.metric("📊 평균 일일 검사 건수", f"{avg_inspection}건")
+    with col2:
+        avg_defect_rate = np.mean(defect_rates)
+        st.metric("⚠️ 평균 불량률", f"{avg_defect_rate:.2f}%")
+    with col3:
+        total_inspections = sum(inspections)
+        st.metric("📈 총 검사 건수", f"{total_inspections}건")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+elif st.session_state.page == "monthly_report":
+    # 월간 리포트 페이지
+    st.markdown("<div class='title-area'><h1>📆 월간 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 월 선택
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_year = st.selectbox("연도 선택", options=list(range(current_year-2, current_year+1)), index=2)
+    with col2:
+        selected_month = st.selectbox("월 선택", options=list(range(1, 13)), index=current_month-1)
+    
+    # 선택된 월의 문자열 표현
+    month_names = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+    selected_month_name = month_names[selected_month-1]
+    
+    # 데이터 로딩 표시
+    with st.spinner(f"{selected_year}년 {selected_month_name} 데이터 불러오는 중..."):
+        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+    
+    # 월간 요약 지표
+    st.subheader(f"{selected_year}년 {selected_month_name} 품질 요약")
+    
+    # 주요 지표 카드
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
+        st.metric("월간 검사 건수", "587", "+23")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
+        st.metric("월간 불량률", "0.68%", "-0.12%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
+        st.metric("주요 불량 유형", "표면거칠기", "")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col4:
+        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
+        st.metric("월간 목표 달성", "97.8%", "+1.5%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 월간 추이 차트
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>📈 일별 불량률 추이</div>", unsafe_allow_html=True)
+    
+    # 선택된 월의 일수 계산
+    import calendar
+    days_in_month = calendar.monthrange(selected_year, selected_month)[1]
+    
+    # 일자 데이터
+    days = list(range(1, days_in_month + 1))
+    # 불량률 데이터 (평균 0.7% 주변에서 랜덤 변동)
+    daily_defect_rates = [0.7 + (np.random.rand() - 0.5) / 2 for _ in range(days_in_month)]
+    
+    # 차트 생성
+    fig = go.Figure()
+    
+    # 불량률 라인
+    fig.add_trace(go.Scatter(
+        x=days,
+        y=daily_defect_rates,
+        mode="lines+markers",
+        name="일별 불량률",
+        line=dict(color="#4361ee", width=2),
+        marker=dict(size=6),
+        hovertemplate='%{x}일<br>불량률: %{y:.2f}%<extra></extra>'
+    ))
+    
+    # 평균 불량률 라인
+    avg_rate = np.mean(daily_defect_rates)
+    fig.add_trace(go.Scatter(
+        x=[days[0], days[-1]],
+        y=[avg_rate, avg_rate],
+        mode="lines",
+        name="평균 불량률",
+        line=dict(color="#4cb782", width=2, dash="dash"),
+        hovertemplate='평균 불량률: %{y:.2f}%<extra></extra>'
+    ))
+    
+    # 목표 불량률 라인
+    target_rate = 1.0
+    fig.add_trace(go.Scatter(
+        x=[days[0], days[-1]],
+        y=[target_rate, target_rate],
+        mode="lines",
+        name="목표 불량률",
+        line=dict(color="red", width=2, dash="dot"),
+        hovertemplate='목표 불량률: %{y:.2f}%<extra></extra>'
+    ))
+    
+    # 레이아웃 설정
+    fig.update_layout(
+        title=None,
+        xaxis=dict(
+            title="일자",
+            tickmode='linear',
+            tick0=1,
+            dtick=3,  # 3일 간격으로 표시
+        ),
+        yaxis=dict(
+            title="불량률 (%)",
+            range=[0, max(daily_defect_rates) * 1.5]  # Y축 범위 설정
+        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=20, r=20, t=10, b=20),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        hovermode="x unified"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 공정 및 불량 분석
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # 공정별 불량률 비교
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>⚙️ 공정별 불량률 비교</div>", unsafe_allow_html=True)
+        
+        # 공정별 데이터
+        processes = ["선삭", "밀링", "연삭", "드릴링", "조립"]
+        process_inspections = np.random.randint(80, 150, size=len(processes))
+        process_defect_rates = np.random.rand(len(processes)) * 1.5  # 0~1.5% 불량률
+        
+        # 공정별 불량률 및 검사 건수를 함께 표시하는 차트
+        process_df = pd.DataFrame({
+            "공정": processes,
+            "검사건수": process_inspections,
+            "불량률": process_defect_rates
+        })
+        
+        # 검사건수에 비례한 버블 크기로 표시
+        fig = px.scatter(
+            process_df,
+            x="공정",
+            y="불량률",
+            size="검사건수",
+            color="공정",
+            size_max=50,
+            hover_name="공정",
+            hover_data={"공정": False, "검사건수": True, "불량률": ":.2f%"},
+            color_discrete_sequence=px.colors.qualitative.Set2
+        )
+        
+        fig.update_layout(
+            title=None,
+            xaxis_title=None,
+            yaxis_title="불량률 (%)",
+            showlegend=False,
+            margin=dict(l=20, r=20, t=10, b=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=320
+        )
+        
+        # 불량률의 평균선 추가
+        avg_process_rate = np.mean(process_defect_rates)
+        fig.add_shape(
+            type="line",
+            x0=-0.5, y0=avg_process_rate,
+            x1=len(processes)-0.5, y1=avg_process_rate,
+            line=dict(color="#4cb782", width=2, dash="dash")
+        )
+        
+        fig.add_annotation(
+            x=processes[1],
+            y=avg_process_rate,
+            text=f"평균: {avg_process_rate:.2f}%",
+            showarrow=False,
+            yshift=10,
+            font=dict(size=12, color="#4cb782")
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col2:
+        # 불량 유형 분포
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>🔍 불량 유형 분포</div>", unsafe_allow_html=True)
+        
+        # 불량 유형별 데이터
+        defect_types = ["치수 불량", "표면 거칠기", "칩핑", "소재 결함", "조립 불량", "기타"]
+        defect_percents = np.random.rand(len(defect_types))
+        defect_percents = (defect_percents / defect_percents.sum()) * 100  # 백분율로 변환
+        
+        # 불량 유형 파이 차트
+        fig = go.Figure(data=[go.Pie(
+            labels=defect_types,
+            values=defect_percents,
+            hole=.4,
+            textinfo="percent+label",
+            insidetextorientation="radial",
+            marker=dict(colors=px.colors.qualitative.Bold),
+            hovertemplate='%{label}<br>비율: %{percent}<extra></extra>'
+        )])
+        
+        fig.update_layout(
+            title=None,
+            margin=dict(l=20, r=20, t=10, b=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=320,
+            showlegend=False
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 주별 성능 추이
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>📊 주별 성능 추이</div>", unsafe_allow_html=True)
+    
+    # 주차 데이터 (보통 한 달에 4-5주)
+    weeks = [f"{selected_month}월 1주차", f"{selected_month}월 2주차", 
+            f"{selected_month}월 3주차", f"{selected_month}월 4주차"]
+    if days_in_month > 28:
+        weeks.append(f"{selected_month}월 5주차")
+    
+    # 주별 검사 건수 및 불량률
+    weekly_inspections = np.random.randint(120, 180, size=len(weeks))
+    weekly_defect_rates = np.random.rand(len(weeks)) * 1.2  # 0~1.2% 불량률
+    
+    # 복합 차트 (막대 + 선)
+    fig = go.Figure()
+    
+    # 검사 건수 (막대)
+    fig.add_trace(go.Bar(
+        x=weeks,
+        y=weekly_inspections,
+        name="검사 건수",
+        marker_color="#4361ee",
+        yaxis="y",
+        hovertemplate='%{x}<br>검사 건수: %{y}건<extra></extra>',
+        opacity=0.8
+    ))
+    
+    # 불량률 (선)
+    fig.add_trace(go.Scatter(
+        x=weeks,
+        y=weekly_defect_rates,
+        name="불량률",
+        yaxis="y2",
+        line=dict(color="#fb8c00", width=3),
+        mode="lines+markers",
+        marker=dict(size=8),
+        hovertemplate='%{x}<br>불량률: %{y:.2f}%<extra></extra>'
+    ))
+    
+    # 레이아웃 설정
+    fig.update_layout(
+        title=None,
+        xaxis=dict(title="주차"),
+        yaxis=dict(
+            title="검사 건수",
+            side="left",
+            showgrid=False
+        ),
+        yaxis2=dict(
+            title="불량률 (%)",
+            side="right",
+            overlaying="y",
+            showgrid=False,
+            range=[0, max(weekly_defect_rates) * 1.3]  # Y축 범위 설정
+        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=20, r=60, t=10, b=20),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        hovermode="x unified"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # 주별 요약 테이블
+    weekly_summary = pd.DataFrame({
+        "주차": weeks,
+        "검사 건수": weekly_inspections,
+        "불량 건수": [int(rate * inspection / 100) for rate, inspection in zip(weekly_defect_rates, weekly_inspections)],
+        "불량률 (%)": weekly_defect_rates.round(2),
+        "목표 달성 여부": [rate < 1.0 for rate in weekly_defect_rates]
+    })
+    
+    # 테이블 형식 조정
+    st.dataframe(
+        weekly_summary,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "불량률 (%)": st.column_config.ProgressColumn(
+                "불량률 (%)",
+                help="주별 불량률 퍼센트",
+                format="%.2f%%",
+                min_value=0,
+                max_value=2,
+            ),
+            "목표 달성 여부": st.column_config.CheckboxColumn(
+                "목표 달성 여부",
+                help="불량률 1% 이하 목표 달성 여부"
+            )
+        }
+    )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+elif st.session_state.page == "manager_auth":
+    # 관리자 및 사용자 관리 페이지
+    st.markdown("<div class='title-area'><h1>👥 관리자 및 사용자 관리</h1></div>", unsafe_allow_html=True)
+    
+    # 관리자 권한 확인
+    if st.session_state.user_role != "관리자":
+        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+        st.stop()
+    
+    # 탭 구성
+    tab1, tab2 = st.tabs(["👤 사용자 관리", "🔑 권한 설정"])
+    
+    with tab1:
+        # 사용자 관리 섹션
+        st.subheader("등록된 사용자 목록")
+        
+        # 샘플 사용자 데이터
+        users_data = {
+            "아이디": ["admin", "user1", "user2", "manager1", "operator1"],
+            "이름": ["관리자", "홍길동", "김철수", "이부장", "박작업"],
+            "역할": ["관리자", "일반", "일반", "관리자", "일반"],
+            "부서": ["관리부", "생산부", "품질부", "생산부", "생산부"],
+            "최근 접속일": [
+                (datetime.now() - timedelta(hours=2)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(hours=5)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d %H:%M"),
+            ],
+            "상태": ["활성", "활성", "비활성", "활성", "활성"]
+        }
+        
+        users_df = pd.DataFrame(users_data)
+        
+        # 사용자 목록 필터링
+        col1, col2 = st.columns(2)
+        with col1:
+            role_filter = st.selectbox("역할 필터", options=["전체", "관리자", "일반"])
+        with col2:
+            status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성"])
+        
+        # 필터 적용
+        filtered_df = users_df.copy()
+        if role_filter != "전체":
+            filtered_df = filtered_df[filtered_df["역할"] == role_filter]
+        if status_filter != "전체":
+            filtered_df = filtered_df[filtered_df["상태"] == status_filter]
+        
+        # 필터링된 사용자 목록 표시
+        st.dataframe(filtered_df, use_container_width=True, hide_index=True)
+        
+        # 새 사용자 등록 폼
+        st.subheader("새 사용자 등록")
+        with st.form("new_user_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                new_user_id = st.text_input("아이디")
+                new_user_name = st.text_input("이름")
+                new_user_dept = st.selectbox("부서", options=["관리부", "생산부", "품질부", "기술부"])
+            with col2:
+                new_user_password = st.text_input("비밀번호", type="password")
+                new_user_password_confirm = st.text_input("비밀번호 확인", type="password")
+                new_user_role = st.selectbox("역할", options=["일반", "관리자"])
+            
+            submit_user = st.form_submit_button("사용자 등록")
+            
+        if submit_user:
+            if not new_user_id or not new_user_name or not new_user_password:
+                st.error("필수 항목을 모두 입력하세요.")
+            elif new_user_password != new_user_password_confirm:
+                st.error("비밀번호가 일치하지 않습니다.")
+            elif new_user_id in users_df["아이디"].values:
+                st.error("이미 존재하는 아이디입니다.")
+            else:
+                st.success(f"사용자 '{new_user_name}'이(가) 성공적으로 등록되었습니다.")
+                st.info("실제 데이터베이스 연동 시 사용자 정보가 저장됩니다.")
+    
+    with tab2:
+        # 권한 설정 섹션
+        st.subheader("사용자 권한 설정")
+        
+        # 권한 설정할 사용자 선택
+        selected_user = st.selectbox(
+            "권한을 설정할 사용자 선택",
+            options=users_df["아이디"].tolist(),
+            format_func=lambda x: f"{x} ({users_df[users_df['아이디'] == x]['이름'].values[0]})"
+        )
+        
+        # 선택된 사용자의 정보 표시
+        user_info = users_df[users_df["아이디"] == selected_user].iloc[0]
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("현재 역할", user_info["역할"])
+        with col2:
+            st.metric("소속 부서", user_info["부서"])
+        with col3:
+            st.metric("계정 상태", user_info["상태"])
+        
+        # 권한 설정 옵션
+        st.subheader("권한 설정")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            new_role = st.radio("역할", options=["일반", "관리자"], index=0 if user_info["역할"] == "일반" else 1)
+        with col2:
+            new_status = st.radio("상태", options=["활성", "비활성"], index=0 if user_info["상태"] == "활성" else 1)
+        
+        # 메뉴별 접근 권한
+        st.subheader("메뉴별 접근 권한")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**관리자 메뉴**")
+            admin_auth = {
+                "사용자 관리": st.checkbox("사용자 관리", value=user_info["역할"] == "관리자"),
+                "공정 관리": st.checkbox("공정 관리", value=user_info["역할"] == "관리자"),
+                "검사 관리": st.checkbox("검사 관리", value=True),
+                "시스템 설정": st.checkbox("시스템 설정", value=user_info["역할"] == "관리자")
+            }
+        
+        with col2:
+            st.markdown("**리포트 메뉴**")
+            report_auth = {
+                "종합 대시보드": st.checkbox("종합 대시보드", value=True),
+                "일간 리포트": st.checkbox("일간 리포트", value=True),
+                "주간 리포트": st.checkbox("주간 리포트", value=True),
+                "월간 리포트": st.checkbox("월간 리포트", value=user_info["역할"] == "관리자")
+            }
+        
+        # 권한 저장 버튼
+        if st.button("권한 설정 저장"):
+            st.success(f"사용자 '{selected_user}'의 권한이 성공적으로 업데이트되었습니다.")
+            st.info("실제 데이터베이스 연동 시 권한 정보가 저장됩니다.")
