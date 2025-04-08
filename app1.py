@@ -311,6 +311,68 @@ if st.sidebar.button("로그아웃"):
     st.session_state.page = "login"
     st.rerun()
 
+# 언어 선택 (한국어/베트남어)
+TRANSLATIONS = {
+    "ko": {
+        "title": "ALMUS TECH CNC 작업자 KPI 관리 시스템",
+        "menu_groups": {
+            "admin": "관리자 메뉴",
+            "report": "리포트 메뉴"
+        },
+        "admin_menu": {
+            "manager_auth": "👥 관리자 및 사용자 관리",
+            "process_auth": "⚙️ 관리자 동록 및 관리",
+            "user_auth": "🔑 사용자 등록 및 관리",
+            "data_auth": "📊 생산 실적 관리"
+        },
+        "report_menu": {
+            "total_dashboard": "📈 종합 대시보드",
+            "daily_report": "📊 일간 리포트",
+            "weekly_report": "📅 주간 리포트",
+            "monthly_report": "📆 월간 리포트",
+            "quality_report": "⭐ 월간 품질 리포트"
+        }
+    },
+    "vi": {
+        "title": "Hệ thống quản lý KPI cho công nhân CNC ALMUS TECH",
+        "menu_groups": {
+            "admin": "Menu quản trị",
+            "report": "Menu báo cáo"
+        },
+        "admin_menu": {
+            "manager_auth": "👥 Quản lý quản trị viên và người dùng",
+            "process_auth": "⚙️ Đăng ký và quản lý quản trị viên",
+            "user_auth": "🔑 Đăng ký và quản lý người dùng",
+            "data_auth": "📊 Quản lý hiệu suất sản xuất"
+        },
+        "report_menu": {
+            "total_dashboard": "📈 Bảng điều khiển tổng hợp",
+            "daily_report": "📊 Báo cáo hàng ngày",
+            "weekly_report": "📅 Báo cáo hàng tuần",
+            "monthly_report": "📆 Báo cáo hàng tháng",
+            "quality_report": "⭐ Báo cáo chất lượng hàng tháng"
+        }
+    }
+}
+
+# 초기 언어 설정
+if 'language' not in st.session_state:
+    st.session_state.language = 'ko'
+
+# 사이드바에 언어 선택 추가
+lang_col1, lang_col2 = st.sidebar.columns(2)
+with lang_col1:
+    if st.button("한국어", key="ko_btn"):
+        st.session_state.language = 'ko'
+        st.rerun()
+with lang_col2:
+    if st.button("Tiếng Việt", key="vi_btn"):
+        st.session_state.language = 'vi'
+        st.rerun()
+
+# 현재 선택된 언어의 번역 가져오기
+curr_lang = TRANSLATIONS[st.session_state.language]
+
 # 페이지 네비게이션
 pages = {
     "대시보드": "dashboard",
@@ -589,47 +651,47 @@ if st.session_state.page == "dashboard":
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "input_inspection":
-    st.title("검사 데이터 입력")
+    st.title("📝 검사 데이터 입력")
     
     # 기본 정보 입력
     with st.form("basic_info"):
-        st.subheader("기본 정보 입력")
+        st.subheader("📋 기본 정보 입력")
         
         col1, col2 = st.columns(2)
         with col1:
-            inspector = st.selectbox("검사원", options=st.session_state.inspectors['name'].tolist())
-            process = st.selectbox("공정", options=["선삭", "밀링"])
+            inspector = st.selectbox("👤 검사원", options=st.session_state.inspectors['name'].tolist())
+            process = st.selectbox("⚙️ 공정", options=["선삭", "밀링"])
             
         with col2:
-            date = st.date_input("검사일자")
-            time = st.time_input("검사시간")
+            date = st.date_input("📅 검사일자")
+            time = st.time_input("⏰ 검사시간")
             
-        lot_number = st.text_input("LOT 번호")
-        total_quantity = st.number_input("전체 수량", min_value=1, value=1)
+        lot_number = st.text_input("🔢 LOT 번호")
+        total_quantity = st.number_input("📦 전체 수량", min_value=1, value=1)
         
-        submit_basic = st.form_submit_button("기본 정보 등록")
+        submit_basic = st.form_submit_button("✅ 기본 정보 등록")
         
     if submit_basic:
         st.session_state.basic_info_valid = True
-        st.success("기본 정보가 등록되었습니다.")
+        st.success("✅ 기본 정보가 등록되었습니다.")
     else:
         st.session_state.basic_info_valid = False
 
     # 불량 정보 입력
     if st.session_state.get('basic_info_valid', False):
         with st.form("defect_info"):
-            st.subheader("불량 정보 입력")
+            st.subheader("⚠️ 불량 정보 입력")
             
             col1, col2 = st.columns(2)
             with col1:
-                defect_type = st.selectbox("불량 유형", 
+                defect_type = st.selectbox("🔍 불량 유형", 
                     options=["치수", "표면거칠기", "칩핑", "기타"])
             
             with col2:
-                defect_quantity = st.number_input("불량 수량", 
+                defect_quantity = st.number_input("📊 불량 수량", 
                     min_value=1, max_value=total_quantity, value=1)
                 
-            submit_defect = st.form_submit_button("불량 등록")
+            submit_defect = st.form_submit_button("➕ 불량 등록")
             
         if submit_defect:
             new_defect = {
@@ -637,11 +699,11 @@ elif st.session_state.page == "input_inspection":
                 "quantity": defect_quantity
             }
             st.session_state.registered_defects.append(new_defect)
-            st.success(f"{defect_type} 불량이 {defect_quantity}개 등록되었습니다.")
+            st.success(f"✅ {defect_type} 불량이 {defect_quantity}개 등록되었습니다.")
             
         # 등록된 불량 정보 표시
         if st.session_state.registered_defects:
-            st.subheader("등록된 불량 정보")
+            st.subheader("📋 등록된 불량 정보")
             defects_df = pd.DataFrame(st.session_state.registered_defects)
             st.dataframe(defects_df)
             
@@ -650,18 +712,18 @@ elif st.session_state.page == "input_inspection":
             
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("총 불량 수량", f"{total_defects}개")
+                st.metric("📊 총 불량 수량", f"{total_defects}개")
             with col2:
-                st.metric("불량률", f"{defect_rate:.2f}%")
+                st.metric("📈 불량률", f"{defect_rate:.2f}%")
                 
         # 불량 목록 초기화 버튼
-        if st.button("불량 목록 초기화"):
+        if st.button("🔄 불량 목록 초기화"):
             st.session_state.registered_defects = []
-            st.success("불량 목록이 초기화되었습니다.")
-            st.stop()  # 현재 실행을 중지하고 페이지를 다시 로드합니다
+            st.success("✅ 불량 목록이 초기화되었습니다.")
+            st.stop()
             
         # 검사 데이터 저장
-        if st.button("검사 데이터 저장"):
+        if st.button("💾 검사 데이터 저장"):
             if st.session_state.registered_defects:
                 inspection_datetime = datetime.combine(date, time)
                 inspector_data = st.session_state.inspectors[st.session_state.inspectors['name'] == inspector].iloc[0]
@@ -690,13 +752,13 @@ elif st.session_state.page == "input_inspection":
                         }
                         st.session_state.saved_defects.append(defect_data)
                     
-                    st.success("검사 데이터가 성공적으로 저장되었습니다.")
+                    st.success("✅ 검사 데이터가 성공적으로 저장되었습니다.")
                     st.session_state.registered_defects = []
-                    st.stop()  # 현재 실행을 중지하고 페이지를 다시 로드합니다
+                    st.stop()
                 except Exception as e:
-                    st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
+                    st.error(f"❌ 데이터 저장 중 오류가 발생했습니다: {str(e)}")
             else:
-                st.warning("저장할 불량 데이터가 없습니다.")
+                st.warning("⚠️ 저장할 불량 데이터가 없습니다.")
 
 elif st.session_state.page == "view_inspection":
     st.title("검사 데이터 조회")
