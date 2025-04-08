@@ -368,53 +368,42 @@ if 'registered_defects' not in st.session_state:
 
 # 현재 페이지에 따라 다른 내용 표시
 if st.session_state.page == "dashboard":
+    # 상단 헤더 섹션
     st.markdown("<div class='title-area'><h1>🏭 CNC 품질관리 시스템 - 대시보드</h1></div>", unsafe_allow_html=True)
     
-    # 날짜 필터 (카드 형태)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 1, 2])
+    # 상단 메트릭 섹션 (2x2 그리드)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
+        st.metric("📝 총 검사 건수", "152", "+12")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
+        st.metric("⚠️ 평균 불량률", "0.8%", "-0.2%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
+        st.metric("🔍 최다 불량 유형", "치수불량", "")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col4:
+        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
+        st.metric("⚙️ 진행 중인 작업", "3", "+1")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 날짜 필터 (메트릭 카드 아래에 통합)
+    col1, col2 = st.columns([1, 1])
     with col1:
         start_date = st.date_input("📅 시작일", datetime.now() - timedelta(days=30))
     with col2:
         end_date = st.date_input("📅 종료일", datetime.now())
-    with col3:
-        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-        st.markdown("<span class='sub-text'>📊 선택한 기간의 품질 데이터를 확인하세요</span>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
     
-    # 주요 품질 지표 (새로운 카드 디자인)
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 주요 품질 지표</div>", unsafe_allow_html=True)
-    st.markdown("<span class='sub-text'>최근 30일간의 주요 품질 지표 현황</span>", unsafe_allow_html=True)
-    
-    # 샘플 데이터
-    cols = st.columns(4)
-    with cols[0]:
-        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("📝 총 검사 건수", "152", "+12")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.metric("⚠️ 평균 불량률", "0.8%", "-0.2%")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[2]:
-        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.metric("🔍 최다 불량 유형", "치수불량", "")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with cols[3]:
-        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.metric("⚙️ 진행 중인 작업", "3", "+1")
-        st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # 차트 영역
+    # 차트 섹션 (2x1 그리드)
     col1, col2 = st.columns(2)
     
     with col1:
-        # 공정별 불량률 추이 차트 (1주일 기준으로 변경)
+        # 일별 불량률 추이 차트
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.markdown("<div class='emoji-title'>📊 일별 불량률 추이 (최근 7일)</div>", unsafe_allow_html=True)
-        st.markdown("<span class='sub-text'>최근 7일간의 공정별 일일 불량률 변화</span>", unsafe_allow_html=True)
         
         # 일주일 데이터 준비 (현재 날짜부터 7일 전까지)
         last_week = pd.date_range(end=datetime.now(), periods=7)
@@ -514,7 +503,6 @@ if st.session_state.page == "dashboard":
         # 불량 유형 분포 차트
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.markdown("<div class='emoji-title'>🍩 불량 유형 분포</div>", unsafe_allow_html=True)
-        st.markdown("<span class='sub-text'>불량 유형별 발생 비율</span>", unsafe_allow_html=True)
         
         # 불량 유형 분포
         defect_types = ["치수 불량", "표면 거칠기", "칩핑", "기타"]
@@ -553,10 +541,9 @@ if st.session_state.page == "dashboard":
         )
         st.plotly_chart(fig, use_container_width=True)
     
-    # 최근 검사 데이터 섹션
+    # 최근 검사 데이터 섹션 (전체 너비)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='emoji-title'>📋 최근 검사 데이터</div>", unsafe_allow_html=True)
-    st.markdown("<span class='sub-text'>가장 최근에 등록된 검사 데이터 현황</span>", unsafe_allow_html=True)
     
     # 최근 데이터를 위한 샘플 테이블
     recent_data = {
