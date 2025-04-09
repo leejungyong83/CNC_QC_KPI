@@ -1737,3 +1737,942 @@ elif st.session_state.page == "manager_auth":
         if st.button("권한 설정 저장"):
             st.success(f"사용자 '{selected_user}'의 권한이 성공적으로 업데이트되었습니다.")
             st.info("실제 데이터베이스 연동 시 권한 정보가 저장됩니다.")
+
+elif st.session_state.page == "process_auth":
+    # 관리자 등록 및 관리 페이지
+    st.markdown("<div class='title-area'><h1>⚙️ 관리자 등록 및 관리</h1></div>", unsafe_allow_html=True)
+    
+    # 관리자 권한 확인
+    if st.session_state.user_role != "관리자":
+        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+        st.stop()
+    
+    # 탭 구성
+    tab1, tab2 = st.tabs(["📋 관리자 목록", "➕ 관리자 등록"])
+    
+    with tab1:
+        # 관리자 목록 섹션
+        st.subheader("등록된 관리자 목록")
+        
+        # 샘플 관리자 데이터
+        admin_data = {
+            "아이디": ["admin", "manager1", "manager2", "supervisor1"],
+            "이름": ["시스템 관리자", "이부장", "김과장", "최대리"],
+            "직급": ["관리자", "부장", "과장", "대리"],
+            "부서": ["IT부", "생산부", "품질부", "관리부"],
+            "권한레벨": ["최고관리자", "부서관리자", "부서관리자", "부서관리자"],
+            "계정생성일": [
+                (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
+            ],
+            "상태": ["활성", "활성", "활성", "비활성"]
+        }
+        
+        admin_df = pd.DataFrame(admin_data)
+        
+        # 관리자 목록 필터링
+        col1, col2 = st.columns(2)
+        with col1:
+            dept_filter = st.selectbox("부서 필터", options=["전체", "IT부", "생산부", "품질부", "관리부"])
+        with col2:
+            status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성"])
+        
+        # 필터 적용
+        filtered_df = admin_df.copy()
+        if dept_filter != "전체":
+            filtered_df = filtered_df[filtered_df["부서"] == dept_filter]
+        if status_filter != "전체":
+            filtered_df = filtered_df[filtered_df["상태"] == status_filter]
+        
+        # 필터링된 관리자 목록 표시
+        st.dataframe(filtered_df, use_container_width=True, hide_index=True)
+        
+        # 선택한 관리자 상세 정보 및 권한 관리
+        selected_admin = st.selectbox(
+            "상세 정보를 볼 관리자 선택",
+            options=filtered_df["아이디"].tolist(),
+            format_func=lambda x: f"{x} ({filtered_df[filtered_df['아이디'] == x]['이름'].values[0]})"
+        )
+        
+        if selected_admin:
+            st.subheader(f"관리자 상세 정보: {selected_admin}")
+            
+            # 선택된 관리자 정보
+            admin_info = filtered_df[filtered_df["아이디"] == selected_admin].iloc[0]
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("이름", admin_info["이름"])
+                st.metric("직급", admin_info["직급"])
+            with col2:
+                st.metric("부서", admin_info["부서"])
+                st.metric("권한레벨", admin_info["권한레벨"])
+            with col3:
+                st.metric("계정생성일", admin_info["계정생성일"])
+                st.metric("상태", admin_info["상태"])
+            
+            # 계정 활성화/비활성화 버튼
+            col1, col2 = st.columns(2)
+            with col1:
+                if admin_info["상태"] == "활성":
+                    if st.button(f"'{admin_info['이름']}' 계정 비활성화", key="deactivate_admin"):
+                        st.warning(f"'{admin_info['이름']}' 계정이 비활성화되었습니다.")
+                        st.info("실제 데이터베이스 연동 시 상태가 변경됩니다.")
+                else:
+                    if st.button(f"'{admin_info['이름']}' 계정 활성화", key="activate_admin"):
+                        st.success(f"'{admin_info['이름']}' 계정이 활성화되었습니다.")
+                        st.info("실제 데이터베이스 연동 시 상태가 변경됩니다.")
+            
+            with col2:
+                if st.button(f"'{admin_info['이름']}' 비밀번호 초기화", key="reset_admin_pwd"):
+                    st.success(f"'{admin_info['이름']}' 계정의 비밀번호가 초기화되었습니다.")
+                    st.code("임시 비밀번호: Admin@1234")
+                    st.info("실제 데이터베이스 연동 시 비밀번호가 변경됩니다.")
+            
+            # 권한 레벨 변경
+            st.subheader("권한 레벨 변경")
+            new_auth_level = st.radio(
+                "권한 레벨 선택",
+                options=["최고관리자", "부서관리자", "일반관리자"],
+                index=0 if admin_info["권한레벨"] == "최고관리자" else 
+                      1 if admin_info["권한레벨"] == "부서관리자" else 2
+            )
+            
+            if st.button("권한 레벨 변경 저장"):
+                st.success(f"'{admin_info['이름']}' 계정의 권한 레벨이 '{new_auth_level}'로 변경되었습니다.")
+                st.info("실제 데이터베이스 연동 시 권한이 변경됩니다.")
+    
+    with tab2:
+        # 관리자 등록 섹션
+        st.subheader("새 관리자 등록")
+        
+        with st.form("new_admin_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                new_admin_id = st.text_input("아이디")
+                new_admin_name = st.text_input("이름")
+                new_admin_position = st.selectbox("직급", options=["부장", "과장", "대리", "주임", "사원"])
+            with col2:
+                new_admin_pwd = st.text_input("비밀번호", type="password")
+                new_admin_pwd_confirm = st.text_input("비밀번호 확인", type="password")
+                new_admin_dept = st.selectbox("부서", options=["IT부", "생산부", "품질부", "관리부"])
+            
+            new_admin_level = st.radio("권한 레벨", options=["최고관리자", "부서관리자", "일반관리자"])
+            
+            submit_admin = st.form_submit_button("관리자 등록")
+        
+        if submit_admin:
+            if not new_admin_id or not new_admin_name or not new_admin_pwd:
+                st.error("필수 항목을 모두 입력하세요.")
+            elif new_admin_pwd != new_admin_pwd_confirm:
+                st.error("비밀번호가 일치하지 않습니다.")
+            elif new_admin_id in admin_df["아이디"].values:
+                st.error("이미 존재하는 아이디입니다.")
+            else:
+                st.success(f"관리자 '{new_admin_name}'이(가) 성공적으로 등록되었습니다.")
+                st.info("실제 데이터베이스 연동 시 관리자 정보가 저장됩니다.")
+
+elif st.session_state.page == "user_auth":
+    # 사용자 등록 및 관리 페이지
+    st.markdown("<div class='title-area'><h1>🔑 사용자 등록 및 관리</h1></div>", unsafe_allow_html=True)
+    
+    # 관리자 권한 확인
+    if st.session_state.user_role != "관리자":
+        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+        st.stop()
+    
+    # 탭 구성
+    tab1, tab2, tab3 = st.tabs(["👥 사용자 목록", "➕ 사용자 등록", "📊 사용 통계"])
+    
+    with tab1:
+        # 사용자 목록 섹션
+        st.subheader("등록된 사용자 목록")
+        
+        # 샘플 사용자 데이터
+        user_data = {
+            "아이디": ["user1", "user2", "user3", "user4", "user5", "user6"],
+            "이름": ["홍길동", "김철수", "이영희", "박민수", "최지훈", "정수민"],
+            "부서": ["생산부", "생산부", "품질부", "품질부", "기술부", "관리부"],
+            "직급": ["사원", "대리", "사원", "주임", "과장", "사원"],
+            "공정": ["선삭", "밀링", "검사", "검사", "설계", "관리"],
+            "계정 생성일": [
+                (datetime.now() - timedelta(days=120)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
+                (datetime.now() - timedelta(days=15)).strftime("%Y-%m-%d"),
+            ],
+            "최근 접속일": [
+                (datetime.now() - timedelta(hours=5)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d %H:%M"),
+                (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M"),
+            ],
+            "상태": ["활성", "활성", "활성", "활성", "비활성", "휴면"]
+        }
+        
+        user_df = pd.DataFrame(user_data)
+        
+        # 필터링 옵션
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            dept_filter = st.selectbox("부서 필터", options=["전체", "생산부", "품질부", "기술부", "관리부"], key="user_dept_filter")
+        with col2:
+            process_filter = st.selectbox("공정 필터", options=["전체", "선삭", "밀링", "검사", "설계", "관리"], key="user_process_filter")
+        with col3:
+            status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성", "휴면"], key="user_status_filter")
+        
+        # 필터 적용
+        filtered_user_df = user_df.copy()
+        if dept_filter != "전체":
+            filtered_user_df = filtered_user_df[filtered_user_df["부서"] == dept_filter]
+        if process_filter != "전체":
+            filtered_user_df = filtered_user_df[filtered_user_df["공정"] == process_filter]
+        if status_filter != "전체":
+            filtered_user_df = filtered_user_df[filtered_user_df["상태"] == status_filter]
+        
+        # 필터링된 사용자 목록 표시
+        st.dataframe(filtered_user_df, use_container_width=True, hide_index=True)
+        
+        # 사용자 검색
+        search_query = st.text_input("사용자 검색 (이름 또는 아이디)", key="user_search")
+        if search_query:
+            search_results = user_df[
+                user_df["이름"].str.contains(search_query) | 
+                user_df["아이디"].str.contains(search_query)
+            ]
+            if not search_results.empty:
+                st.subheader("검색 결과")
+                st.dataframe(search_results, use_container_width=True, hide_index=True)
+            else:
+                st.info("검색 결과가 없습니다.")
+        
+        # 선택한 사용자 상세 정보 및 관리
+        selected_user_id = st.selectbox(
+            "상세 정보를 볼 사용자 선택",
+            options=user_df["아이디"].tolist(),
+            format_func=lambda x: f"{x} ({user_df[user_df['아이디'] == x]['이름'].values[0]})"
+        )
+        
+        if selected_user_id:
+            st.subheader(f"사용자 상세 정보: {selected_user_id}")
+            
+            # 선택된 사용자 정보
+            user_info = user_df[user_df["아이디"] == selected_user_id].iloc[0]
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("이름", user_info["이름"])
+                st.metric("부서", user_info["부서"])
+            with col2:
+                st.metric("직급", user_info["직급"])
+                st.metric("공정", user_info["공정"])
+            with col3:
+                st.metric("계정 생성일", user_info["계정 생성일"])
+                st.metric("최근 접속일", user_info["최근 접속일"])
+            
+            # 계정 상태 관리
+            st.subheader("계정 상태 관리")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                new_status = st.radio(
+                    "계정 상태",
+                    options=["활성", "비활성", "휴면"],
+                    index=0 if user_info["상태"] == "활성" else 
+                          1 if user_info["상태"] == "비활성" else 2,
+                    key="user_status_change"
+                )
+            
+            with col2:
+                if st.button("비밀번호 초기화", key="user_reset_pwd"):
+                    st.success(f"'{user_info['이름']}' 계정의 비밀번호가 초기화되었습니다.")
+                    st.code("임시 비밀번호: User@1234")
+                    st.info("실제 데이터베이스 연동 시 비밀번호가 변경됩니다.")
+            
+            if st.button("상태 변경 저장", key="save_user_status"):
+                st.success(f"'{user_info['이름']}' 계정의 상태가 '{new_status}'로 변경되었습니다.")
+                st.info("실제 데이터베이스 연동 시 상태가 변경됩니다.")
+
+    with tab2:
+        # 사용자 등록 섹션
+        st.subheader("새 사용자 등록")
+        
+        with st.form("new_user_form_2"):
+            col1, col2 = st.columns(2)
+            with col1:
+                new_user_id = st.text_input("아이디", key="new_user_id_2")
+                new_user_name = st.text_input("이름", key="new_user_name_2")
+                new_user_dept = st.selectbox("부서", options=["생산부", "품질부", "기술부", "관리부"], key="new_user_dept_2")
+            with col2:
+                new_user_pwd = st.text_input("비밀번호", type="password", key="new_user_pwd_2")
+                new_user_pwd_confirm = st.text_input("비밀번호 확인", type="password", key="new_user_pwd_confirm_2")
+                new_user_position = st.selectbox("직급", options=["사원", "주임", "대리", "과장", "부장"], key="new_user_position_2")
+            
+            new_user_process = st.selectbox("담당 공정", options=["선삭", "밀링", "검사", "설계", "관리"], key="new_user_process_2")
+            new_user_memo = st.text_area("메모 (선택사항)", max_chars=200, key="new_user_memo_2")
+            
+            submit_user = st.form_submit_button("사용자 등록")
+        
+        if submit_user:
+            if not new_user_id or not new_user_name or not new_user_pwd:
+                st.error("필수 항목을 모두 입력하세요.")
+            elif new_user_pwd != new_user_pwd_confirm:
+                st.error("비밀번호가 일치하지 않습니다.")
+            elif new_user_id in user_df["아이디"].values:
+                st.error("이미 존재하는 아이디입니다.")
+            else:
+                st.success(f"사용자 '{new_user_name}'이(가) 성공적으로 등록되었습니다.")
+                st.info("실제 데이터베이스 연동 시 사용자 정보가 저장됩니다.")
+    
+    with tab3:
+        # 사용 통계 섹션
+        st.subheader("사용자 통계")
+        
+        # 부서별 사용자 분포
+        dept_counts = user_df["부서"].value_counts().reset_index()
+        dept_counts.columns = ["부서", "사용자 수"]
+        
+        # 공정별 사용자 분포
+        process_counts = user_df["공정"].value_counts().reset_index()
+        process_counts.columns = ["공정", "사용자 수"]
+        
+        # 상태별 사용자 분포
+        status_counts = user_df["상태"].value_counts().reset_index()
+        status_counts.columns = ["상태", "사용자 수"]
+        
+        # 차트 표시
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.markdown("<div class='emoji-title'>👥 부서별 사용자 분포</div>", unsafe_allow_html=True)
+            
+            fig = px.bar(
+                dept_counts, 
+                x="부서", 
+                y="사용자 수",
+                color="부서",
+                color_discrete_sequence=px.colors.qualitative.Bold
+            )
+            
+            fig.update_layout(
+                height=300,
+                margin=dict(l=20, r=20, t=10, b=20),
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.markdown("<div class='emoji-title'>⚙️ 공정별 사용자 분포</div>", unsafe_allow_html=True)
+            
+            fig = px.pie(
+                process_counts, 
+                names="공정", 
+                values="사용자 수",
+                hole=0.4,
+                color_discrete_sequence=px.colors.qualitative.Set2
+            )
+            
+            fig.update_layout(
+                height=300,
+                margin=dict(l=20, r=20, t=10, b=20),
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.markdown("<div class='emoji-title'>🔄 계정 상태 분포</div>", unsafe_allow_html=True)
+            
+            fig = px.pie(
+                status_counts, 
+                names="상태", 
+                values="사용자 수",
+                color="상태",
+                color_discrete_map={
+                    "활성": "#4cb782",
+                    "비활성": "#fb8c00",
+                    "휴면": "#7c3aed"
+                }
+            )
+            
+            fig.update_layout(
+                height=300,
+                margin=dict(l=20, r=20, t=10, b=20),
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # 접속 활동 요약
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.markdown("<div class='emoji-title'>📈 접속 활동 요약</div>", unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                active_users = len(user_df[user_df["상태"] == "활성"])
+                st.metric("활성 사용자", f"{active_users}명")
+                
+                recent_users = len(user_df[pd.to_datetime(user_df["최근 접속일"]) > (datetime.now() - timedelta(days=7))])
+                st.metric("최근 7일 접속자", f"{recent_users}명")
+            
+            with col2:
+                inactive_users = len(user_df[user_df["상태"] != "활성"])
+                st.metric("비활성/휴면 사용자", f"{inactive_users}명")
+                
+                no_login_users = len(user_df[pd.to_datetime(user_df["최근 접속일"]) < (datetime.now() - timedelta(days=30))])
+                st.metric("30일 이상 미접속자", f"{no_login_users}명")
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+
+elif st.session_state.page == "data_auth":
+    # 생산 실적 관리 페이지
+    st.markdown("<div class='title-area'><h1>📊 생산 실적 관리</h1></div>", unsafe_allow_html=True)
+    
+    # 관리자 권한 확인
+    if st.session_state.user_role != "관리자":
+        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+        st.stop()
+    
+    # 탭 구성
+    tab1, tab2, tab3 = st.tabs(["📑 실적 데이터 조회", "📝 실적 데이터 입력", "🔍 데이터 검증"])
+    
+    with tab1:
+        # 실적 데이터 조회 섹션
+        st.subheader("생산 실적 데이터 조회")
+        
+        # 검색 및 필터 조건
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            start_date = st.date_input("시작일", datetime.now() - timedelta(days=30), key="prod_start_date")
+        with col2:
+            end_date = st.date_input("종료일", datetime.now(), key="prod_end_date")
+        with col3:
+            process_filter = st.selectbox("공정 필터", options=["전체", "선삭", "밀링", "연삭", "조립"], key="prod_process")
+        
+        # 샘플 생산 실적 데이터
+        production_data = {
+            "날짜": pd.date_range(start=datetime.now()-timedelta(days=30), periods=50, freq='B').strftime("%Y-%m-%d"),
+            "작업지시번호": [f"WO-{i:05d}" for i in range(1001, 1051)],
+            "품목코드": [f"ITEM-{i:04d}" for i in range(1, 51)],
+            "품목명": [f"부품 {chr(65 + i % 26)}-{i % 10}" for i in range(50)],
+            "공정": np.random.choice(["선삭", "밀링", "연삭", "조립"], 50),
+            "작업자": np.random.choice(["홍길동", "김철수", "이영희", "박민수", "최지훈"], 50),
+            "계획수량": np.random.randint(50, 200, 50),
+            "생산수량": [np.random.randint(40, x+1) for x in np.random.randint(50, 200, 50)],
+            "불량수량": np.random.randint(0, 10, 50)
+        }
+        
+        production_data["작업시작시간"] = [(datetime.now() - timedelta(days=d, hours=np.random.randint(0, 5))).strftime("%H:%M") 
+                       for d in range(30, 0, -1)] + [(datetime.now() - timedelta(hours=np.random.randint(0, 5))).strftime("%H:%M") 
+                       for _ in range(20)]
+        
+        production_data["작업종료시간"] = [(datetime.now() - timedelta(days=d, hours=np.random.randint(0, 3))).strftime("%H:%M") 
+                       for d in range(30, 0, -1)] + [(datetime.now() - timedelta(hours=np.random.randint(0, 3))).strftime("%H:%M") 
+                       for _ in range(20)]
+        
+        production_data["상태"] = np.random.choice(["완료", "진행중", "대기"], 50, p=[0.7, 0.2, 0.1])
+        
+        prod_df = pd.DataFrame(production_data)
+        
+        # 데이터프레임에 불량률 계산 추가
+        prod_df["불량률(%)"] = (prod_df["불량수량"] / prod_df["생산수량"] * 100).round(2)
+        prod_df["달성률(%)"] = (prod_df["생산수량"] / prod_df["계획수량"] * 100).round(2)
+        
+        # 필터 적용
+        filtered_prod_df = prod_df.copy()
+        
+        # 날짜 필터 적용
+        filtered_prod_df = filtered_prod_df[
+            (pd.to_datetime(filtered_prod_df["날짜"]) >= pd.Timestamp(start_date)) & 
+            (pd.to_datetime(filtered_prod_df["날짜"]) <= pd.Timestamp(end_date))
+        ]
+        
+        # 공정 필터 적용
+        if process_filter != "전체":
+            filtered_prod_df = filtered_prod_df[filtered_prod_df["공정"] == process_filter]
+        
+        # 검색 기능
+        search_query = st.text_input("품목 또는 작업지시번호 검색", key="prod_search")
+        if search_query:
+            filtered_prod_df = filtered_prod_df[
+                filtered_prod_df["품목명"].str.contains(search_query) | 
+                filtered_prod_df["작업지시번호"].str.contains(search_query) |
+                filtered_prod_df["품목코드"].str.contains(search_query)
+            ]
+        
+        # 데이터 정렬 옵션
+        sort_option = st.selectbox(
+            "정렬 기준",
+            options=["날짜(최신순)", "날짜(오래된순)", "달성률(높은순)", "달성률(낮은순)", "불량률(높은순)", "불량률(낮은순)"],
+            index=0
+        )
+        
+        # 정렬 적용
+        if sort_option == "날짜(최신순)":
+            filtered_prod_df = filtered_prod_df.sort_values(by="날짜", ascending=False)
+        elif sort_option == "날짜(오래된순)":
+            filtered_prod_df = filtered_prod_df.sort_values(by="날짜", ascending=True)
+        elif sort_option == "달성률(높은순)":
+            filtered_prod_df = filtered_prod_df.sort_values(by="달성률(%)", ascending=False)
+        elif sort_option == "달성률(낮은순)":
+            filtered_prod_df = filtered_prod_df.sort_values(by="달성률(%)", ascending=True)
+        elif sort_option == "불량률(높은순)":
+            filtered_prod_df = filtered_prod_df.sort_values(by="불량률(%)", ascending=False)
+        elif sort_option == "불량률(낮은순)":
+            filtered_prod_df = filtered_prod_df.sort_values(by="불량률(%)", ascending=True)
+        
+        # 필터링된 생산 실적 표시
+        st.dataframe(
+            filtered_prod_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "불량률(%)": st.column_config.ProgressColumn(
+                    "불량률(%)",
+                    help="생산된 제품 중 불량 비율",
+                    format="%.2f%%",
+                    min_value=0,
+                    max_value=10,
+                ),
+                "달성률(%)": st.column_config.ProgressColumn(
+                    "달성률(%)",
+                    help="계획 대비 생산 달성률",
+                    format="%.2f%%",
+                    min_value=0,
+                    max_value=120,
+                    width="medium"
+                ),
+            }
+        )
+    
+    # 나머지 탭은 구현이 복잡하므로 간단한 안내 메시지로 대체
+    with tab2:
+        st.info("실적 데이터 입력 기능은 데이터베이스 연동 후 구현됩니다.")
+    
+    with tab3:
+        st.info("데이터 검증 기능은 데이터베이스 연동 후 구현됩니다.")
+
+elif st.session_state.page == "quality_report":
+    # 월간 품질 리포트 페이지
+    st.markdown("<div class='title-area'><h1>⭐ 월간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    
+    # 날짜 선택
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_year = st.selectbox("연도 선택", options=list(range(datetime.now().year-2, datetime.now().year+1)), index=2)
+    with col2:
+        selected_month = st.selectbox("월 선택", options=list(range(1, 13)), index=datetime.now().month-1)
+    
+    # 선택된 월의 문자열 표현
+    month_names = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+    selected_month_name = month_names[selected_month-1]
+    
+    # 데이터 로딩 표시
+    with st.spinner(f"{selected_year}년 {selected_month_name} 품질 데이터 분석 중..."):
+        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+    
+    # 품질 요약 지표
+    st.subheader(f"{selected_year}년 {selected_month_name} 품질 요약")
+    
+    # 주요 지표 카드
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
+        st.metric("월별 검사 건수", "487건", "+12%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
+        st.metric("불량률", "0.62%", "-0.08%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
+        st.metric("품질 목표 달성률", "97.5%", "+1.2%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col4:
+        st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
+        st.metric("고객 반품률", "0.05%", "-0.02%")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 품질 트렌드 차트
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>📈 6개월 품질 추이</div>", unsafe_allow_html=True)
+    
+    # 샘플 데이터 준비
+    months = [(datetime.now() - timedelta(days=30*i)).strftime("%Y-%m") for i in range(5, -1, -1)]
+    month_labels = [(datetime.now() - timedelta(days=30*i)).strftime("%Y년 %m월") for i in range(5, -1, -1)]
+    
+    # 불량률 데이터 (개선 추세)
+    defect_rates = [0.82, 0.78, 0.74, 0.69, 0.65, 0.62]
+    
+    # 반품률 데이터 (더 낮은 값)
+    return_rates = [0.12, 0.10, 0.09, 0.07, 0.06, 0.05]
+    
+    # 품질 목표 달성률 데이터 (상승 추세)
+    quality_achievement = [92.5, 93.2, 94.1, 95.3, 96.2, 97.5]
+    
+    # 복합 그래프 생성
+    fig = go.Figure()
+    
+    # 불량률 (선 그래프)
+    fig.add_trace(go.Scatter(
+        x=month_labels,
+        y=defect_rates,
+        name="불량률(%)",
+        line=dict(color="#4361ee", width=3),
+        mode="lines+markers",
+        marker=dict(size=8),
+        yaxis="y1",
+        hovertemplate='%{x}<br>불량률: %{y:.2f}%<extra></extra>'
+    ))
+    
+    # 반품률 (선 그래프)
+    fig.add_trace(go.Scatter(
+        x=month_labels,
+        y=return_rates,
+        name="반품률(%)",
+        line=dict(color="#fb8c00", width=3),
+        mode="lines+markers",
+        marker=dict(size=8),
+        yaxis="y1",
+        hovertemplate='%{x}<br>반품률: %{y:.2f}%<extra></extra>'
+    ))
+    
+    # 품질 목표 달성률 (선 그래프, 두 번째 y축)
+    fig.add_trace(go.Scatter(
+        x=month_labels,
+        y=quality_achievement,
+        name="품질 목표 달성률(%)",
+        line=dict(color="#4cb782", width=3),
+        mode="lines+markers",
+        marker=dict(size=8),
+        yaxis="y2",
+        hovertemplate='%{x}<br>품질 달성률: %{y:.1f}%<extra></extra>'
+    ))
+    
+    # 불량률 목표선 (1%)
+    fig.add_trace(go.Scatter(
+        x=[month_labels[0], month_labels[-1]],
+        y=[1.0, 1.0],
+        name="불량률 목표(1%)",
+        line=dict(color="red", width=2, dash="dash"),
+        mode="lines",
+        yaxis="y1",
+        hoverinfo="skip"
+    ))
+    
+    # 레이아웃 설정
+    fig.update_layout(
+        title=None,
+        xaxis=dict(title=None),
+        yaxis=dict(
+            title="불량률/반품률 (%)",
+            side="left",
+            range=[0, 1.2],
+            showgrid=False
+        ),
+        yaxis2=dict(
+            title="목표 달성률 (%)",
+            side="right",
+            overlaying="y",
+            range=[90, 100],
+            showgrid=False
+        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=20, r=60, t=10, b=20),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        height=400,
+        hovermode="x unified"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 공정별 품질 분석
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>⚙️ 공정별 품질 분석</div>", unsafe_allow_html=True)
+    
+    # 공정 데이터
+    processes = ["선삭", "밀링", "연삭", "드릴링", "조립", "검사"]
+    process_defect_rates = [0.85, 0.65, 0.55, 0.70, 0.45, 0.20]
+    process_inspection_counts = [1200, 980, 850, 780, 1500, 2000]
+    
+    # 공정별 데이터프레임
+    process_df = pd.DataFrame({
+        "공정": processes,
+        "불량률(%)": process_defect_rates,
+        "검사건수": process_inspection_counts
+    })
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # 공정별 불량률 막대 그래프
+        fig = px.bar(
+            process_df,
+            x="공정",
+            y="불량률(%)",
+            color="공정",
+            color_discrete_sequence=px.colors.qualitative.Bold,
+            labels={"불량률(%)": "불량률 (%)"},
+            text_auto='.2f'
+        )
+        
+        # 평균 불량률 라인
+        avg_defect = np.mean(process_defect_rates)
+        fig.add_shape(
+            type="line",
+            x0=-0.5, y0=avg_defect,
+            x1=len(processes)-0.5, y1=avg_defect,
+            line=dict(color="#4361ee", width=2, dash="dash")
+        )
+        
+        fig.add_annotation(
+            x=1, y=avg_defect,
+            text=f"평균: {avg_defect:.2f}%",
+            showarrow=False,
+            yshift=10,
+            font=dict(color="#4361ee")
+        )
+        
+        fig.update_layout(
+            title=None,
+            margin=dict(l=20, r=20, t=10, b=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=300,
+            showlegend=False
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        # 공정별 불량률 및 검사건수 버블 차트
+        fig = px.scatter(
+            process_df,
+            x="공정",
+            y="불량률(%)",
+            size="검사건수",
+            color="불량률(%)",
+            color_continuous_scale="Viridis",
+            size_max=50,
+            labels={"불량률(%)": "불량률 (%)"},
+            hover_data={"검사건수": True}
+        )
+        
+        fig.update_layout(
+            title=None,
+            margin=dict(l=20, r=20, t=10, b=20),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=300,
+            coloraxis_colorbar=dict(title="불량률 (%)")
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # 공정별 품질 지표 테이블
+    process_df["개선필요"] = ["" if rate < 0.7 else "⚠️" for rate in process_df["불량률(%)"]]
+    process_df["품질그룹"] = ["A" if rate < 0.5 else "B" if rate < 0.7 else "C" for rate in process_df["불량률(%)"]]
+    
+    st.dataframe(
+        process_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "불량률(%)": st.column_config.ProgressColumn(
+                "불량률(%)",
+                help="공정별 불량률",
+                format="%.2f%%",
+                min_value=0,
+                max_value=1,
+            ),
+            "검사건수": st.column_config.NumberColumn(
+                "검사건수",
+                help="공정별 검사 건수",
+                format="%d건",
+            ),
+            "개선필요": st.column_config.TextColumn(
+                "개선필요",
+                help="불량률 0.7% 이상 공정은 개선 필요"
+            ),
+            "품질그룹": st.column_config.SelectboxColumn(
+                "품질그룹",
+                help="불량률에 따른 품질 그룹",
+                options=["A", "B", "C"],
+                required=True,
+            ),
+        }
+    )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 불량 유형 분석
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>🔍 불량 유형 분석</div>", unsafe_allow_html=True)
+    
+    defect_types = ["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "기타"]
+    defect_counts = [42, 35, 28, 15, 22, 18, 10]
+    
+    defect_df = pd.DataFrame({
+        "불량유형": defect_types,
+        "발생건수": defect_counts,
+        "비율(%)": [(count / sum(defect_counts) * 100).round(2) for count in defect_counts]
+    })
+    
+    # 불량 유형별 파레토 차트
+    fig = go.Figure()
+    
+    # 막대 그래프 (불량 건수)
+    fig.add_trace(go.Bar(
+        x=defect_df["불량유형"],
+        y=defect_df["발생건수"],
+        marker_color="#4361ee",
+        name="발생건수",
+        text=defect_df["발생건수"],
+        textposition="auto"
+    ))
+    
+    # 누적 비율 계산
+    defect_df = defect_df.sort_values(by="발생건수", ascending=False)
+    cum_percent = np.cumsum(defect_df["발생건수"]) / sum(defect_df["발생건수"]) * 100
+    
+    # 선 그래프 (누적 비율)
+    fig.add_trace(go.Scatter(
+        x=defect_df["불량유형"],
+        y=cum_percent,
+        mode="lines+markers",
+        marker=dict(size=8),
+        line=dict(color="#fb8c00", width=3),
+        name="누적 비율(%)",
+        yaxis="y2",
+        hovertemplate='%{x}<br>누적 비율: %{y:.1f}%<extra></extra>'
+    ))
+    
+    # 80% 기준선
+    fig.add_trace(go.Scatter(
+        x=[defect_df["불량유형"].iloc[0], defect_df["불량유형"].iloc[-1]],
+        y=[80, 80],
+        mode="lines",
+        line=dict(color="red", width=2, dash="dash"),
+        name="80% 기준",
+        yaxis="y2",
+        hoverinfo="skip"
+    ))
+    
+    # 레이아웃 설정
+    fig.update_layout(
+        title=None,
+        xaxis=dict(title="불량 유형"),
+        yaxis=dict(
+            title="발생 건수",
+            side="left",
+            showgrid=False
+        ),
+        yaxis2=dict(
+            title="누적 비율 (%)",
+            side="right",
+            overlaying="y",
+            range=[0, 105],
+            showgrid=False
+        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=20, r=60, t=10, b=20),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        height=400,
+        hovermode="x unified"
+    )
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        st.subheader("핵심 개선 대상")
+        st.markdown("**주요 불량 유형 (80% 비중)**")
+        
+        # 누적 80%까지의 불량 유형
+        critical_defects = defect_df[cum_percent <= 80]
+        
+        for idx, row in critical_defects.iterrows():
+            st.markdown(f"⚠️ **{row['불량유형']}**: {row['발생건수']}건 ({row['비율(%)']}%)")
+        
+        st.markdown("---")
+        st.markdown("**신규 불량 탐지**")
+        
+        new_defects = ["표면거칠기", "조립불량"]
+        for defect in new_defects:
+            st.markdown(f"🆕 **{defect}**: 전월 대비 증가")
+    
+    # 불량 유형별 개선 권고 사항
+    improvement_data = {
+        "불량유형": ["치수불량", "표면거칠기", "칩핑"],
+        "근본원인": ["공구 마모", "가공 조건 부적절", "소재 품질 불량"],
+        "개선방안": ["공구 교체 주기 단축", "가공 속도 및 이송 조정", "소재 공급업체 품질 관리 강화"],
+        "담당부서": ["생산부", "기술부", "품질부"],
+        "우선순위": ["상", "상", "중"]
+    }
+    
+    improvement_df = pd.DataFrame(improvement_data)
+    
+    st.subheader("주요 불량 개선 권고사항")
+    st.dataframe(improvement_df, use_container_width=True, hide_index=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 월간 품질 요약 보고서
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>📋 월간 품질 요약 보고서</div>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    ### {selected_year}년 {selected_month_name} 품질 성과 요약
+    
+    - **전체 불량률**: 0.62% (전월 대비 0.08%p 감소)
+    - **불량 유형 분석**: 치수불량과 표면거칠기가 전체 불량의 약 45%를 차지함
+    - **공정별 분석**: 선삭 공정이 가장 높은 불량률(0.85%)을 보임
+    - **품질 개선 활동**: 공구 교체 주기 단축, 가공 조건 최적화로 표면거칠기 불량 감소
+    - **권고 사항**: 치수불량 개선을 위한 공정 모니터링 시스템 도입 검토
+    
+    ### 다음 달 품질 개선 계획
+    
+    1. 선삭 공정 가공 조건 최적화 연구
+    2. 치수불량 개선을 위한 작업자 교육 프로그램 실시
+    3. 새로운 측정 장비 도입으로 불량 탐지율 향상
+    """)
+    
+    # 보고서 다운로드 버튼
+    download_col1, download_col2 = st.columns(2)
+    with download_col1:
+        st.download_button(
+            label="📄 PDF 보고서 다운로드",
+            data=b"Sample PDF Report",
+            file_name=f"품질보고서_{selected_year}_{selected_month}.pdf",
+            mime="application/pdf"
+        )
+    
+    with download_col2:
+        st.download_button(
+            label="📊 Excel 데이터 다운로드",
+            data=b"Sample Excel Data",
+            file_name=f"품질데이터_{selected_year}_{selected_month}.xlsx",
+            mime="application/vnd.ms-excel"
+        )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
