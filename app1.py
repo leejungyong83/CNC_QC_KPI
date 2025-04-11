@@ -2339,13 +2339,21 @@ elif st.session_state.page == "inspection_data":
                 st.metric("총 불량 수량", f"{defect_qty}개")
                 
                 # 불량률 계산 및 표시
-                if total_qty > 0 and defect_qty > 0:
-                    defect_rate = (defect_qty / total_qty * 100).round(2)
-                    st.metric("불량률", f"{defect_rate}%")
-                elif defect_qty == 0:
-                    st.metric("불량률", "0.00%")
-                else:
-                    st.metric("불량률", "검사수량을 확인하세요")
+                try:
+                    # 값이 숫자인지 확인하고 명시적으로 float으로 변환
+                    total_qty_float = float(total_qty)
+                    defect_qty_float = float(defect_qty)
+                    
+                    if total_qty_float > 0 and defect_qty_float > 0:
+                        defect_rate = (defect_qty_float / total_qty_float * 100).round(2)
+                        st.metric("불량률", f"{defect_rate}%")
+                    elif defect_qty_float == 0:
+                        st.metric("불량률", "0.00%")
+                    else:
+                        st.metric("불량률", "검사수량을 확인하세요")
+                except Exception as e:
+                    st.metric("불량률", "계산 오류")
+                    st.error(f"불량률 계산 중 오류 발생: {total_qty}와 {defect_qty}를 확인하세요.")
         
         # 추가 정보
         st.subheader("추가 정보")
@@ -2379,6 +2387,16 @@ elif st.session_state.page == "inspection_data":
                     st.success("검사 데이터가 성공적으로 저장되었습니다!")
                     
                     # 저장된 데이터 미리보기
+                    try:
+                        # 변수가 유효한 숫자인지 확인
+                        total_qty_float = float(total_qty)
+                        defect_qty_float = float(defect_qty)
+                        
+                        # 불량률 계산
+                        defect_rate_value = (defect_qty_float / total_qty_float * 100).round(2) if total_qty_float > 0 and defect_qty_float > 0 else 0.00
+                    except Exception:
+                        defect_rate_value = 0.00
+                    
                     saved_data = {
                         "검사일자": inspection_date.strftime("%Y-%m-%d"),
                         "검사자": inspector_name,
@@ -2390,7 +2408,7 @@ elif st.session_state.page == "inspection_data":
                         "계획수량": plan_qty,
                         "검사수량": total_qty,
                         "불량수량": defect_qty,
-                        "불량률(%)": (defect_qty / total_qty * 100).round(2) if total_qty > 0 and defect_qty > 0 else 0.00,
+                        "불량률(%)": defect_rate_value,
                         "불량유형": ", ".join(defect_types) if defect_types else "-",
                         "작업시간(분)": work_time,
                         "특이사항": memo
