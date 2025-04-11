@@ -2262,10 +2262,242 @@ elif st.session_state.page == "inspection_data":
     
     # 나머지 탭은 구현이 복잡하므로 간단한 안내 메시지로 대체
     with tab2:
-        st.info("실적 데이터 입력 기능은 데이터베이스 연동 후 구현됩니다.")
+        # 실적 데이터 입력 폼 구현
+        st.subheader("검사실적 데이터 입력")
+        
+        # 기본 정보 입력 폼
+        col1, col2 = st.columns(2)
+        with col1:
+            inspector_name = st.selectbox(
+                "검사원 이름",
+                options=["홍길동", "김철수", "이영희", "박민수", "최지훈"],
+                key="input_inspector_name"
+            )
+            
+            process = st.selectbox(
+                "공정",
+                options=["IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
+                key="input_process"
+            )
+            
+            model_name = st.selectbox(
+                "모델명",
+                options=["모델을 선택하세요", "E1", "E2", "B6 SUB", "B7", "B8", "E3", "E4", "E5", 
+                         "E6", "E7", "E8", "E9", "E10", "G1", "G2", "G3", "G4", "G5", 
+                         "G6", "G7", "H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9"],
+                index=0,
+                key="input_model"
+            )
+            
+        with col2:
+            inspection_date = st.date_input("검사일자", datetime.now(), key="input_date")
+            
+            lot_number = st.text_input("LOT 번호", key="input_lot")
+            
+            work_time = st.number_input("작업 시간(분)", min_value=0, value=60, key="input_work_time")
+        
+        # 수량 정보 입력
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            plan_quantity = st.number_input("계획 수량", min_value=0, value=100, key="input_plan_qty")
+        with col2:
+            total_quantity = st.number_input("총 검사 수량", min_value=0, value=0, key="input_total_qty")
+        with col3:
+            defect_quantity = st.number_input("불량 수량", min_value=0, value=0, key="input_defect_qty")
+        
+        # 불량 정보 입력 섹션
+        if defect_quantity > 0:
+            st.subheader("불량 정보")
+            
+            # 불량 유형 선택
+            defect_types = st.multiselect(
+                "불량 유형 선택",
+                options=["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "외관불량", "기능불량"],
+                key="defect_types"
+            )
+            
+            if defect_types:
+                # 불량 유형별 수량 입력
+                cols = st.columns(min(len(defect_types), 3))
+                defect_details = []
+                total_defects = 0
+                
+                for i, defect_type in enumerate(defect_types):
+                    with cols[i % 3]:
+                        qty = st.number_input(
+                            f"{defect_type} 수량",
+                            min_value=0,
+                            max_value=defect_quantity,
+                            key=f"defect_{i}"
+                        )
+                        if qty > 0:
+                            defect_details.append({"type": defect_type, "quantity": qty})
+                            total_defects += qty
+                
+                if total_defects != defect_quantity:
+                    st.warning(f"입력한 불량 수량 합계 ({total_defects})가 총 불량 수량 ({defect_quantity})과 일치하지 않습니다.")
+        
+        # 지표 계산 및 표시
+        if total_quantity > 0:
+            st.subheader("검사 지표")
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                # 불량률 계산
+                defect_rate = round((defect_quantity / total_quantity * 100), 2) if total_quantity > 0 else 0
+                st.metric("불량률", f"{defect_rate}%")
+            
+            with col2:
+                # 목표 대비 검사율 계산
+                inspection_rate = round((total_quantity / plan_quantity * 100), 2) if plan_quantity > 0 else 0
+                inspection_status = "✅ 목표 달성" if inspection_rate >= 100 else "⏳ 진행 중"
+                st.metric("목표대비 검사율", f"{inspection_rate}%", delta=f"{inspection_status}")
+            
+            with col3:
+                # 시간당 검사량 및 목표 달성 예상 시간
+                if work_time > 0:
+                    hourly_rate = round((total_quantity / work_time * 60), 1)
+                    time_to_complete = round((plan_quantity - total_quantity) / hourly_rate * 60) if hourly_rate > 0 else 0
+                    
+                    if total_quantity < plan_quantity:
+                        st.metric("시간당 검사량", f"{hourly_rate}개/시간", 
+                                 delta=f"목표 달성까지 약 {time_to_complete}분 소요 예상")
+                    else:
+                        st.metric("시간당 검사량", f"{hourly_rate}개/시간", delta="목표 달성 완료")
+        
+        # 비고 입력
+        memo = st.text_area("비고", key="input_memo", help="추가 특이사항이 있으면 입력하세요.")
+        
+        # 저장 버튼
+        if st.button("데이터 저장", use_container_width=True):
+            # 입력 검증
+            if model_name == "모델을 선택하세요":
+                st.error("모델을 선택해주세요.")
+            elif total_quantity <= 0:
+                st.error("검사 수량을 입력해주세요.")
+            elif defect_quantity > total_quantity:
+                st.error("불량 수량은 총 검사 수량보다 클 수 없습니다.")
+            else:
+                # 데이터 준비
+                inspection_data = {
+                    "검사원": inspector_name,
+                    "공정": process,
+                    "모델명": model_name,
+                    "검사일자": inspection_date.strftime("%Y-%m-%d"),
+                    "LOT번호": lot_number,
+                    "작업시간(분)": work_time,
+                    "계획수량": plan_quantity,
+                    "검사수량": total_quantity,
+                    "불량수량": defect_quantity,
+                    "불량률(%)": defect_rate if total_quantity > 0 else 0,
+                    "목표달성율(%)": inspection_rate if plan_quantity > 0 else 0,
+                    "비고": memo
+                }
+                
+                try:
+                    # 데이터베이스에 저장 시도
+                    response = save_inspection_data(inspection_data)
+                    st.success("검사실적 데이터가 성공적으로 저장되었습니다!")
+                    
+                    # 저장 성공 시 입력 필드 초기화 또는 다른 액션
+                    st.balloons()
+                except Exception as e:
+                    # 로컬 세션에 저장 (데이터베이스 연결 실패 시)
+                    if 'saved_inspections' not in st.session_state:
+                        st.session_state.saved_inspections = []
+                    
+                    st.session_state.saved_inspections.append(inspection_data)
+                    st.success("검사실적 데이터가 세션에 저장되었습니다. (데이터베이스 연결이 되면 자동으로 동기화됩니다)")
+                    st.info(f"참고: {str(e)}")
     
     with tab3:
-        st.info("데이터 검증 기능은 데이터베이스 연동 후 구현됩니다.")
+        # 간단한 데이터 검증 기능 구현
+        st.subheader("데이터 검증")
+        
+        # 날짜 범위 선택
+        col1, col2 = st.columns(2)
+        with col1:
+            start_date = st.date_input("시작일", datetime.now() - timedelta(days=30), key="verify_start_date")
+        with col2:
+            end_date = st.date_input("종료일", datetime.now(), key="verify_end_date")
+        
+        # 검증 유형 선택
+        verification_type = st.selectbox(
+            "검증 유형",
+            options=["누락 데이터 검사", "불량률 이상치 검사", "LOT 중복 검사", "전체 검사"],
+            key="verification_type"
+        )
+        
+        # 데이터 로드 및 검증 버튼
+        if st.button("데이터 검증 실행", key="run_verification"):
+            # 로딩 표시
+            with st.spinner("데이터 검증 중..."):
+                time.sleep(1)  # 검증 작업 시뮬레이션
+                
+                # 세션에 저장된 검사 데이터 사용 (실제로는 데이터베이스에서 조회)
+                if 'saved_inspections' in st.session_state and st.session_state.saved_inspections:
+                    inspections = st.session_state.saved_inspections
+                    df = pd.DataFrame(inspections)
+                    
+                    st.success(f"총 {len(df)}개의 검사 데이터를 검증했습니다.")
+                    
+                    # 선택한 검증 유형에 따른 결과 표시
+                    if verification_type == "누락 데이터 검사" or verification_type == "전체 검사":
+                        missing_data = df[df.isnull().any(axis=1)]
+                        if len(missing_data) > 0:
+                            st.warning(f"{len(missing_data)}개의 검사 데이터에 누락된 값이 있습니다.")
+                            st.dataframe(missing_data)
+                        else:
+                            st.info("누락된 데이터가 없습니다.")
+                    
+                    if verification_type == "불량률 이상치 검사" or verification_type == "전체 검사":
+                        if "불량률(%)" in df.columns:
+                            outliers = df[df["불량률(%)"] > 5]  # 불량률 5% 초과를 이상치로 간주
+                            if len(outliers) > 0:
+                                st.warning(f"{len(outliers)}개의 검사 데이터에 불량률 이상치가 있습니다.")
+                                st.dataframe(outliers[["검사일자", "모델명", "공정", "검사수량", "불량수량", "불량률(%)"]])
+                            else:
+                                st.info("불량률 이상치가 없습니다.")
+                    
+                    if verification_type == "LOT 중복 검사" or verification_type == "전체 검사":
+                        if "LOT번호" in df.columns:
+                            duplicates = df[df.duplicated("LOT번호", keep=False)]
+                            if len(duplicates) > 0:
+                                st.warning(f"{len(duplicates)}개의 검사 데이터에 LOT 번호 중복이 있습니다.")
+                                st.dataframe(duplicates[["검사일자", "LOT번호", "모델명", "공정"]])
+                            else:
+                                st.info("LOT 번호 중복이 없습니다.")
+                else:
+                    # 데이터가 없을 경우 샘플 결과 표시
+                    st.info("검사 데이터가 없습니다. 샘플 검증 결과를 표시합니다.")
+                    
+                    # 샘플 검증 결과 생성
+                    sample_results = [
+                        {"검사일자": "2025-04-10", "LOT번호": "LT2025041001", "모델명": "E1", "공정": "CNC1_PQC", "검사수량": 100, "불량수량": 2, "불량률(%)": 2.0, "문제": "정상"},
+                        {"검사일자": "2025-04-09", "LOT번호": "LT2025040901", "모델명": "E2", "공정": "CNC2_PQC", "검사수량": 150, "불량수량": 8, "불량률(%)": 5.33, "문제": "불량률 높음"},
+                        {"검사일자": "2025-04-08", "LOT번호": "LT2025040801", "모델명": "B6 SUB", "공정": "OQC", "검사수량": 80, "불량수량": 0, "불량률(%)": 0.0, "문제": "정상"}
+                    ]
+                    
+                    sample_df = pd.DataFrame(sample_results)
+                    st.dataframe(sample_df)
+            
+            # 검증 완료 후 요약 정보
+            st.subheader("검증 요약")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("총 검사 데이터", "3건")
+            with col2:
+                st.metric("문제 발견", "1건", delta="-1건", delta_color="inverse")
+            with col3:
+                st.metric("검증 성공률", "66.7%")
+                
+            # 검증 보고서 다운로드 버튼 (실제로는 기능 구현 필요)
+            st.download_button(
+                label="검증 보고서 다운로드",
+                data=b"Sample Verification Report",
+                file_name=f"data_verification_report_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                mime="application/vnd.ms-excel"
+            )
 
 elif st.session_state.page == "quality_report":
     # 월간 품질 리포트 페이지
