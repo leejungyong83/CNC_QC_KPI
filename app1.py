@@ -2311,7 +2311,17 @@ elif st.session_state.page == "inspection_data":
         
         if has_defects:
             # 불량 유형 선택 (복수 선택 가능)
-            defect_options = ["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "외관불량", "기능불량"]
+            defect_options = [
+                "ĂN MÒN", "ATN CRACK", "CẮT SÂU, GỜ BẬC", "CHƯA GIA CÔNG HẾT", 
+                "CHƯA GIA CÔNG USB", "CRACK", "ĐỘ DẦY MAX", "ĐỘ DẦY MIN", 
+                "GÃY TOOL", "GỜ BẬC KHE SÓNG", "HOLE KÍCH THƯỚC", "KÍCH THƯỚC KHE SÓNG", 
+                "LỆCH USB", "Lỗi Khác", "MÒN TOOL, hết CNC", "NG 3D (MÁY)", 
+                "NG CHIỀU DÀI PHÔI", "NG CHIỀU RỘNG PHÔI", "NG ĐỘ DẦY PHÔI", 
+                "NG KÍCH THƯỚC", "NG PHÔI", "NG T CUT", "ø1 CRACK", 
+                "ø1 CRACK PIN JIG", "SETTING", "TẮC NƯỚC", "TÊN LỖI", 
+                "THAO TÁC1", "THAO TÁC2", "THAO TÁC3", "TOOL RUNG LẮC", 
+                "TRÀN NHỰA", "TRỤC A", "VẾT ĐÂM"
+            ]
             defect_types = st.multiselect(
                 "불량 유형 선택 (복수 선택 가능)",
                 options=defect_options,
@@ -2341,14 +2351,19 @@ elif st.session_state.page == "inspection_data":
                 # 불량률 계산 및 표시
                 try:
                     # 값이 숫자인지 확인하고 명시적으로 float으로 변환
-                    total_qty_float = float(total_qty)
-                    defect_qty_float = float(defect_qty)
+                    total_qty_float = float(total_qty) if total_qty else 0
+                    defect_qty_float = float(defect_qty) if defect_qty else 0
                     
-                    defect_rate = (defect_qty_float / total_qty_float * 100).round(2)
-                    st.metric("불량률", f"{defect_rate}%")
+                    if total_qty_float > 0 and defect_qty_float > 0:
+                        defect_rate = (defect_qty_float / total_qty_float * 100).round(2)
+                        st.metric("불량률", f"{defect_rate}%")
+                    elif defect_qty_float == 0:
+                        st.metric("불량률", "0.00%")
+                    else:
+                        st.metric("불량률", "검사수량을 확인하세요")
                 except Exception as e:
                     st.metric("불량률", "계산 오류")
-                    st.error(f"불량률 계산 중 오류 발생: {total_qty}와 {defect_qty}를 확인하세요.")
+                    st.error(f"불량률 계산 중 오류 발생: {e}")
         
         # 추가 정보
         st.subheader("추가 정보")
@@ -2384,11 +2399,14 @@ elif st.session_state.page == "inspection_data":
                     # 저장된 데이터 미리보기
                     try:
                         # 변수가 유효한 숫자인지 확인
-                        total_qty_float = float(total_qty)
-                        defect_qty_float = float(defect_qty)
+                        total_qty_float = float(total_qty) if total_qty else 0
+                        defect_qty_float = float(defect_qty) if defect_qty else 0
                         
                         # 불량률 계산
-                        defect_rate_value = (defect_qty_float / total_qty_float * 100).round(2) if total_qty_float > 0 and defect_qty_float > 0 else 0.00
+                        if total_qty_float > 0 and defect_qty_float > 0:
+                            defect_rate_value = (defect_qty_float / total_qty_float * 100).round(2)
+                        else:
+                            defect_rate_value = 0.00
                     except Exception:
                         defect_rate_value = 0.00
                     
