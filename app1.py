@@ -740,12 +740,35 @@ elif st.session_state.page == "input_inspection":
                     
                     if total_qty_float > 0 and defect_qty_float > 0:
                         defect_rate = (defect_qty_float / total_qty_float * 100)
-                        defect_rate = round(defect_rate, 2)
+                        defect_rate = round(defect_rate, 2)  # round() 함수를 별도로 사용
                         st.metric("불량률", f"{defect_rate}%")
                     elif defect_qty_float == 0:
                         st.metric("불량률", "0.00%")
                     else:
                         st.metric("불량률", "검사수량을 확인하세요")
+                    
+                    # 목표대비 검사율 계산 및 표시
+                    if plan_qty > 0:
+                        inspection_rate = (total_qty_float / plan_qty * 100)
+                        inspection_rate = round(inspection_rate, 2)
+                        inspection_status = "✅ 목표 달성" if inspection_rate >= 100 else "⏳ 진행 중"
+                        st.metric("목표대비 검사율", f"{inspection_rate}%", 
+                                  delta=f"{inspection_status}")
+                        
+                        # 시간당 검사 효율성 계산
+                        if work_time > 0:
+                            hourly_rate = (total_qty_float / work_time * 60)  # 시간당 검사 수량
+                            hourly_rate = round(hourly_rate, 1)
+                            expected_time = round((plan_qty - total_qty_float) / hourly_rate * 60, 1) if hourly_rate > 0 and total_qty_float < plan_qty else 0
+                            
+                            efficiency_col1, efficiency_col2 = st.columns(2)
+                            with efficiency_col1:
+                                st.metric("시간당 검사량", f"{hourly_rate}개/시간")
+                            with efficiency_col2:
+                                if total_qty_float < plan_qty and hourly_rate > 0:
+                                    st.metric("목표 달성 예상 시간", f"약 {expected_time}분 소요")
+                                else:
+                                    st.metric("목표 달성 상태", "완료" if total_qty_float >= plan_qty else "진행 중")
                 except Exception as e:
                     st.metric("불량률", "계산 오류")
                     st.error(f"불량률 계산 중 오류 발생: {e}")
@@ -1338,7 +1361,7 @@ elif st.session_state.page == "monthly_report":
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("월간 검사 건수", "587", "+23")
+        st.metric("월별 검사 건수", "587", "+23")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
@@ -2387,6 +2410,29 @@ elif st.session_state.page == "inspection_data":
                         st.metric("불량률", "0.00%")
                     else:
                         st.metric("불량률", "검사수량을 확인하세요")
+                    
+                    # 목표대비 검사율 계산 및 표시
+                    if plan_qty > 0:
+                        inspection_rate = (total_qty_float / plan_qty * 100)
+                        inspection_rate = round(inspection_rate, 2)
+                        inspection_status = "✅ 목표 달성" if inspection_rate >= 100 else "⏳ 진행 중"
+                        st.metric("목표대비 검사율", f"{inspection_rate}%", 
+                                  delta=f"{inspection_status}")
+                        
+                        # 시간당 검사 효율성 계산
+                        if work_time > 0:
+                            hourly_rate = (total_qty_float / work_time * 60)  # 시간당 검사 수량
+                            hourly_rate = round(hourly_rate, 1)
+                            expected_time = round((plan_qty - total_qty_float) / hourly_rate * 60, 1) if hourly_rate > 0 and total_qty_float < plan_qty else 0
+                            
+                            efficiency_col1, efficiency_col2 = st.columns(2)
+                            with efficiency_col1:
+                                st.metric("시간당 검사량", f"{hourly_rate}개/시간")
+                            with efficiency_col2:
+                                if total_qty_float < plan_qty and hourly_rate > 0:
+                                    st.metric("목표 달성 예상 시간", f"약 {expected_time}분 소요")
+                                else:
+                                    st.metric("목표 달성 상태", "완료" if total_qty_float >= plan_qty else "진행 중")
                 except Exception as e:
                     st.metric("불량률", "계산 오류")
                     st.error(f"불량률 계산 중 오류 발생: {e}")
