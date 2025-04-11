@@ -2304,6 +2304,7 @@ elif st.session_state.page == "inspection_data":
         st.subheader("불량 정보")
         has_defects = st.checkbox("불량 있음", key="has_defects")
         
+        # 불량 관련 변수 초기화
         defect_qty = 0
         defect_types = []
         defect_details = {}
@@ -2338,9 +2339,13 @@ elif st.session_state.page == "inspection_data":
                 st.metric("총 불량 수량", f"{defect_qty}개")
                 
                 # 불량률 계산 및 표시
-                if total_qty > 0:
+                if total_qty > 0 and defect_qty > 0:
                     defect_rate = (defect_qty / total_qty * 100).round(2)
                     st.metric("불량률", f"{defect_rate}%")
+                elif defect_qty == 0:
+                    st.metric("불량률", "0.00%")
+                else:
+                    st.metric("불량률", "검사수량을 확인하세요")
         
         # 추가 정보
         st.subheader("추가 정보")
@@ -2385,7 +2390,7 @@ elif st.session_state.page == "inspection_data":
                         "계획수량": plan_qty,
                         "검사수량": total_qty,
                         "불량수량": defect_qty,
-                        "불량률(%)": (defect_qty / total_qty * 100).round(2) if total_qty > 0 else 0,
+                        "불량률(%)": (defect_qty / total_qty * 100).round(2) if total_qty > 0 and defect_qty > 0 else 0.00,
                         "불량유형": ", ".join(defect_types) if defect_types else "-",
                         "작업시간(분)": work_time,
                         "특이사항": memo
