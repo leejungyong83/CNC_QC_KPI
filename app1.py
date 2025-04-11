@@ -2679,7 +2679,7 @@ elif st.session_state.page == "quality_report":
 
 elif st.session_state.page == "inspection_data":
     # 검사 실적 관리 페이지
-    st.markdown("<div class='title-area'><h1>📝 검사 실적 관리</h1></div>", unsafe_allow_html=True)
+    st.markdown("<div class='title-area'><h1>📝 검사실적 관리</h1></div>", unsafe_allow_html=True)
     
     # 관리자 권한 확인
     if st.session_state.user_role != "관리자":
@@ -2882,49 +2882,30 @@ elif st.session_state.page == "inspection_data":
         # 검사 데이터 입력 섹션
         st.subheader("검사 데이터 입력")
         
+        # 기본 정보
         col1, col2 = st.columns(2)
         with col1:
-            inspection_date = st.date_input("검사일자", datetime.now(), key="input_date")
+            inspector_name = st.text_input("이름", key="input_name", help="검사원 이름을 입력하세요.")
         with col2:
-            inspection_time = st.time_input("검사시간", datetime.now().time(), key="input_time")
+            inspector_id = st.text_input("ID", key="input_id", help="검사원 ID를 입력하세요.")
         
         col1, col2 = st.columns(2)
         with col1:
             inspection_process = st.selectbox(
                 "공정",
-                options=["선삭", "밀링", "연삭", "조립"],
+                options=["선삭", "밀링", "연삭", "조립", "CNC", "검사"],
                 key="input_process"
             )
         with col2:
-            inspector = st.selectbox(
-                "검사원",
-                options=["김검사", "이검사", "박검사", "최검사"],
-                key="input_inspector"
-            )
+            work_time_minutes = st.number_input("근무시간(분)", min_value=0, value=480, key="input_work_time", help="작업/검사에 소요된 시간을 분 단위로 입력하세요.")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            work_order = st.text_input("작업지시번호", key="input_work_order")
-        with col2:
-            item_code = st.text_input("품목코드", key="input_item_code")
+        # 불량 입력 섹션
+        st.subheader("불량 정보 입력")
+        has_defects = st.checkbox("불량 있음", key="has_defects")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            item_name = st.text_input("품목명", key="input_item_name")
-        with col2:
-            inspection_qty = st.number_input("검사수량", min_value=1, value=100, key="input_inspection_qty")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            defect_qty = st.number_input("불량수량", min_value=0, max_value=inspection_qty, value=0, key="input_defect_qty")
-        with col2:
-            pass
-        
-        # 불량 유형 입력 (복수 선택 가능)
-        if defect_qty > 0:
-            st.subheader("불량 유형 입력")
-            
-            defect_types = ["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량"]
+        if has_defects:
+            # 불량 유형 입력 (복수 선택 가능)
+            defect_types = ["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "외관불량", "기능불량"]
             selected_defects = st.multiselect(
                 "불량 유형 선택 (복수 선택 가능)",
                 options=defect_types,
@@ -2936,43 +2917,40 @@ elif st.session_state.page == "inspection_data":
                 st.write("각 불량 유형별 수량 입력:")
                 
                 defect_quantities = {}
-                total_allocated = 0
+                total_defect_qty = 0
                 
                 # 불량 유형별 수량 입력
-                cols = st.columns(len(selected_defects))
+                cols = st.columns(min(len(selected_defects), 3))  # 최대 3개의 열로 제한
                 for i, defect in enumerate(selected_defects):
-                    with cols[i]:
+                    with cols[i % 3]:  # 열 순환 (최대 3개 열)
                         defect_quantities[defect] = st.number_input(
                             f"{defect} 수량",
-                            min_value=0,
-                            max_value=defect_qty - total_allocated + defect_quantities.get(defect, 0),
-                            value=defect_quantities.get(defect, 0),
+                            min_value=1,
+                            value=1,
                             key=f"qty_{defect}"
                         )
-                        total_allocated += defect_quantities[defect]
+                        total_defect_qty += defect_quantities[defect]
                 
-                # 남은 미할당 불량 수량 표시
-                remaining = defect_qty - total_allocated
-                if remaining > 0:
-                    st.warning(f"아직 {remaining}개의 불량이 유형에 할당되지 않았습니다.")
-                elif remaining < 0:
-                    st.error(f"불량 유형에 할당된 수량이 총 불량수량보다 {abs(remaining)}개 많습니다.")
-                else:
-                    st.success("모든 불량이 유형에 할당되었습니다.")
+                # 총 불량 수량 표시
+                st.info(f"총 불량 수량: {total_defect_qty}개")
         
+        # 추가 정보 입력
+        st.subheader("추가 정보")
+        col1, col2 = st.columns(2)
+        with col1:
+            inspection_date = st.date_input("검사일자", datetime.now(), key="input_date")
+        with col2:
+            inspection_time = st.time_input("검사시간", datetime.now().time(), key="input_time")
+            
         # 비고 입력
         memo = st.text_area("비고", key="input_memo", help="추가 정보나 특이사항을 입력하세요.")
         
         # 데이터 제출 버튼
         if st.button("검사 데이터 저장", use_container_width=True):
-            if not work_order or not item_code or not item_name:
-                st.error("작업지시번호, 품목코드, 품목명은 필수 입력 항목입니다.")
-            elif defect_qty > inspection_qty:
-                st.error("불량수량은 검사수량보다 클 수 없습니다.")
-            elif defect_qty > 0 and not selected_defects:
+            if not inspector_name or not inspector_id:
+                st.error("이름과 ID는 필수 입력 항목입니다.")
+            elif has_defects and not selected_defects:
                 st.error("불량이 있을 경우 불량 유형을 하나 이상 선택해야 합니다.")
-            elif defect_qty > 0 and total_allocated != defect_qty:
-                st.error("불량 유형별 수량의 합이 총 불량수량과 일치해야 합니다.")
             else:
                 # 실제로는 여기서 데이터베이스에 저장하는 코드가 필요합니다.
                 st.success("검사 데이터가 성공적으로 저장되었습니다!")
@@ -2981,7 +2959,7 @@ elif st.session_state.page == "inspection_data":
                 st.write("### 입력된 검사 데이터")
                 
                 defect_info = ""
-                if defect_qty > 0 and selected_defects:
+                if has_defects and selected_defects:
                     defect_details = []
                     for defect, qty in defect_quantities.items():
                         if qty > 0:
@@ -2991,15 +2969,13 @@ elif st.session_state.page == "inspection_data":
                 data = {
                     "검사일자": inspection_date.strftime("%Y-%m-%d"),
                     "검사시간": inspection_time.strftime("%H:%M"),
+                    "이름": inspector_name,
+                    "ID": inspector_id,
                     "공정": inspection_process,
-                    "검사원": inspector,
-                    "작업지시번호": work_order,
-                    "품목코드": item_code,
-                    "품목명": item_name,
-                    "검사수량": inspection_qty,
-                    "불량수량": defect_qty,
-                    "불량률(%)": round(defect_qty / inspection_qty * 100, 2) if inspection_qty > 0 else 0,
-                    "불량유형": defect_info,
+                    "근무시간(분)": work_time_minutes,
+                    "불량여부": "있음" if has_defects else "없음",
+                    "불량수량": total_defect_qty if has_defects else 0,
+                    "불량유형": defect_info if has_defects else "-",
                     "비고": memo
                 }
                 
