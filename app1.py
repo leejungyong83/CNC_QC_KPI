@@ -323,7 +323,7 @@ TRANSLATIONS = {
             "manager_auth": "👥 관리자 및 사용자 관리",
             "process_auth": "⚙️ 관리자 동록 및 관리",
             "user_auth": "🔑 사용자 등록 및 관리",
-            "data_auth": "📊 생산 실적 관리"
+            "data_auth": "📊 검사실적 관리"
         },
         "report_menu": {
             "total_dashboard": "📈 종합 대시보드",
@@ -343,7 +343,7 @@ TRANSLATIONS = {
             "manager_auth": "👥 Quản lý quản trị viên và người dùng",
             "process_auth": "⚙️ Đăng ký và quản lý quản trị viên",
             "user_auth": "🔑 Đăng ký và quản lý người dùng",
-            "data_auth": "📊 Quản lý hiệu suất sản xuất"
+            "data_auth": "📊 Quản lý dữ liệu kiểm tra"
         },
         "report_menu": {
             "total_dashboard": "📈 Bảng điều khiển tổng hợp",
