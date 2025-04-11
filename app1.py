@@ -2380,7 +2380,8 @@ elif st.session_state.page == "inspection_data":
                     defect_qty_float = float(defect_qty) if defect_qty else 0
                     
                     if total_qty_float > 0 and defect_qty_float > 0:
-                        defect_rate = (defect_qty_float / total_qty_float * 100).round(2)
+                        defect_rate = (defect_qty_float / total_qty_float * 100)
+                        defect_rate = round(defect_rate, 2)  # round() 함수를 별도로 사용
                         st.metric("불량률", f"{defect_rate}%")
                     elif defect_qty_float == 0:
                         st.metric("불량률", "0.00%")
@@ -2433,7 +2434,8 @@ elif st.session_state.page == "inspection_data":
                         
                         # 불량률 계산
                         if total_qty_float > 0 and defect_qty_float > 0:
-                            defect_rate_value = (defect_qty_float / total_qty_float * 100).round(2)
+                            defect_rate_value = (defect_qty_float / total_qty_float * 100)
+                            defect_rate_value = round(defect_rate_value, 2)  # round() 함수를 별도로 사용
                         else:
                             defect_rate_value = 0.00
                     except Exception as e:
