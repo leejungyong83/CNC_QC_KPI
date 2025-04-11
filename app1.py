@@ -732,7 +732,23 @@ elif st.session_state.page == "input_inspection":
             with col1:
                 st.metric("📊 총 불량 수량", f"{total_defects}개")
             with col2:
-                st.metric("📈 불량률", f"{defect_rate:.2f}%")
+                # 불량률 계산 및 표시
+                try:
+                    # 값이 숫자인지 확인하고 명시적으로 float으로 변환
+                    total_qty_float = float(total_quantity) if total_quantity else 0
+                    defect_qty_float = float(defect_quantity) if defect_quantity else 0
+                    
+                    if total_qty_float > 0 and defect_qty_float > 0:
+                        defect_rate = (defect_qty_float / total_qty_float * 100)
+                        defect_rate = round(defect_rate, 2)
+                        st.metric("불량률", f"{defect_rate}%")
+                    elif defect_qty_float == 0:
+                        st.metric("불량률", "0.00%")
+                    else:
+                        st.metric("불량률", "검사수량을 확인하세요")
+                except Exception as e:
+                    st.metric("불량률", "계산 오류")
+                    st.error(f"불량률 계산 중 오류 발생: {e}")
                 
         # 불량 목록 초기화 버튼
         if st.button("🔄 불량 목록 초기화"):
@@ -2280,7 +2296,7 @@ elif st.session_state.page == "inspection_data":
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            item_name = st.text_input("품목명", key="item_name", help="검사 대상 품목의 이름을 입력하세요.")
+            item_name = st.text_input("모델명", key="item_name", help="검사 대상 품목의 모델명을 입력하세요.")
         with col2:
             process = st.selectbox(
                 "공정",
@@ -2294,7 +2310,7 @@ elif st.session_state.page == "inspection_data":
         st.subheader("수량 정보")
         col1, col2, col3 = st.columns(3)
         with col1:
-            plan_qty = st.number_input("계획수량", min_value=1, value=100, key="plan_qty")
+            plan_qty = st.number_input("일검사목표 수량", min_value=1, value=100, key="plan_qty")
         with col2:
             total_qty = st.number_input("검사수량", min_value=1, value=100, key="total_qty")
         with col3:
@@ -2407,8 +2423,9 @@ elif st.session_state.page == "inspection_data":
                             defect_rate_value = (defect_qty_float / total_qty_float * 100).round(2)
                         else:
                             defect_rate_value = 0.00
-                    except Exception:
+                    except Exception as e:
                         defect_rate_value = 0.00
+                        st.error(f"불량률 계산 중 오류 발생: {e}")
                     
                     saved_data = {
                         "검사일자": inspection_date.strftime("%Y-%m-%d"),
@@ -2416,9 +2433,9 @@ elif st.session_state.page == "inspection_data":
                         "검사자ID": inspector_id,
                         "작업지시번호": work_order,
                         "품목코드": item_code,
-                        "품목명": item_name,
+                        "모델명": item_name,  # 여기도 품목명에서 모델명으로 변경
                         "공정": process,
-                        "계획수량": plan_qty,
+                        "일검사목표 수량": plan_qty,  # 계획수량에서 일검사목표 수량으로 변경
                         "검사수량": total_qty,
                         "불량수량": defect_qty,
                         "불량률(%)": defect_rate_value,
