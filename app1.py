@@ -2141,7 +2141,7 @@ elif st.session_state.page == "user_auth":
 
 elif st.session_state.page == "data_auth":
     # 생산 실적 관리 페이지
-    st.markdown("<div class='title-area'><h1>📊 생산 실적 관리</h1></div>", unsafe_allow_html=True)
+    st.markdown("<div class='title-area'><h1>📊 검사실적 관리</h1></div>", unsafe_allow_html=True)
     
     # 관리자 권한 확인
     if st.session_state.user_role != "관리자":
@@ -2153,7 +2153,7 @@ elif st.session_state.page == "data_auth":
     
     with tab1:
         # 실적 데이터 조회 섹션
-        st.subheader("생산 실적 데이터 조회")
+        st.subheader("검사 실적 데이터 조회")
         
         # 검색 및 필터 조건
         col1, col2, col3 = st.columns(3)
