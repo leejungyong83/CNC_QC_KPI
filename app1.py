@@ -2344,13 +2344,8 @@ elif st.session_state.page == "inspection_data":
                     total_qty_float = float(total_qty)
                     defect_qty_float = float(defect_qty)
                     
-                    if total_qty_float > 0 and defect_qty_float > 0:
-                        defect_rate = (defect_qty_float / total_qty_float * 100).round(2)
-                        st.metric("불량률", f"{defect_rate}%")
-                    elif defect_qty_float == 0:
-                        st.metric("불량률", "0.00%")
-                    else:
-                        st.metric("불량률", "검사수량을 확인하세요")
+                    defect_rate = (defect_qty_float / total_qty_float * 100).round(2)
+                    st.metric("불량률", f"{defect_rate}%")
                 except Exception as e:
                     st.metric("불량률", "계산 오류")
                     st.error(f"불량률 계산 중 오류 발생: {total_qty}와 {defect_qty}를 확인하세요.")
