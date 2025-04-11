@@ -2296,11 +2296,19 @@ elif st.session_state.page == "inspection_data":
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            item_name = st.text_input("모델명", key="item_name", help="검사 대상 품목의 모델명을 입력하세요.")
+            # 모델명을 드롭다운 방식으로 변경
+            model_options = [
+                "E1", "E2", "B6 SUB", "B6 SUB6", "B6 MMW", "PA1 MASS", "B7 MMW", "B7 SUB", 
+                "PA2", "PA3", "B5 MMW", "B5 SUB6", "B7 DUALSIM", "B7 SUB 6", "B6 Dualsim",
+                "X1", "DM2", "B7R DUAL", "B7R SUB", "B7R SUB6", "B7R MMW", "PA3 MMW", 
+                "PS SUB6", "A82", "B7 SUB MU", "B7 SUB6 MU", "PA3 SUB6 SIEL", "Y2", "BEYOND2"
+            ]
+            item_name = st.selectbox("모델명", options=model_options, key="item_name", help="검사 대상 모델을 선택하세요.")
         with col2:
+            # 공정 옵션 수정
             process = st.selectbox(
                 "공정",
-                options=["선삭", "밀링", "연삭", "조립", "검사"],
+                options=["IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
                 key="process"
             )
         with col3:
