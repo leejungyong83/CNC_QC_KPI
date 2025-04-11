@@ -323,7 +323,7 @@ TRANSLATIONS = {
             "manager_auth": "👥 관리자 및 사용자 관리",
             "process_auth": "⚙️ 관리자 동록 및 관리",
             "user_auth": "🔑 사용자 등록 및 관리",
-            "data_auth": "📊 검사실적 관리"
+            "inspection_data": "📊 검사실적 관리"
         },
         "report_menu": {
             "total_dashboard": "📈 종합 대시보드",
@@ -343,7 +343,7 @@ TRANSLATIONS = {
             "manager_auth": "👥 Quản lý quản trị viên và người dùng",
             "process_auth": "⚙️ Đăng ký và quản lý quản trị viên",
             "user_auth": "🔑 Đăng ký và quản lý người dùng",
-            "data_auth": "📊 Quản lý dữ liệu kiểm tra"
+            "inspection_data": "📊 Quản lý dữ liệu kiểm tra"
         },
         "report_menu": {
             "total_dashboard": "📈 Bảng điều khiển tổng hợp",
@@ -2139,7 +2139,7 @@ elif st.session_state.page == "user_auth":
             
             st.markdown("</div>", unsafe_allow_html=True)
 
-elif st.session_state.page == "data_auth":
+elif st.session_state.page == "inspection_data":
     # 생산 실적 관리 페이지
     st.markdown("<div class='title-area'><h1>📊 검사실적 관리</h1></div>", unsafe_allow_html=True)
     
@@ -2677,125 +2677,6 @@ elif st.session_state.page == "quality_report":
     
     st.markdown("</div>", unsafe_allow_html=True)
 
-elif st.session_state.page == "inspection_data":
-    # 검사 실적 관리 페이지
-    st.markdown("<div class='title-area'><h1>📝 검사실적 관리</h1></div>", unsafe_allow_html=True)
-    
-    # 관리자 권한 확인
-    if st.session_state.user_role != "관리자":
-        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
-        st.stop()
-    
-    # 탭 구성
-    tab1, tab2, tab3 = st.tabs(["📑 검사 데이터 조회", "➕ 검사 데이터 입력", "📊 검사 통계"])
-    
-    with tab1:
-        # 검사 데이터 조회 섹션
-        st.subheader("검사 실적 데이터 조회")
-        
-        # 검색 및 필터 조건
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            start_date = st.date_input("시작일", datetime.now() - timedelta(days=30), key="insp_start_date")
-        with col2:
-            end_date = st.date_input("종료일", datetime.now(), key="insp_end_date")
-        with col3:
-            process_filter = st.selectbox(
-                "공정 필터", 
-                options=["전체", "선삭", "밀링", "연삭", "조립"],
-                key="insp_process"
-            )
-        
-        # 추가 필터
-        col1, col2 = st.columns(2)
-        with col1:
-            inspector_filter = st.selectbox(
-                "검사원 필터",
-                options=["전체", "김검사", "이검사", "박검사", "최검사"],
-                key="inspector_filter"
-            )
-        with col2:
-            defect_filter = st.multiselect(
-                "불량 유형 필터",
-                options=["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량"],
-                default=[],
-                key="defect_filter"
-            )
-        
-        # 샘플 검사 실적 데이터
-        inspection_data = {
-            "날짜": pd.date_range(start=datetime.now()-timedelta(days=30), periods=50, freq='B').strftime("%Y-%m-%d"),
-            "검사번호": [f"INSP-{i:05d}" for i in range(1001, 1051)],
-            "공정": np.random.choice(["선삭", "밀링", "연삭", "조립"], 50),
-            "품목코드": [f"ITEM-{i:04d}" for i in range(1, 51)],
-            "품목명": [f"부품 {chr(65 + i % 26)}-{i % 10}" for i in range(50)],
-            "작업지시번호": [f"WO-{i:04d}" for i in range(101, 151)],
-            "검사원": np.random.choice(["김검사", "이검사", "박검사", "최검사"], 50),
-            "검사수량": np.random.randint(50, 200, 50),
-            "불량수량": np.random.randint(0, 10, 50)
-        }
-        
-        # 불량 유형 데이터 (복수 선택)
-        defect_types = ["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량"]
-        inspection_data["불량유형"] = [", ".join(np.random.choice(defect_types, size=np.random.randint(0, 3), replace=False)) 
-                               if q > 0 else "" 
-                               for q in inspection_data["불량수량"]]
-        
-        inspection_data["검사시간"] = [(datetime.now() - timedelta(days=d, hours=np.random.randint(0, 5))).strftime("%H:%M") 
-                        for d in range(30, 0, -1)] + [(datetime.now() - timedelta(hours=np.random.randint(0, 5))).strftime("%H:%M") 
-                        for _ in range(20)]
-        
-        inspection_data["상태"] = ["완료"] * 50
-        
-        insp_df = pd.DataFrame(inspection_data)
-        
-        # 데이터프레임에 불량률 계산 추가
-        insp_df["불량률(%)"] = (insp_df["불량수량"] / insp_df["검사수량"] * 100).round(2)
-        
-        # 필터 적용
-        filtered_insp_df = insp_df.copy()
-        
-        # 날짜 필터 적용
-        filtered_insp_df = filtered_insp_df[
-            (pd.to_datetime(filtered_insp_df["날짜"]) >= pd.Timestamp(start_date)) & 
-            (pd.to_datetime(filtered_insp_df["날짜"]) <= pd.Timestamp(end_date))
-        ]
-        
-        # 공정 필터 적용
-        if process_filter != "전체":
-            filtered_insp_df = filtered_insp_df[filtered_insp_df["공정"] == process_filter]
-        
-        # 검사원 필터 적용
-        if inspector_filter != "전체":
-            filtered_insp_df = filtered_insp_df[filtered_insp_df["검사원"] == inspector_filter]
-        
-        # 불량 유형 필터 적용
-        if defect_filter:
-            filtered_insp_df = filtered_insp_df[
-                filtered_insp_df["불량유형"].apply(
-                    lambda x: any(defect in x for defect in defect_filter) if x else False
-                )
-            ]
-        
-        # 검색 기능
-        search_query = st.text_input("품목 또는 검사번호 검색", key="insp_search")
-        if search_query:
-            filtered_insp_df = filtered_insp_df[
-                filtered_insp_df["품목명"].str.contains(search_query) | 
-                filtered_insp_df["검사번호"].str.contains(search_query) |
-                filtered_insp_df["품목코드"].str.contains(search_query)
-            ]
-        
-        # 데이터 정렬 옵션
-        sort_option = st.selectbox(
-            "정렬 기준",
-            options=["날짜(최신순)", "날짜(오래된순)", "불량률(높은순)", "불량률(낮은순)"],
-            index=0
-        )
-        
-        # 정렬 적용
-        if sort_option == "날짜(최신순)":
-            filtered_insp_df = filtered_insp_df.sort_values(by="날짜", ascending=False)
         elif sort_option == "날짜(오래된순)":
             filtered_insp_df = filtered_insp_df.sort_values(by="날짜", ascending=True)
         elif sort_option == "불량률(높은순)":
