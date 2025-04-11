@@ -2303,12 +2303,13 @@ elif st.session_state.page == "inspection_data":
                 "X1", "DM2", "B7R DUAL", "B7R SUB", "B7R SUB6", "B7R MMW", "PA3 MMW", 
                 "PS SUB6", "A82", "B7 SUB MU", "B7 SUB6 MU", "PA3 SUB6 SIEL", "Y2", "BEYOND2"
             ]
-            item_name = st.selectbox("모델명", options=model_options, key="item_name", help="검사 대상 모델을 선택하세요.")
+            item_name = st.selectbox("모델명", options=["모델을 선택하세요"] + model_options, index=0, key="item_name", help="검사 대상 모델을 선택하세요.")
         with col2:
             # 공정 옵션 수정
             process = st.selectbox(
                 "공정",
-                options=["IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
+                options=["공정을 선택하세요", "IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
+                index=0,
                 key="process"
             )
         with col3:
@@ -2408,6 +2409,10 @@ elif st.session_state.page == "inspection_data":
         if st.button("검사 데이터 저장", use_container_width=True, type="primary"):
             if not inspector_name or not inspector_id or not work_order or not item_code:
                 st.error("필수 입력 항목을 모두 입력해주세요. (검사자 이름, 검사자 ID, 작업지시번호, 품목코드)")
+            elif item_name == "모델을 선택하세요":
+                st.error("모델을 선택해주세요.")
+            elif process == "공정을 선택하세요":
+                st.error("공정을 선택해주세요.")
             elif has_defects and not defect_types:
                 st.error("불량이 있을 경우 하나 이상의 불량 유형을 선택해야 합니다.")
             elif total_qty < defect_qty:
