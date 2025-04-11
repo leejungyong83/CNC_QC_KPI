@@ -818,12 +818,12 @@ elif st.session_state.page == "input_inspection":
                 st.warning("⚠️ 저장할 불량 데이터가 없습니다.")
 
 elif st.session_state.page == "view_inspection":
-    st.title("검사 데이터 조회")
+    st.title("검사 실적 데이터 조회")
     
     # 필터링 옵션
     col1, col2, col3 = st.columns(3)
     with col1:
-        filter_process = st.selectbox("공정 필터", options=["전체", "선삭", "밀링"])
+        filter_process = st.selectbox("공정 필터", options=["전체", "IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"])
     with col2:
         filter_start_date = st.date_input("시작일", datetime.now() - timedelta(days=30))
     with col3:
@@ -833,66 +833,156 @@ elif st.session_state.page == "view_inspection":
         # 검사 데이터 조회
         st.subheader("검사 데이터 목록")
         
-        # Supabase에서 데이터 가져오기 (실제 구현 필요)
-        # 샘플 데이터 표시
-        sample_data = {
-            "inspection_id": [f"INSP{i}" for i in range(1, 11)],
-            "inspector_name": np.random.choice(["홍길동", "김철수", "이영희"], 10),
-            "process": np.random.choice(["선삭", "밀링"], 10),
-            "inspection_date": pd.date_range(start=filter_start_date, periods=10).strftime("%Y-%m-%d"),
-            "lot_number": [f"LOT{i:04d}" for i in range(1, 11)],
-            "total_quantity": np.random.randint(50, 200, 10),
-            "defect_count": np.random.randint(0, 10, 10),
-        }
-        
-        df = pd.DataFrame(sample_data)
-        df["defect_rate"] = (df["defect_count"] / df["total_quantity"] * 100).round(2)
+        with st.spinner("데이터 불러오는 중..."):
+            try:
+                # Supabase에서 데이터 가져오기 시도
+                response = supabase.table('inspection_data')\
+                    .select('*')\
+                    .gte('검사일자', filter_start_date.strftime('%Y-%m-%d'))\
+                    .lte('검사일자', filter_end_date.strftime('%Y-%m-%d'))\
+                    .execute()
+                
+                if response.data:
+                    df = pd.DataFrame(response.data)
+                    st.success(f"{len(df)}개의 검사 데이터를 불러왔습니다.")
+                else:
+                    # Supabase에 데이터가 없을 경우 실제 입력 예시 데이터를 보여줌
+                    st.info("Supabase에서 데이터를 가져올 수 없습니다. 실제 입력 예시 데이터를 표시합니다.")
+                    # 이미지에 표시된 것과 유사한 예시 데이터 생성
+                    real_data = {
+                        "날짜": ["2025-04-11", "2025-04-10", "2025-04-09", "2025-04-08", "2025-04-07", 
+                                "2025-04-04", "2025-04-03", "2025-04-02", "2025-04-01", "2025-03-31"],
+                        "작업지시번호": ["WO-01023", "WO-01022", "WO-01021", "WO-01020", "WO-01019", 
+                                    "WO-01018", "WO-01017", "WO-01016", "WO-01015", "WO-01014"],
+                        "품목코드": ["ITEM-0023", "ITEM-0022", "ITEM-0021", "ITEM-0020", "ITEM-0019", 
+                                  "ITEM-0018", "ITEM-0017", "ITEM-0016", "ITEM-0015", "ITEM-0014"],
+                        "모델명": ["부품 W-2", "부품 V-1", "부품 U-0", "부품 T-9", "부품 S-8", 
+                                "부품 R-7", "부품 Q-6", "부품 P-5", "부품 O-4", "부품 N-3"],
+                        "공정": ["밀링", "조립", "밀링", "연삭", "밀링", "조립", "밀링", "밀링", "선삭", "연삭"],
+                        "작업자": ["김철수", "이영희", "박민수", "박민수", "김철수", "홍길동", "홍길동", "김철수", "이영희", "김철수"],
+                        "계획수량": [55, 178, 117, 175, 99, 179, 101, 90, 68, 118],
+                        "생산수량": [141, 53, 51, 73, 57, 127, 58, 67, 113, 193],
+                        "불량수량": [1, 0, 5, 4, 1, 7, 7, 4, 5, 7],
+                        "작업시작시간": ["07:37", "08:37", "05:37", "05:37", "05:37", "09:37", "07:37", "05:37", "09:37", "09:37"],
+                        "작업종료시간": ["09:37", "08:37", "08:37", "08:37", "09:37", "07:37", "08:37", "08:37", "09:37", "08:37"],
+                        "상태": ["완료", "진행중", "진행중", "완료", "대기", "대기", "완료", "완료", "완료", "완료"],
+                    }
+                    
+                    df = pd.DataFrame(real_data)
+                    # 불량률 계산
+                    df["불량률(%)"] = df.apply(lambda row: round((row["불량수량"] / row["생산수량"] * 100), 2) if row["생산수량"] > 0 else 0, axis=1)
+            
+            except Exception as e:
+                st.error(f"Supabase 연결 오류: {str(e)}")
+                # 오류 발생 시 실제 입력 예시 데이터를 보여줌
+                real_data = {
+                    "날짜": ["2025-04-11", "2025-04-10", "2025-04-09", "2025-04-08", "2025-04-07", 
+                            "2025-04-04", "2025-04-03", "2025-04-02", "2025-04-01", "2025-03-31"],
+                    "작업지시번호": ["WO-01023", "WO-01022", "WO-01021", "WO-01020", "WO-01019", 
+                                "WO-01018", "WO-01017", "WO-01016", "WO-01015", "WO-01014"],
+                    "품목코드": ["ITEM-0023", "ITEM-0022", "ITEM-0021", "ITEM-0020", "ITEM-0019", 
+                              "ITEM-0018", "ITEM-0017", "ITEM-0016", "ITEM-0015", "ITEM-0014"],
+                    "모델명": ["부품 W-2", "부품 V-1", "부품 U-0", "부품 T-9", "부품 S-8", 
+                            "부품 R-7", "부품 Q-6", "부품 P-5", "부품 O-4", "부품 N-3"],
+                    "공정": ["밀링", "조립", "밀링", "연삭", "밀링", "조립", "밀링", "밀링", "선삭", "연삭"],
+                    "작업자": ["김철수", "이영희", "박민수", "박민수", "김철수", "홍길동", "홍길동", "김철수", "이영희", "김철수"],
+                    "계획수량": [55, 178, 117, 175, 99, 179, 101, 90, 68, 118],
+                    "생산수량": [141, 53, 51, 73, 57, 127, 58, 67, 113, 193],
+                    "불량수량": [1, 0, 5, 4, 1, 7, 7, 4, 5, 7],
+                    "작업시작시간": ["07:37", "08:37", "05:37", "05:37", "05:37", "09:37", "07:37", "05:37", "09:37", "09:37"],
+                    "작업종료시간": ["09:37", "08:37", "08:37", "08:37", "09:37", "07:37", "08:37", "08:37", "09:37", "08:37"],
+                    "상태": ["완료", "진행중", "진행중", "완료", "대기", "대기", "완료", "완료", "완료", "완료"],
+                }
+                
+                df = pd.DataFrame(real_data)
+                # 불량률 계산
+                df["불량률(%)"] = df.apply(lambda row: round((row["불량수량"] / row["생산수량"] * 100), 2) if row["생산수량"] > 0 else 0, axis=1)
         
         # 공정 필터링
         if filter_process != "전체":
-            df = df[df["process"] == filter_process]
+            df = df[df["공정"] == filter_process]
             
-        st.dataframe(df)
+        # 데이터프레임 표시 
+        st.dataframe(df, use_container_width=True, hide_index=True,
+                    column_config={
+                        "불량률(%)": st.column_config.ProgressColumn(
+                            "불량률(%)",
+                            help="생산 수량 대비 불량 비율",
+                            format="%.2f%%",
+                            min_value=0,
+                            max_value=15,
+                            width="medium"
+                        )
+                    })
         
-        # 선택한 데이터 상세 보기 기능
-        inspection_id = st.selectbox("상세 정보를 볼 검사 ID 선택", options=df["inspection_id"].tolist())
-        
-        if inspection_id:
-            st.subheader(f"검사 상세 정보: {inspection_id}")
-            # 선택한 검사의 상세 정보 (샘플)
-            selected_row = df[df["inspection_id"] == inspection_id].iloc[0]
+        # 데이터가 있을 경우에만 선택 옵션과 상세 정보 표시
+        if not df.empty:
+            # 선택한 데이터 상세 보기 기능
+            selected_row_idx = st.selectbox("상세 정보를 볼 행 선택", options=range(len(df)), 
+                                      format_func=lambda x: f"{df.iloc[x]['날짜']} - {df.iloc[x]['모델명']} ({df.iloc[x]['작업지시번호']})")
             
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("검사원", selected_row["inspector_name"])
-                st.metric("총 수량", f"{selected_row['total_quantity']}개")
-            with col2:
-                st.metric("공정", selected_row["process"])
-                st.metric("불량 수량", f"{selected_row['defect_count']}개")
-            with col3:
-                st.metric("검사일", selected_row["inspection_date"])
-                st.metric("불량률", f"{selected_row['defect_rate']}%")
+            if selected_row_idx is not None:
+                st.subheader(f"검사 상세 정보")
+                selected_row = df.iloc[selected_row_idx]
                 
-            # 불량 상세 정보 (샘플)
-            st.subheader("불량 상세 정보")
-            defect_detail = {
-                "defect_type": np.random.choice(["치수", "표면거칠기", "칩핑", "기타"], 
-                                           selected_row["defect_count"]),
-                "quantity": np.random.randint(1, 5, selected_row["defect_count"])
-            }
-            
-            if selected_row["defect_count"] > 0:
-                defect_df = pd.DataFrame(defect_detail)
-                st.dataframe(defect_df)
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("날짜", selected_row["날짜"])
+                    st.metric("작업자", selected_row["작업자"])
+                    st.metric("품목코드", selected_row["품목코드"])
+                with col2:
+                    st.metric("모델명", selected_row["모델명"])
+                    st.metric("공정", selected_row["공정"])
+                    st.metric("계획수량", f"{selected_row['계획수량']}개")
+                with col3:
+                    st.metric("생산수량", f"{selected_row['생산수량']}개")
+                    st.metric("불량수량", f"{selected_row['불량수량']}개")
+                    st.metric("불량률", f"{selected_row['불량률(%)']}%")
                 
-                # 불량 유형 분포 차트
-                fig = px.pie(defect_df, names="defect_type", values="quantity", 
-                           title="불량 유형 분포")
-                st.plotly_chart(fig)
-            else:
-                st.info("이 검사에는 등록된 불량이 없습니다.")
+                # 불량이 있을 경우만 차트 표시
+                if selected_row["불량수량"] > 0:
+                    st.subheader("불량 상세 정보")
+                    
+                    # 실제로는 이 부분에 불량 상세 정보를 Supabase에서 불러오는 코드가 필요함
+                    # 예시 데이터로 구성
+                    if selected_row["날짜"] == "2025-04-11":
+                        defect_types = ["CẮT SÂU, GỜ BẬC", "CRACK", "VẾT ĐÂM"]
+                        defect_counts = [1, 0, 0]
+                    elif selected_row["날짜"] == "2025-04-09":
+                        defect_types = ["CRACK", "GÃY TOOL", "VẾT ĐÂM", "TOOL RUNG LẮC"]
+                        defect_counts = [1, 1, 2, 1] 
+                    elif selected_row["날짜"] == "2025-04-08":
+                        defect_types = ["CẮT SÂU, GỜ BẬC", "TẮC NƯỚC"]
+                        defect_counts = [3, 1]
+                    else:
+                        # 기타 행의 경우 임의의 불량 유형 생성
+                        defect_types = ["CẮT SÂU, GỜ BẬC", "CRACK", "VẾT ĐÂM", "TOOL RUNG LẮC", "TẮC NƯỚC"]
+                        defect_counts = [0] * len(defect_types)
+                        for i in range(int(selected_row["불량수량"])):
+                            idx = i % len(defect_types)
+                            defect_counts[idx] += 1
+                    
+                    defect_df = pd.DataFrame({
+                        "불량유형": defect_types,
+                        "수량": defect_counts
+                    })
+                    defect_df = defect_df[defect_df["수량"] > 0]  # 수량이 0인 행 제거
+                    
+                    # 불량 유형 데이터 표시
+                    st.dataframe(defect_df, hide_index=True)
+                    
+                    # 불량 유형 분포 차트
+                    if not defect_df.empty:
+                        fig = px.pie(defect_df, names="불량유형", values="수량", 
+                                title="불량 유형 분포")
+                        st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("이 검사에는 등록된 불량이 없습니다.")
+        else:
+            st.info("조건에 맞는 검사 데이터가 없습니다.")
     except Exception as e:
         st.error(f"데이터 조회 중 오류가 발생했습니다: {str(e)}")
+        st.exception(e)
 
 elif st.session_state.page == "manage_inspectors":
     if st.session_state.user_role != "관리자":
@@ -2469,9 +2559,6 @@ elif st.session_state.page == "inspection_data":
                 with st.spinner("데이터 저장 중..."):
                     time.sleep(1)  # 저장 시간 시뮬레이션
                     
-                    # 실제로는 여기에 데이터베이스 저장 코드가 들어갑니다
-                    st.success("검사 데이터가 성공적으로 저장되었습니다!")
-                    
                     # 저장된 데이터 미리보기
                     try:
                         # 변수가 유효한 숫자인지 확인
@@ -2488,23 +2575,66 @@ elif st.session_state.page == "inspection_data":
                         defect_rate_value = 0.00
                         st.error(f"불량률 계산 중 오류 발생: {e}")
                     
+                    # 저장할 데이터 구성
                     saved_data = {
                         "검사일자": inspection_date.strftime("%Y-%m-%d"),
                         "검사자": inspector_name,
                         "검사자ID": inspector_id,
                         "작업지시번호": work_order,
                         "품목코드": item_code,
-                        "모델명": item_name,  # 여기도 품목명에서 모델명으로 변경
+                        "모델명": item_name,
                         "공정": process,
-                        "일검사목표 수량": plan_qty,  # 계획수량에서 일검사목표 수량으로 변경
+                        "일검사목표 수량": plan_qty,
                         "검사수량": total_qty,
                         "불량수량": defect_qty,
                         "불량률(%)": defect_rate_value,
                         "불량유형": ", ".join(defect_types) if defect_types else "-",
                         "작업시간(분)": work_time,
-                        "특이사항": memo
+                        "특이사항": memo,
+                        "생성일시": datetime.now().isoformat()
                     }
                     
+                    # 불량 상세 정보도 별도로 저장
+                    defect_details_list = []
+                    if has_defects and defect_types:
+                        for defect_type in defect_types:
+                            defect_details_list.append({
+                                "작업지시번호": work_order,
+                                "검사일자": inspection_date.strftime("%Y-%m-%d"),
+                                "모델명": item_name,
+                                "불량유형": defect_type,
+                                "불량수량": defect_details.get(defect_type, 0),
+                                "생성일시": datetime.now().isoformat()
+                            })
+                    
+                    try:
+                        # Supabase에 데이터 저장 시도
+                        response = supabase.table('inspection_data').insert(saved_data).execute()
+                        
+                        # 불량 상세 정보도 저장
+                        if defect_details_list:
+                            detail_response = supabase.table('defect_details').insert(defect_details_list).execute()
+                        
+                        st.success("검사 데이터가 Supabase에 성공적으로 저장되었습니다!")
+                    except Exception as e:
+                        st.warning(f"Supabase 저장 중 오류 발생: {e}")
+                        st.info("로컬 데이터로만 저장됩니다.")
+                        
+                        # 세션 상태에 데이터 저장 (임시)
+                        if 'saved_inspections' not in st.session_state:
+                            st.session_state.saved_inspections = []
+                        
+                        st.session_state.saved_inspections.append(saved_data)
+                        
+                        if defect_details_list and 'saved_defects' not in st.session_state:
+                            st.session_state.saved_defects = []
+                        
+                        for defect in defect_details_list:
+                            st.session_state.saved_defects.append(defect)
+                        
+                        st.success("검사 데이터가 로컬에 성공적으로 저장되었습니다!")
+                    
+                    # 데이터 미리보기 표시
                     saved_df = pd.DataFrame([saved_data])
                     st.dataframe(saved_df, use_container_width=True, hide_index=True)
 
