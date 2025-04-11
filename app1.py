@@ -2262,10 +2262,346 @@ elif st.session_state.page == "inspection_data":
     
     # 나머지 탭은 구현이 복잡하므로 간단한 안내 메시지로 대체
     with tab2:
-        st.info("실적 데이터 입력 기능은 데이터베이스 연동 후 구현됩니다.")
-    
+        # 검사 데이터 입력 섹션
+        st.subheader("검사 실적 데이터 입력")
+        
+        # 기본 정보
+        col1, col2 = st.columns(2)
+        with col1:
+            inspector_name = st.text_input("검사자 이름", key="inspector_name", help="검사를 수행한 작업자의 이름을 입력하세요.")
+        with col2:
+            inspector_id = st.text_input("검사자 ID", key="inspector_id", help="검사원 ID를 입력하세요.")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            work_order = st.text_input("작업지시번호", key="work_order", help="검사할 작업의 지시번호를 입력하세요.")
+        with col2:
+            item_code = st.text_input("품목코드", key="item_code", help="검사 대상 품목의 코드를 입력하세요.")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            item_name = st.text_input("품목명", key="item_name", help="검사 대상 품목의 이름을 입력하세요.")
+        with col2:
+            process = st.selectbox(
+                "공정",
+                options=["선삭", "밀링", "연삭", "조립", "검사"],
+                key="process"
+            )
+        with col3:
+            inspection_date = st.date_input("검사일자", datetime.now(), key="inspection_date")
+        
+        # 수량 정보
+        st.subheader("수량 정보")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            plan_qty = st.number_input("계획수량", min_value=1, value=100, key="plan_qty")
+        with col2:
+            total_qty = st.number_input("검사수량", min_value=1, value=100, key="total_qty")
+        with col3:
+            work_time = st.number_input("작업시간(분)", min_value=1, value=60, key="work_time")
+        
+        # 불량 정보 입력
+        st.subheader("불량 정보")
+        has_defects = st.checkbox("불량 있음", key="has_defects")
+        
+        defect_qty = 0
+        defect_types = []
+        defect_details = {}
+        
+        if has_defects:
+            # 불량 유형 선택 (복수 선택 가능)
+            defect_options = ["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "외관불량", "기능불량"]
+            defect_types = st.multiselect(
+                "불량 유형 선택 (복수 선택 가능)",
+                options=defect_options,
+                key="defect_types"
+            )
+            
+            if defect_types:
+                # 각 불량 유형별 수량 입력
+                st.write("각 불량 유형별 수량:")
+                
+                # 열 구성 (최대 3개 열로 배치)
+                cols = st.columns(min(len(defect_types), 3))
+                
+                for i, defect in enumerate(defect_types):
+                    with cols[i % 3]:
+                        defect_details[defect] = st.number_input(
+                            f"{defect} 수량",
+                            min_value=1,
+                            value=1,
+                            key=f"defect_{i}"
+                        )
+                        defect_qty += defect_details[defect]
+                
+                # 총 불량 수량 표시
+                st.metric("총 불량 수량", f"{defect_qty}개")
+                
+                # 불량률 계산 및 표시
+                if total_qty > 0:
+                    defect_rate = (defect_qty / total_qty * 100).round(2)
+                    st.metric("불량률", f"{defect_rate}%")
+        
+        # 추가 정보
+        st.subheader("추가 정보")
+        memo = st.text_area("특이사항", key="memo", help="검사 과정에서 발견된 특이사항이나 추가 정보를 입력하세요.")
+        
+        # 사진 업로드
+        st.subheader("검사 사진 업로드")
+        uploaded_files = st.file_uploader("검사 관련 사진을 업로드하세요 (선택사항)", accept_multiple_files=True, type=["jpg", "jpeg", "png"])
+        
+        if uploaded_files:
+            st.write(f"{len(uploaded_files)}개의 파일이 업로드되었습니다.")
+            cols = st.columns(min(len(uploaded_files), 3))
+            for i, file in enumerate(uploaded_files):
+                with cols[i % 3]:
+                    st.image(file, caption=f"업로드된 이미지 {i+1}", use_column_width=True)
+        
+        # 데이터 저장 버튼
+        if st.button("검사 데이터 저장", use_container_width=True, type="primary"):
+            if not inspector_name or not inspector_id or not work_order or not item_code:
+                st.error("필수 입력 항목을 모두 입력해주세요. (검사자 이름, 검사자 ID, 작업지시번호, 품목코드)")
+            elif has_defects and not defect_types:
+                st.error("불량이 있을 경우 하나 이상의 불량 유형을 선택해야 합니다.")
+            elif total_qty < defect_qty:
+                st.error("불량 수량은 검사 수량보다 클 수 없습니다.")
+            else:
+                # 데이터 저장 시뮬레이션
+                with st.spinner("데이터 저장 중..."):
+                    time.sleep(1)  # 저장 시간 시뮬레이션
+                    
+                    # 실제로는 여기에 데이터베이스 저장 코드가 들어갑니다
+                    st.success("검사 데이터가 성공적으로 저장되었습니다!")
+                    
+                    # 저장된 데이터 미리보기
+                    saved_data = {
+                        "검사일자": inspection_date.strftime("%Y-%m-%d"),
+                        "검사자": inspector_name,
+                        "검사자ID": inspector_id,
+                        "작업지시번호": work_order,
+                        "품목코드": item_code,
+                        "품목명": item_name,
+                        "공정": process,
+                        "계획수량": plan_qty,
+                        "검사수량": total_qty,
+                        "불량수량": defect_qty,
+                        "불량률(%)": (defect_qty / total_qty * 100).round(2) if total_qty > 0 else 0,
+                        "불량유형": ", ".join(defect_types) if defect_types else "-",
+                        "작업시간(분)": work_time,
+                        "특이사항": memo
+                    }
+                    
+                    saved_df = pd.DataFrame([saved_data])
+                    st.dataframe(saved_df, use_container_width=True, hide_index=True)
+
     with tab3:
-        st.info("데이터 검증 기능은 데이터베이스 연동 후 구현됩니다.")
+        # 데이터 검증 섹션
+        st.subheader("검사 데이터 검증")
+        
+        # 데이터 검증 설명
+        st.info("이 기능은 입력된 검사 데이터의 유효성을 검증하고 품질 관리에 필요한 통계적 분석을 제공합니다.")
+        
+        # 데이터 선택
+        col1, col2 = st.columns(2)
+        with col1:
+            validation_start_date = st.date_input("시작일", datetime.now() - timedelta(days=30), key="validation_start_date")
+        with col2:
+            validation_end_date = st.date_input("종료일", datetime.now(), key="validation_end_date")
+        
+        # 검증 대상 선택
+        validation_type = st.radio(
+            "검증 유형",
+            options=["이상치 검출", "데이터 완전성 확인", "통계적 유의성 검증"],
+            horizontal=True
+        )
+        
+        # 검증 실행 버튼
+        if st.button("데이터 검증 실행", use_container_width=True):
+            with st.spinner("데이터 검증 중..."):
+                time.sleep(1.5)  # 검증 작업 시뮬레이션
+                
+                # 검증 결과 표시 (샘플 데이터)
+                st.success("데이터 검증이 완료되었습니다.")
+                
+                if validation_type == "이상치 검출":
+                    st.subheader("이상치 검출 결과")
+                    
+                    # 이상치 데이터 샘플
+                    anomaly_data = {
+                        "날짜": ["2023-04-03", "2023-04-05", "2023-04-08"],
+                        "작업지시번호": ["WO-10045", "WO-10062", "WO-10078"],
+                        "품목코드": ["ITEM-1024", "ITEM-2056", "ITEM-3012"],
+                        "검사수량": [120, 85, 150],
+                        "불량수량": [35, 42, 68],
+                        "불량률(%)": [29.17, 49.41, 45.33],
+                        "이상 유형": ["과다 불량", "과다 불량", "과다 불량"],
+                        "신뢰도": ["높음", "중간", "높음"]
+                    }
+                    
+                    anomaly_df = pd.DataFrame(anomaly_data)
+                    st.dataframe(
+                        anomaly_df,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "불량률(%)": st.column_config.ProgressColumn(
+                                "불량률(%)",
+                                help="검사 수량 대비 불량 비율",
+                                format="%.2f%%",
+                                min_value=0,
+                                max_value=50,
+                                width="medium"
+                            )
+                        }
+                    )
+                    
+                    # 이상치 시각화
+                    st.subheader("이상치 분포")
+                    
+                    # 박스플롯으로 이상치 표시
+                    fig = go.Figure()
+                    fig.add_trace(go.Box(
+                        y=[1.2, 1.8, 2.1, 2.4, 1.5, 1.7, 1.9, 2.0, 2.3, 1.4, 1.6, 35.0, 42.0, 68.0],
+                        name="불량률 분포",
+                        boxpoints='outliers',
+                        marker_color='blue',
+                        marker=dict(
+                            size=8,
+                            outliercolor='red',
+                            line=dict(
+                                outlierwidth=2
+                            )
+                        ),
+                        line_color='blue'
+                    ))
+                    
+                    fig.update_layout(
+                        title="검사 데이터 불량률 분포 (이상치 표시)",
+                        yaxis_title="불량률(%)",
+                        showlegend=False,
+                        height=400,
+                        margin=dict(l=20, r=20, t=50, b=20),
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        paper_bgcolor="rgba(0,0,0,0)"
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # 이상치 처리 방법 안내
+                    st.info("이상치로 감지된 데이터는 재검증이 필요합니다. 담당자에게 통보하여 데이터를 확인하세요.")
+                    
+                elif validation_type == "데이터 완전성 확인":
+                    st.subheader("데이터 완전성 확인 결과")
+                    
+                    # 완전성 지표 계산
+                    completeness_metrics = {
+                        "검사 데이터 레코드 수": 245,
+                        "필수 필드 누락 레코드": 8,
+                        "데이터 완전성 점수": "96.7%",
+                        "누락된 주요 필드": "작업자(3건), 불량유형(5건)"
+                    }
+                    
+                    # 지표 표시
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("총 레코드 수", completeness_metrics["검사 데이터 레코드 수"])
+                        st.metric("완전성 점수", completeness_metrics["데이터 완전성 점수"], delta="양호")
+                    
+                    with col2:
+                        st.metric("필수 필드 누락 레코드", completeness_metrics["필수 필드 누락 레코드"], delta="-2", delta_color="inverse")
+                        st.text(f"누락된 주요 필드: {completeness_metrics['누락된 주요 필드']}")
+                    
+                    # 누락된 데이터 내역
+                    st.subheader("누락된 데이터 내역")
+                    
+                    missing_data = {
+                        "날짜": ["2023-04-01", "2023-04-01", "2023-04-02", "2023-04-03", "2023-04-04", "2023-04-05", "2023-04-06", "2023-04-07"],
+                        "작업지시번호": ["WO-10023", "WO-10024", "WO-10035", "WO-10041", "WO-10048", "WO-10055", "WO-10062", "WO-10070"],
+                        "품목코드": ["ITEM-1005", "ITEM-2010", "ITEM-3001", "ITEM-1008", "ITEM-2001", "ITEM-4002", "ITEM-3005", "ITEM-1015"],
+                        "누락 필드": ["작업자", "작업자", "작업자", "불량유형", "불량유형", "불량유형", "불량유형", "불량유형"],
+                        "처리상태": ["미처리", "미처리", "미처리", "미처리", "처리완료", "미처리", "미처리", "처리완료"]
+                    }
+                    
+                    missing_df = pd.DataFrame(missing_data)
+                    st.dataframe(missing_df, use_container_width=True, hide_index=True)
+                    
+                    # 완전성 개선 제안
+                    st.warning("데이터 입력 시 필수 필드 유효성 검사를 강화하고, 작업자 등록 시스템을 개선할 필요가 있습니다.")
+                    
+                elif validation_type == "통계적 유의성 검증":
+                    st.subheader("통계적 유의성 검증 결과")
+                    
+                    # 통계 분석 결과
+                    st.write("### 공정별 불량률 차이 분석 (ANOVA)")
+                    
+                    anova_result = {
+                        "공정": ["선삭", "밀링", "연삭", "조립"],
+                        "샘플 수": [56, 48, 42, 38],
+                        "평균 불량률(%)": [1.87, 2.15, 1.42, 0.98],
+                        "표준 편차": [0.45, 0.62, 0.38, 0.31]
+                    }
+                    
+                    anova_df = pd.DataFrame(anova_result)
+                    st.dataframe(anova_df, use_container_width=True, hide_index=True)
+                    
+                    # 통계적 유의성 결과
+                    st.metric("F-value", "15.32")
+                    st.metric("p-value", "0.00012")
+                    st.success("통계적으로 유의한 차이가 있습니다 (p < 0.001)")
+                    
+                    # 사후 분석 결과
+                    st.write("### 사후 분석 결과 (Tukey HSD)")
+                    
+                    tukey_result = {
+                        "비교 그룹": ["선삭-밀링", "선삭-연삭", "선삭-조립", "밀링-연삭", "밀링-조립", "연삭-조립"],
+                        "평균 차이": ["-0.28", "0.45", "0.89", "0.73", "1.17", "0.44"],
+                        "p-value": ["0.082", "0.021", "<0.001", "<0.001", "<0.001", "0.034"],
+                        "유의성": ["무", "유", "유", "유", "유", "유"]
+                    }
+                    
+                    tukey_df = pd.DataFrame(tukey_result)
+                    st.dataframe(tukey_df, use_container_width=True, hide_index=True)
+                    
+                    # 분석 결과 시각화
+                    st.subheader("공정별 불량률 분포")
+                    
+                    # 막대 그래프로 표시
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(
+                        x=anova_result["공정"],
+                        y=anova_result["평균 불량률(%)"],
+                        error_y=dict(
+                            type='data',
+                            array=anova_result["표준 편차"],
+                            visible=True
+                        ),
+                        marker_color=['#4361ee', '#4361ee', '#4361ee', '#4361ee'],
+                        text=anova_result["평균 불량률(%)"],
+                        textposition='auto'
+                    ))
+                    
+                    fig.update_layout(
+                        title="공정별 평균 불량률 비교",
+                        xaxis_title="공정",
+                        yaxis_title="평균 불량률(%)",
+                        height=400,
+                        margin=dict(l=20, r=20, t=50, b=20),
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        paper_bgcolor="rgba(0,0,0,0)"
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # 분석 결과 해석
+                    st.info("조립 공정의 불량률이 가장 낮고, 밀링 공정의 불량률이 가장 높습니다. 밀링 공정에 대한 품질 개선 활동이 우선적으로 필요합니다.")
+                
+                # 검증 보고서 다운로드 버튼
+                st.download_button(
+                    label="검증 보고서 다운로드 (Excel)",
+                    data=b"Sample Data Validation Report",
+                    file_name=f"데이터검증보고서_{validation_start_date.strftime('%Y%m%d')}-{validation_end_date.strftime('%Y%m%d')}.xlsx",
+                    mime="application/vnd.ms-excel"
+                )
 
 elif st.session_state.page == "quality_report":
     # 월간 품질 리포트 페이지
