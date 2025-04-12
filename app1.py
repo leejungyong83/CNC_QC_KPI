@@ -428,7 +428,32 @@ def load_inspectors():
 # 검사 데이터 저장
 def save_inspection_data(data):
     try:
-        response = supabase.table('inspection_data').insert(data).execute()
+        # 한글 필드명을 영문으로 변환
+        field_mapping = {
+            "검사원": "inspector_name",
+            "공정": "process",
+            "모델명": "model_name",
+            "검사일자": "inspection_date",
+            "LOT번호": "lot_number",
+            "작업시간(분)": "work_time_minutes",
+            "계획수량": "planned_quantity",
+            "검사수량": "inspection_quantity",
+            "불량수량": "defect_quantity",
+            "불량률(%)": "defect_rate",
+            "목표달성율(%)": "achievement_rate",
+            "비고": "remarks"
+        }
+        
+        # 데이터 변환
+        english_data = {}
+        for k, v in data.items():
+            if k in field_mapping:
+                english_data[field_mapping[k]] = v
+            else:
+                english_data[k] = v
+        
+        # 영문 필드명으로 저장
+        response = supabase.table('inspection_data').insert(english_data).execute()
         return response
     except Exception as e:
         # Supabase 테이블이 없는 경우나 다른 오류 처리
@@ -442,7 +467,26 @@ def save_inspection_data(data):
 # 불량 데이터 저장
 def save_defect_data(data):
     try:
-        response = supabase.table('defect_data').insert(data).execute()
+        # 한글 필드명을 영문으로 변환
+        field_mapping = {
+            "불량유형": "defect_type",
+            "수량": "quantity",
+            "검사ID": "inspection_id",
+            "등록일자": "registration_date",
+            "등록자": "registered_by",
+            "비고": "remarks"
+        }
+        
+        # 데이터 변환
+        english_data = {}
+        for k, v in data.items():
+            if k in field_mapping:
+                english_data[field_mapping[k]] = v
+            else:
+                english_data[k] = v
+        
+        # 영문 필드명으로 저장
+        response = supabase.table('defect_data').insert(english_data).execute()
         return response
     except Exception as e:
         # Supabase 테이블이 없는 경우나 다른 오류 처리
