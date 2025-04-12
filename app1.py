@@ -431,13 +431,31 @@ def load_inspectors():
 
 # 검사 데이터 저장
 def save_inspection_data(data):
-    response = supabase.table('inspection_data').insert(data).execute()
-    return response
+    try:
+        response = supabase.table('inspection_data').insert(data).execute()
+        return response
+    except Exception as e:
+        # Supabase 테이블이 없는 경우나 다른 오류 처리
+        st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
+        # 세션에 데이터 저장(백업)
+        if 'saved_inspections' not in st.session_state:
+            st.session_state.saved_inspections = []
+        st.session_state.saved_inspections.append(data)
+        raise e
 
 # 불량 데이터 저장
 def save_defect_data(data):
-    response = supabase.table('defect_data').insert(data).execute()
-    return response
+    try:
+        response = supabase.table('defect_data').insert(data).execute()
+        return response
+    except Exception as e:
+        # Supabase 테이블이 없는 경우나 다른 오류 처리
+        st.error(f"불량 데이터 저장 중 오류가 발생했습니다: {str(e)}")
+        # 세션에 데이터 저장(백업)
+        if 'saved_defects' not in st.session_state:
+            st.session_state.saved_defects = []
+        st.session_state.saved_defects.append(data)
+        raise e
 
 # 세션 상태 초기화 (앱 최초 로드 시 한 번만 실행)
 if 'inspectors' not in st.session_state:
@@ -636,7 +654,7 @@ if st.session_state.page == "total_dashboard":
     }
     
     df = pd.DataFrame(recent_data)
-    df["📊 불량률(%)"] = (df["⚠️ 불량수량"] / df["📦 전체수량"] * 100).round(2)
+    df["📊 불량률(%)"] = (df["⚠️ 불량수량"] / df["📦 전체수량"] * 100).apply(lambda x: round(x, 2))
     
     # 데이터프레임에 스타일 적용
     st.dataframe(
@@ -726,13 +744,13 @@ elif st.session_state.page == "input_inspection":
             st.dataframe(defects_df)
             
             total_defects = defects_df['quantity'].sum()
-            defect_rate = (total_defects / total_quantity) * 100
+            defect_rate = round((total_defects / total_quantity * 100), 2) if total_quantity > 0 else 0
             
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("📊 총 불량 수량", f"{total_defects}개")
             with col2:
-                st.metric("📈 불량률", f"{defect_rate:.2f}%")
+                st.metric("📈 불량률", f"{defect_rate}%")
                 
         # 불량 목록 초기화 버튼
         if st.button("🔄 불량 목록 초기화"):
@@ -807,7 +825,7 @@ elif st.session_state.page == "view_inspection":
         }
         
         df = pd.DataFrame(sample_data)
-        df["defect_rate"] = (df["defect_count"] / df["total_quantity"] * 100).round(2)
+        df["defect_rate"] = (df["defect_count"] / df["total_quantity"] * 100).apply(lambda x: round(x, 2))
         
         # 공정 필터링
         if filter_process != "전체":
