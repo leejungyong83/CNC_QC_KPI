@@ -2400,7 +2400,13 @@ elif st.session_state.page == "inspection_data":
             # 불량 유형 선택
             defect_types = st.multiselect(
                 "불량 유형 선택",
-                options=["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "외관불량", "기능불량"],
+                options=["ĂN MÒN", "ATN CRACK", "CẮT SÂU, GỜ BẬC", "CHƯA GIA CÔNG HẾT", "CHƯA GIA CÔNG USB", 
+                         "CRACK", "ĐỘ DẦY MAX", "ĐỘ DẦY MIN", "GÃY TOOL", "GỜ BẬC KHE SÓNG", 
+                         "HOLE KÍCH THƯỚC", "KÍCH THƯỚC KHE SÓNG", "LỆCH USB", "Lỗi Khác", "MÒN TOOL, hết CNC", 
+                         "NG 3D (MÁY)", "NG CHIỀU DÀI PHÔI", "NG CHIỀU RỘNG PHÔI", "NG ĐỘ DẦY PHÔI", "NG KÍCH THƯỚC", 
+                         "NG PHÔI", "NG T CUT", "ø1 CRACK", "ø1 CRACK PIN JIG", "SETTING", 
+                         "TẮC NƯỚC", "TÊN LỖI", "THAO TÁC1", "THAO TÁC2", "THAO TÁC3", 
+                         "TOOL RUNG LẮC", "TRÀN NHỰA", "TRỤC A", "VẾT ĐÂM"],
                 placeholder="불량 유형을 선택하세요",
                 key="defect_types"
             )
