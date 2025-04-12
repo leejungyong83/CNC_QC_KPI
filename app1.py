@@ -2268,11 +2268,40 @@ elif st.session_state.page == "inspection_data":
         # 기본 정보 입력 폼
         col1, col2 = st.columns(2)
         with col1:
+            # 세션에 저장된 검사원 목록 사용 또는 가져오기
+            if 'inspectors' not in st.session_state or len(st.session_state.inspectors) == 0:
+                try:
+                    st.session_state.inspectors = load_inspectors()
+                except Exception as e:
+                    st.error(f"검사원 목록을 불러오는데 실패했습니다: {str(e)}")
+                    # 백업 검사원 목록 설정
+                    default_inspectors = [
+                        {"id": "INS001", "name": "홍길동", "department": "CNC_1"},
+                        {"id": "INS002", "name": "김철수", "department": "CNC_2"},
+                        {"id": "INS003", "name": "이영희", "department": "PQC_LINE"},
+                        {"id": "INS004", "name": "박민수", "department": "CNC_1"},
+                        {"id": "INS005", "name": "최지훈", "department": "CNC_2"}
+                    ]
+                    st.session_state.inspectors = pd.DataFrame(default_inspectors)
+            
+            # 검사원 이름 목록 추출
+            inspector_names = ["검사원을 선택하세요"] + st.session_state.inspectors["name"].tolist()
+            
             inspector_name = st.selectbox(
                 "검사원 이름",
-                options=["홍길동", "김철수", "이영희", "박민수", "최지훈"],
+                options=inspector_names,
+                index=0,
                 key="input_inspector_name"
             )
+            
+            # 검사원 ID 자동 입력
+            inspector_id = ""
+            if inspector_name != "검사원을 선택하세요":
+                inspector_row = st.session_state.inspectors[st.session_state.inspectors["name"] == inspector_name]
+                if not inspector_row.empty:
+                    inspector_id = inspector_row.iloc[0]["id"]
+            
+            st.text_input("검사원 ID", value=inspector_id, key="input_inspector_id", disabled=True)
             
             process = st.selectbox(
                 "공정",
@@ -2371,7 +2400,9 @@ elif st.session_state.page == "inspection_data":
         # 저장 버튼
         if st.button("데이터 저장", use_container_width=True):
             # 입력 검증
-            if model_name == "모델을 선택하세요":
+            if inspector_name == "검사원을 선택하세요":
+                st.error("검사원을 선택해주세요.")
+            elif model_name == "모델을 선택하세요":
                 st.error("모델을 선택해주세요.")
             elif total_quantity <= 0:
                 st.error("검사 수량을 입력해주세요.")
