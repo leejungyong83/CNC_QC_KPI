@@ -412,7 +412,7 @@ def load_inspectors():
         if response.data:
             return pd.DataFrame(response.data)
         else:
-            # 샘플 검사원 데이터 (실제 저장하지 않음)
+            # 샘플 데이터 반환
             default_inspectors = [
                 {"id": "INS001", "name": "홍길동", "department": "CNC_1", "process": "선삭", "years_of_service": 5.5},
                 {"id": "INS002", "name": "김철수", "department": "CNC_2", "process": "밀링", "years_of_service": 3.2},
@@ -420,13 +420,9 @@ def load_inspectors():
             ]
             return pd.DataFrame(default_inspectors)
     except Exception as e:
+        # 오류 발생 시 기본 데이터 반환
         st.error(f"검사원 정보 로딩 중 오류: {str(e)}")
-        # 오류 발생시 샘플 데이터 반환
-        default_inspectors = [
-            {"id": "INS001", "name": "홍길동", "department": "CNC_1", "process": "선삭", "years_of_service": 5.5},
-            {"id": "INS002", "name": "김철수", "department": "CNC_2", "process": "밀링", "years_of_service": 3.2},
-            {"id": "INS003", "name": "이영희", "department": "PQC_LINE", "process": "검사", "years_of_service": 7.1}
-        ]
+        default_inspectors = [...]
         return pd.DataFrame(default_inspectors)
 
 # 검사 데이터 저장
@@ -2323,7 +2319,8 @@ elif st.session_state.page == "inspection_data":
             
             process = st.selectbox(
                 "공정",
-                options=["IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
+                options=["공정을 선택하세요", "IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
+                index=0,
                 key="input_process"
             )
             
@@ -2339,18 +2336,18 @@ elif st.session_state.page == "inspection_data":
         with col2:
             inspection_date = st.date_input("검사일자", datetime.now(), key="input_date")
             
-            lot_number = st.text_input("LOT 번호", key="input_lot")
+            lot_number = st.text_input("LOT 번호", placeholder="LOT 번호를 입력하세요", key="input_lot")
             
-            work_time = st.number_input("작업 시간(분)", min_value=0, value=60, key="input_work_time")
+            work_time = st.number_input("작업 시간(분)", min_value=0, value=60, placeholder="작업 시간을 분 단위로 입력하세요", key="input_work_time")
         
         # 수량 정보 입력
         col1, col2, col3 = st.columns(3)
         with col1:
-            plan_quantity = st.number_input("계획 수량", min_value=0, value=100, key="input_plan_qty")
+            plan_quantity = st.number_input("계획 수량", min_value=0, value=100, placeholder="계획 수량을 입력하세요", key="input_plan_qty")
         with col2:
-            total_quantity = st.number_input("총 검사 수량", min_value=0, value=0, key="input_total_qty")
+            total_quantity = st.number_input("총 검사 수량", min_value=0, value=0, placeholder="총 검사 수량을 입력하세요", key="input_total_qty")
         with col3:
-            defect_quantity = st.number_input("불량 수량", min_value=0, value=0, key="input_defect_qty")
+            defect_quantity = st.number_input("불량 수량", min_value=0, value=0, placeholder="불량 수량을 입력하세요", key="input_defect_qty")
         
         # 불량 정보 입력 섹션
         if defect_quantity > 0:
@@ -2360,6 +2357,7 @@ elif st.session_state.page == "inspection_data":
             defect_types = st.multiselect(
                 "불량 유형 선택",
                 options=["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "외관불량", "기능불량"],
+                placeholder="불량 유형을 선택하세요",
                 key="defect_types"
             )
             
@@ -2413,13 +2411,15 @@ elif st.session_state.page == "inspection_data":
                         st.metric("시간당 검사량", f"{hourly_rate}개/시간", delta="목표 달성 완료")
         
         # 비고 입력
-        memo = st.text_area("비고", key="input_memo", help="추가 특이사항이 있으면 입력하세요.")
+        memo = st.text_area("비고", placeholder="특이사항이 있으면 입력하세요", key="input_memo", help="추가 특이사항이 있으면 입력하세요.")
         
         # 저장 버튼
         if st.button("데이터 저장", use_container_width=True):
             # 입력 검증
             if inspector_name == "검사원을 선택하세요":
                 st.error("검사원을 선택해주세요.")
+            elif process == "공정을 선택하세요":
+                st.error("공정을 선택해주세요.")    
             elif model_name == "모델을 선택하세요":
                 st.error("모델을 선택해주세요.")
             elif total_quantity <= 0:
@@ -2473,7 +2473,8 @@ elif st.session_state.page == "inspection_data":
         # 검증 유형 선택
         verification_type = st.selectbox(
             "검증 유형",
-            options=["누락 데이터 검사", "불량률 이상치 검사", "LOT 중복 검사", "전체 검사"],
+            options=["검증 유형을 선택하세요", "누락 데이터 검사", "불량률 이상치 검사", "LOT 중복 검사", "전체 검사"],
+            index=0,
             key="verification_type"
         )
         
@@ -2957,3 +2958,91 @@ elif st.session_state.page == "quality_report":
         )
     
     st.markdown("</div>", unsafe_allow_html=True)
+
+def save_inspector(inspector_data):
+    try:
+        response = supabase.table('inspectors').insert(inspector_data).execute()
+        return response.data[0] if response.data else None
+    except Exception as e:
+        st.error(f"검사원 정보 저장 중 오류: {str(e)}")
+        # 세션에 데이터 저장(백업)
+        if 'saved_inspectors' not in st.session_state:
+            st.session_state.saved_inspectors = []
+        st.session_state.saved_inspectors.append(inspector_data)
+        raise e
+
+def update_inspector(inspector_id, updated_data):
+    try:
+        response = supabase.table('inspectors').update(updated_data).eq('id', inspector_id).execute()
+        return response.data[0] if response.data else None
+    except Exception as e:
+        st.error(f"검사원 정보 업데이트 중 오류: {str(e)}")
+        raise e
+
+def delete_inspector(inspector_id):
+    try:
+        response = supabase.table('inspectors').delete().eq('id', inspector_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"검사원 정보 삭제 중 오류: {str(e)}")
+        return False
+
+def inspector_management_ui():
+    st.title("검사원 관리")
+    
+    # 검사원 목록 표시
+    inspectors = load_inspectors()
+    st.dataframe(inspectors)
+    
+    # 새 검사원 등록 폼
+    with st.form("new_inspector_form"):
+        st.subheader("새 검사원 등록")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            new_id = st.text_input("검사원 ID")
+            new_name = st.text_input("이름")
+        
+        with col2:
+            new_dept = st.selectbox("부서", options=["CNC_1", "CNC_2", "PQC_LINE"])
+            new_process = st.selectbox("공정", options=["선삭", "밀링", "검사", "기타"])
+        
+        new_years = st.number_input("근속년수", min_value=0.0, step=0.5)
+        submitted = st.form_submit_button("등록")
+        
+        if submitted:
+            if not new_id or not new_name:
+                st.error("검사원 ID와 이름은 필수입니다.")
+            else:
+                new_inspector = {
+                    "id": new_id,
+                    "name": new_name,
+                    "department": new_dept,
+                    "process": new_process,
+                    "years_of_service": new_years
+                }
+                
+                try:
+                    save_inspector(new_inspector)
+                    st.success(f"{new_name} 검사원이 성공적으로 등록되었습니다.")
+                    st.rerun()  # 페이지 새로고침
+                except Exception as e:
+                    st.error(f"등록 실패: {str(e)}")
+
+def sync_offline_data():
+    if 'saved_inspectors' in st.session_state and st.session_state.saved_inspectors:
+        with st.spinner("오프라인 데이터 동기화 중..."):
+            success_count = 0
+            for inspector in st.session_state.saved_inspectors[:]:
+                try:
+                    save_inspector(inspector)
+                    st.session_state.saved_inspectors.remove(inspector)
+                    success_count += 1
+                except Exception:
+                    continue
+            
+            if success_count > 0:
+                st.success(f"{success_count}개의 검사원 데이터가 동기화되었습니다.")
+            
+            if st.session_state.saved_inspectors:
+                st.warning(f"{len(st.session_state.saved_inspectors)}개의 데이터는 여전히 동기화되지 않았습니다.")
