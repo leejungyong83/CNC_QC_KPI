@@ -440,7 +440,6 @@ def save_inspection_data(data):
             "검사수량": "inspection_quantity",
             "불량수량": "defect_quantity",
             "불량률(%)": "defect_rate",
-            "목표달성율(%)": "achievement_rate",
             "비고": "remarks"
         }
         
@@ -2489,7 +2488,6 @@ elif st.session_state.page == "inspection_data":
                     "검사수량": total_quantity,
                     "불량수량": defect_quantity,
                     "불량률(%)": defect_rate if total_quantity > 0 else 0,
-                    "목표달성율(%)": inspection_rate if plan_quantity > 0 else 0,
                     "비고": memo
                 }
                 
