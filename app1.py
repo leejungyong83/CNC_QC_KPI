@@ -1675,15 +1675,14 @@ elif st.session_state.page == "manager_auth":
     
     with tab1:
         # 사용자 관리 섹션
-        st.subheader("등록된 사용자 목록")
+        st.subheader("관리자 등록 현황")
         
         # 샘플 사용자 데이터
         users_data = {
             "아이디": ["admin", "user1", "user2", "manager1", "operator1"],
             "이름": ["관리자", "홍길동", "김철수", "이부장", "박작업"],
-            "역할": ["관리자", "일반", "일반", "관리자", "일반"],
-            "부서": ["관리부", "생산부", "품질부", "생산부", "생산부"],
-            "최근 접속일": [
+            "권한": ["관리자", "일반", "일반", "관리자", "일반"],
+            "최근접속일": [
                 (datetime.now() - timedelta(hours=2)).strftime("%Y-%m-%d %H:%M"),
                 (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M"),
                 (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d %H:%M"),
@@ -1698,22 +1697,44 @@ elif st.session_state.page == "manager_auth":
         # 사용자 목록 필터링
         col1, col2 = st.columns(2)
         with col1:
-            role_filter = st.selectbox("역할 필터", options=["전체", "관리자", "일반"])
+            role_filter = st.selectbox("권한 필터", options=["전체", "관리자", "일반"])
         with col2:
             status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성"])
         
         # 필터 적용
         filtered_df = users_df.copy()
         if role_filter != "전체":
-            filtered_df = filtered_df[filtered_df["역할"] == role_filter]
+            filtered_df = filtered_df[filtered_df["권한"] == role_filter]
         if status_filter != "전체":
             filtered_df = filtered_df[filtered_df["상태"] == status_filter]
         
         # 필터링된 사용자 목록 표시
         st.dataframe(filtered_df, use_container_width=True, hide_index=True)
         
+        # 관리자 삭제 섹션
+        st.subheader("관리자 삭제")
+        delete_cols = st.columns([3, 2])
+        with delete_cols[0]:
+            admin_to_delete = st.selectbox(
+                "삭제할 관리자 선택",
+                options=filtered_df["아이디"].tolist(),
+                format_func=lambda x: f"{x} ({filtered_df[filtered_df['아이디'] == x]['이름'].values[0]})"
+            )
+        with delete_cols[1]:
+            delete_confirm = st.checkbox("삭제를 확인합니다")
+            
+        if st.button("관리자 삭제", type="primary", disabled=not delete_confirm):
+            if delete_confirm:
+                st.warning(f"관리자 '{admin_to_delete}'가 시스템에서 삭제되었습니다.")
+                st.info("실제 데이터베이스 연동 시 관리자 정보가 삭제됩니다.")
+            else:
+                st.error("삭제를 확인해주세요.")
+        
+        # 구분선
+        st.markdown("---")
+        
         # 새 사용자 등록 폼
-        st.subheader("새 사용자 등록")
+        st.subheader("신규 관리자 추가")
         with st.form("new_user_form"):
             col1, col2 = st.columns(2)
             with col1:
@@ -1723,10 +1744,10 @@ elif st.session_state.page == "manager_auth":
             with col2:
                 new_user_password = st.text_input("비밀번호", type="password")
                 new_user_password_confirm = st.text_input("비밀번호 확인", type="password")
-                new_user_role = st.selectbox("역할", options=["일반", "관리자"])
+                new_user_role = st.selectbox("권한", options=["일반", "관리자"])
             
-            submit_user = st.form_submit_button("사용자 등록")
-            
+            submit_user = st.form_submit_button("관리자 추가")
+        
         if submit_user:
             if not new_user_id or not new_user_name or not new_user_password:
                 st.error("필수 항목을 모두 입력하세요.")
