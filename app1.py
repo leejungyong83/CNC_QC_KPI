@@ -11,6 +11,13 @@ from pathlib import Path
 import os
 import threading
 import httpx
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import matplotlib.dates as mdates
+import uuid
+import re
+import random
+from PIL import Image
 
 # Supabase 초기화
 try:
@@ -1679,14 +1686,8 @@ elif st.session_state.page == "manager_auth":
         
         # 세션 상태에 관리자 목록 초기화 (처음 접속 시에만)
         if 'admin_users' not in st.session_state:
-            st.session_state.admin_users = {
-                "아이디": [],
-                "이름": [],
-                "권한": [],
-                "부서": [],
-                "최근접속일": [],
-                "상태": []
-            }
+            # JSON 파일에서 관리자 데이터 로드
+            st.session_state.admin_users = load_admin_data()
         
         # 사용자 데이터프레임 생성
         users_df = pd.DataFrame(st.session_state.admin_users)
@@ -1726,17 +1727,32 @@ elif st.session_state.page == "manager_auth":
                     # 세션 상태에서 관리자 삭제
                     idx = st.session_state.admin_users["아이디"].index(admin_to_delete)
                     deleted_name = st.session_state.admin_users["이름"][idx]
+                    
+                    # 관리자 삭제
                     for key in st.session_state.admin_users:
                         st.session_state.admin_users[key].pop(idx)
                     
-                    # 성공 메시지 및 시각적 효과
+                    # 파일에 저장
+                    save_admin_data(st.session_state.admin_users)
+                    
+                    # 성공 메시지 및 시각적 효과 - 페이지 리로드 전에 표시
                     st.warning(f"관리자 '{admin_to_delete}'가 시스템에서 삭제되었습니다.")
+                    time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
                     st.toast(f"🗑️ {deleted_name} 관리자가 삭제되었습니다", icon="🔴")
+                    
+                    # 삭제 효과를 위한 플래그 설정
+                    if 'deleted_admin' not in st.session_state:
+                        st.session_state.deleted_admin = True
                     
                     # 페이지 리로드
                     st.experimental_rerun()
                 else:
                     st.error("삭제를 확인해주세요.")
+        
+        # 삭제 효과 표시
+        if 'deleted_admin' in st.session_state and st.session_state.deleted_admin:
+            st.session_state.deleted_admin = False
+            st.snow()  # 삭제 임팩트 효과
         
         # 구분선
         st.markdown("---")
@@ -1787,9 +1803,16 @@ elif st.session_state.page == "manager_auth":
                 st.session_state.admin_users["최근접속일"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
                 st.session_state.admin_users["상태"].append("활성")
                 
+                # 파일에 저장
+                save_admin_data(st.session_state.admin_users)
+                
                 # 성공 메시지 및 시각적 효과
                 st.success(f"관리자 '{new_user_name}'이(가) 성공적으로 등록되었습니다.")
-                st.balloons()  # 풍선 효과 추가
+                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                
+                # 추가 효과를 위한 플래그 설정
+                if 'added_admin' not in st.session_state:
+                    st.session_state.added_admin = True
                 
                 # 폼 입력값 리셋을 위한 세션 상태 설정
                 st.session_state.new_user_id = ""
@@ -1799,7 +1822,12 @@ elif st.session_state.page == "manager_auth":
                 
                 # 페이지 리로드
                 st.experimental_rerun()
-    
+        
+        # 추가 효과 표시
+        if 'added_admin' in st.session_state and st.session_state.added_admin:
+            st.session_state.added_admin = False
+            st.balloons()  # 풍선 효과 추가
+
     with tab2:
         # 권한 설정 섹션
         st.subheader("사용자 권한 설정")
@@ -1861,15 +1889,39 @@ elif st.session_state.page == "manager_auth":
                 # 세션 상태에서 해당 사용자의 권한과 상태 업데이트
                 idx = st.session_state.admin_users["아이디"].index(selected_user)
                 user_name = st.session_state.admin_users["이름"][idx]
+                old_role = st.session_state.admin_users["권한"][idx]  # 이전 권한 저장
+                
+                # 권한과 상태 업데이트
                 st.session_state.admin_users["권한"][idx] = new_role
                 st.session_state.admin_users["상태"][idx] = new_status
                 
+                # 파일에 저장
+                save_admin_data(st.session_state.admin_users)
+                
                 # 성공 메시지 및 시각적 효과
                 st.success(f"사용자 '{selected_user}'의 권한이 성공적으로 업데이트되었습니다.")
-                st.toast(f"✅ {user_name}님의 권한이 {new_role}로 변경되었습니다", icon="🔵")
+                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                
+                # 업데이트에 따른 메시지 커스터마이징
+                message = f"✅ {user_name}님의 "
+                if old_role != new_role:
+                    message += f"권한이 {old_role}에서 {new_role}로 변경되었습니다"
+                else:
+                    message += f"상태가 업데이트되었습니다"
+                
+                st.toast(message, icon="🔵")
+                
+                # 권한 설정 효과를 위한 플래그 설정
+                if 'updated_admin' not in st.session_state:
+                    st.session_state.updated_admin = True
                 
                 # 페이지 리로드
                 st.experimental_rerun()
+                
+        # 권한 설정 효과 표시
+        if 'updated_admin' in st.session_state and st.session_state.updated_admin:
+            st.session_state.updated_admin = False
+            st.success("✨ 권한 설정이 성공적으로 적용되었습니다!")
 
 elif st.session_state.page == "process_auth":
     # 관리자 등록 및 관리 페이지
@@ -3171,3 +3223,28 @@ def sync_offline_data():
             
             if st.session_state.saved_inspectors:
                 st.warning(f"{len(st.session_state.saved_inspectors)}개의 데이터는 여전히 동기화되지 않았습니다.")
+
+# 관리자 데이터 저장 및 로드 함수 추가
+def load_admin_data():
+    """관리자 데이터 파일에서 로드하는 함수"""
+    try:
+        with open('data/admin_data.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # 파일이 없거나 내용이 없을 경우 기본 구조 반환
+        return {
+            "아이디": [],
+            "이름": [],
+            "권한": [],
+            "부서": [],
+            "최근접속일": [],
+            "상태": []
+        }
+
+def save_admin_data(admin_data):
+    """관리자 데이터를 파일에 저장하는 함수"""
+    # 디렉토리가 없으면 생성
+    os.makedirs('data', exist_ok=True)
+    
+    with open('data/admin_data.json', 'w', encoding='utf-8') as f:
+        json.dump(admin_data, f, ensure_ascii=False, indent=2)
