@@ -1725,9 +1725,15 @@ elif st.session_state.page == "manager_auth":
                 if delete_confirm:
                     # 세션 상태에서 관리자 삭제
                     idx = st.session_state.admin_users["아이디"].index(admin_to_delete)
+                    deleted_name = st.session_state.admin_users["이름"][idx]
                     for key in st.session_state.admin_users:
                         st.session_state.admin_users[key].pop(idx)
+                    
+                    # 성공 메시지 및 시각적 효과
                     st.warning(f"관리자 '{admin_to_delete}'가 시스템에서 삭제되었습니다.")
+                    st.toast(f"🗑️ {deleted_name} 관리자가 삭제되었습니다", icon="🔴")
+                    
+                    # 페이지 리로드
                     st.experimental_rerun()
                 else:
                     st.error("삭제를 확인해주세요.")
@@ -1737,16 +1743,31 @@ elif st.session_state.page == "manager_auth":
         
         # 새 사용자 등록 폼
         st.subheader("신규 관리자 추가")
+        
+        # 폼 입력값 초기화를 위한 세션 상태 초기화
+        if 'new_user_id' not in st.session_state:
+            st.session_state.new_user_id = ""
+        if 'new_user_name' not in st.session_state:
+            st.session_state.new_user_name = ""
+        if 'new_user_password' not in st.session_state:
+            st.session_state.new_user_password = ""
+        if 'new_user_password_confirm' not in st.session_state:
+            st.session_state.new_user_password_confirm = ""
+        if 'new_user_dept' not in st.session_state:
+            st.session_state.new_user_dept = "관리부"
+        if 'new_user_role' not in st.session_state:
+            st.session_state.new_user_role = "일반"
+            
         with st.form("new_user_form"):
             col1, col2 = st.columns(2)
             with col1:
-                new_user_id = st.text_input("아이디")
-                new_user_name = st.text_input("이름")
-                new_user_dept = st.selectbox("부서", options=["관리부", "생산부", "품질부", "기술부"])
+                new_user_id = st.text_input("아이디", value=st.session_state.new_user_id, key="input_user_id")
+                new_user_name = st.text_input("이름", value=st.session_state.new_user_name, key="input_user_name")
+                new_user_dept = st.selectbox("부서", options=["관리부", "생산부", "품질부", "기술부"], index=["관리부", "생산부", "품질부", "기술부"].index(st.session_state.new_user_dept) if st.session_state.new_user_dept in ["관리부", "생산부", "품질부", "기술부"] else 0, key="input_user_dept")
             with col2:
-                new_user_password = st.text_input("비밀번호", type="password")
-                new_user_password_confirm = st.text_input("비밀번호 확인", type="password")
-                new_user_role = st.selectbox("권한", options=["일반", "관리자"])
+                new_user_password = st.text_input("비밀번호", type="password", value=st.session_state.new_user_password, key="input_user_pwd")
+                new_user_password_confirm = st.text_input("비밀번호 확인", type="password", value=st.session_state.new_user_password_confirm, key="input_user_pwd_confirm")
+                new_user_role = st.selectbox("권한", options=["일반", "관리자"], index=["일반", "관리자"].index(st.session_state.new_user_role) if st.session_state.new_user_role in ["일반", "관리자"] else 0, key="input_user_role")
             
             submit_user = st.form_submit_button("관리자 추가")
         
@@ -1766,7 +1787,17 @@ elif st.session_state.page == "manager_auth":
                 st.session_state.admin_users["최근접속일"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
                 st.session_state.admin_users["상태"].append("활성")
                 
+                # 성공 메시지 및 시각적 효과
                 st.success(f"관리자 '{new_user_name}'이(가) 성공적으로 등록되었습니다.")
+                st.balloons()  # 풍선 효과 추가
+                
+                # 폼 입력값 리셋을 위한 세션 상태 설정
+                st.session_state.new_user_id = ""
+                st.session_state.new_user_name = ""
+                st.session_state.new_user_password = ""
+                st.session_state.new_user_password_confirm = ""
+                
+                # 페이지 리로드
                 st.experimental_rerun()
     
     with tab2:
@@ -1829,9 +1860,15 @@ elif st.session_state.page == "manager_auth":
             if st.button("권한 설정 저장"):
                 # 세션 상태에서 해당 사용자의 권한과 상태 업데이트
                 idx = st.session_state.admin_users["아이디"].index(selected_user)
+                user_name = st.session_state.admin_users["이름"][idx]
                 st.session_state.admin_users["권한"][idx] = new_role
                 st.session_state.admin_users["상태"][idx] = new_status
+                
+                # 성공 메시지 및 시각적 효과
                 st.success(f"사용자 '{selected_user}'의 권한이 성공적으로 업데이트되었습니다.")
+                st.toast(f"✅ {user_name}님의 권한이 {new_role}로 변경되었습니다", icon="🔵")
+                
+                # 페이지 리로드
                 st.experimental_rerun()
 
 elif st.session_state.page == "process_auth":
