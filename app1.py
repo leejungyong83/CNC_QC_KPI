@@ -1682,6 +1682,7 @@ elif st.session_state.page == "manager_auth":
             "아이디": ["admin", "user1", "user2", "manager1", "operator1"],
             "이름": ["관리자", "홍길동", "김철수", "이부장", "박작업"],
             "권한": ["관리자", "일반", "일반", "관리자", "일반"],
+            "부서": ["관리부", "생산부", "품질부", "생산부", "생산부"],
             "최근접속일": [
                 (datetime.now() - timedelta(hours=2)).strftime("%Y-%m-%d %H:%M"),
                 (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M"),
