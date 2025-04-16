@@ -1775,7 +1775,7 @@ elif st.session_state.page == "manager_auth":
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("현재 역할", user_info["역할"])
+            st.metric("현재 권한", user_info["권한"])
         with col2:
             st.metric("소속 부서", user_info["부서"])
         with col3:
@@ -1786,7 +1786,7 @@ elif st.session_state.page == "manager_auth":
         
         col1, col2 = st.columns(2)
         with col1:
-            new_role = st.radio("역할", options=["일반", "관리자"], index=0 if user_info["역할"] == "일반" else 1)
+            new_role = st.radio("권한", options=["일반", "관리자"], index=0 if user_info["권한"] == "일반" else 1)
         with col2:
             new_status = st.radio("상태", options=["활성", "비활성"], index=0 if user_info["상태"] == "활성" else 1)
         
@@ -1797,10 +1797,10 @@ elif st.session_state.page == "manager_auth":
         with col1:
             st.markdown("**관리자 메뉴**")
             admin_auth = {
-                "사용자 관리": st.checkbox("사용자 관리", value=user_info["역할"] == "관리자"),
-                "공정 관리": st.checkbox("공정 관리", value=user_info["역할"] == "관리자"),
+                "사용자 관리": st.checkbox("사용자 관리", value=user_info["권한"] == "관리자"),
+                "공정 관리": st.checkbox("공정 관리", value=user_info["권한"] == "관리자"),
                 "검사 관리": st.checkbox("검사 관리", value=True),
-                "시스템 설정": st.checkbox("시스템 설정", value=user_info["역할"] == "관리자")
+                "시스템 설정": st.checkbox("시스템 설정", value=user_info["권한"] == "관리자")
             }
         
         with col2:
@@ -1809,7 +1809,7 @@ elif st.session_state.page == "manager_auth":
                 "종합 대시보드": st.checkbox("종합 대시보드", value=True),
                 "일간 리포트": st.checkbox("일간 리포트", value=True),
                 "주간 리포트": st.checkbox("주간 리포트", value=True),
-                "월간 리포트": st.checkbox("월간 리포트", value=user_info["역할"] == "관리자")
+                "월간 리포트": st.checkbox("월간 리포트", value=user_info["권한"] == "관리자")
             }
         
         # 권한 저장 버튼
