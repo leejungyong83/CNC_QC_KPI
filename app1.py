@@ -438,7 +438,7 @@ def save_inspection_data(data):
             "작업시간(분)": "work_time_minutes",
             "계획수량": "planned_quantity",
             "검사수량": "inspection_quantity",
-            "불량수량": "defect_quantity",
+            "불량수량": "total_defects",
             "불량률(%)": "defect_rate",
             "비고": "remarks"
         }
