@@ -2472,7 +2472,7 @@ elif st.session_state.page == "user_auth":
         # 사용 통계 섹션
         st.subheader("사용자 통계")
         
-        if 'user_data' not in st.session_state or not st.session_state.user_data["아이디"]:
+        if 'user_data' not in st.session_state or not isinstance(st.session_state.user_data, dict) or "아이디" not in st.session_state.user_data or len(st.session_state.user_data["아이디"]) == 0:
             st.info("등록된 사용자가 없습니다. 통계를 표시하려면 사용자를 등록해주세요.")
         else:
             user_df = pd.DataFrame(st.session_state.user_data)
