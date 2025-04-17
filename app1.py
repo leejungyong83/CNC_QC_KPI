@@ -121,6 +121,31 @@ DATA_DIR.mkdir(exist_ok=True)
 INSPECTION_DATA_FILE = DATA_DIR / "inspection_data.json"
 INSPECTOR_DATA_FILE = DATA_DIR / "inspector_data.json"
 DEFECT_DATA_FILE = DATA_DIR / "defect_data.json"
+ADMIN_DATA_FILE = DATA_DIR / "admin_data.json"
+
+def load_admin_data():
+    """관리자 데이터 파일에서 로드하는 함수"""
+    try:
+        with open(ADMIN_DATA_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # 파일이 없거나 내용이 없을 경우 기본 구조 반환
+        return {
+            "아이디": [],
+            "이름": [],
+            "권한": [],
+            "부서": [],
+            "최근접속일": [],
+            "상태": []
+        }
+
+def save_admin_data(admin_data):
+    """관리자 데이터를 파일에 저장하는 함수"""
+    # 디렉토리가 없으면 생성
+    os.makedirs(DATA_DIR, exist_ok=True)
+    
+    with open(ADMIN_DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(admin_data, f, ensure_ascii=False, indent=2)
 
 def init_db():
     """JSON 파일 기반 데이터베이스 초기화"""
@@ -3225,26 +3250,3 @@ def sync_offline_data():
                 st.warning(f"{len(st.session_state.saved_inspectors)}개의 데이터는 여전히 동기화되지 않았습니다.")
 
 # 관리자 데이터 저장 및 로드 함수 추가
-def load_admin_data():
-    """관리자 데이터 파일에서 로드하는 함수"""
-    try:
-        with open('data/admin_data.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        # 파일이 없거나 내용이 없을 경우 기본 구조 반환
-        return {
-            "아이디": [],
-            "이름": [],
-            "권한": [],
-            "부서": [],
-            "최근접속일": [],
-            "상태": []
-        }
-
-def save_admin_data(admin_data):
-    """관리자 데이터를 파일에 저장하는 함수"""
-    # 디렉토리가 없으면 생성
-    os.makedirs('data', exist_ok=True)
-    
-    with open('data/admin_data.json', 'w', encoding='utf-8') as f:
-        json.dump(admin_data, f, ensure_ascii=False, indent=2)
