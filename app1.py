@@ -2263,11 +2263,11 @@ elif st.session_state.page == "user_auth":
         st.stop()
     
     # 탭 구성
-    tab1, tab2, tab3 = st.tabs(["👥 사용자 목록", "➕ 사용자 등록", "📊 사용 통계"])
+    tab1, tab2, tab3 = st.tabs(["👥 검사자 목록", "➕ 신규 검사자 등록", "📊 검사자 통계"])
     
     with tab1:
         # 사용자 목록 섹션
-        st.subheader("등록된 사용자 목록")
+        st.subheader("등록된 검사자 목록")
         
         try:
             # 세션 상태에 사용자 목록 초기화 (처음 접속 시에만)
@@ -2320,12 +2320,12 @@ elif st.session_state.page == "user_auth":
         
         # 필터링된 사용자 목록 표시
         if filtered_user_df.empty:
-            st.info("등록된 사용자가 없습니다. 먼저 사용자를 등록해주세요.")
+            st.info("등록된 검사자가 없습니다. 먼저 검사자를 등록해주세요.")
         else:
             st.dataframe(filtered_user_df, use_container_width=True, hide_index=True)
         
         # 사용자 검색
-        search_query = st.text_input("사용자 검색 (이름 또는 아이디)", key="user_search")
+        search_query = st.text_input("검사자 검색 (이름 또는 아이디)", key="user_search")
         if search_query and not user_df.empty:
             try:
                 if "이름" in user_df.columns and "아이디" in user_df.columns:
@@ -2348,13 +2348,13 @@ elif st.session_state.page == "user_auth":
             try:
                 if "아이디" in user_df.columns:
                     selected_user_id = st.selectbox(
-                        "상세 정보를 볼 사용자 선택",
+                        "상세 정보를 볼 검사자 선택",
                         options=user_df["아이디"].tolist(),
                         format_func=lambda x: f"{x} ({user_df[user_df['아이디'] == x]['이름'].values[0] if not user_df[user_df['아이디'] == x].empty and '이름' in user_df.columns else '알 수 없음'})"
                     )
                     
                     if selected_user_id:
-                        st.subheader(f"사용자 상세 정보: {selected_user_id}")
+                        st.subheader(f"검사자 상세 정보: {selected_user_id}")
                         
                         # 선택된 사용자 정보
                         user_info_df = user_df[user_df["아이디"] == selected_user_id]
@@ -2433,10 +2433,10 @@ elif st.session_state.page == "user_auth":
                                         st.error(f"상태 변경 중 오류가 발생했습니다: {str(e)}")
                         
                         # 사용자 삭제 섹션
-                        st.subheader("사용자 삭제")
+                        st.subheader("검사자 삭제")
                         delete_confirm = st.checkbox("삭제를 확인합니다", key="delete_user_confirm")
                         
-                        if st.button("사용자 삭제", type="primary", disabled=not delete_confirm):
+                        if st.button("검사자 삭제", type="primary", disabled=not delete_confirm):
                             if delete_confirm:
                                 try:
                                     # 세션 상태에서 사용자 삭제
@@ -2452,9 +2452,9 @@ elif st.session_state.page == "user_auth":
                                     save_user_data(st.session_state.user_data)
                                     
                                     # 성공 메시지 및 시각적 효과 - 페이지 리로드 전에 표시
-                                    st.warning(f"사용자 '{selected_user_id}'가 시스템에서 삭제되었습니다.")
+                                    st.warning(f"검사자 '{selected_user_id}'가 시스템에서 삭제되었습니다.")
                                     time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
-                                    st.toast(f"🗑️ {deleted_name} 사용자가 삭제되었습니다", icon="🔴")
+                                    st.toast(f"🗑️ {deleted_name} 검사자가 삭제되었습니다", icon="🔴")
                                     
                                     # 삭제 효과를 위한 플래그 설정
                                     if 'deleted_user' not in st.session_state:
@@ -2463,14 +2463,14 @@ elif st.session_state.page == "user_auth":
                                     # 페이지 리로드
                                     st.experimental_rerun()
                                 except Exception as e:
-                                    st.error(f"사용자 삭제 중 오류가 발생했습니다: {str(e)}")
+                                    st.error(f"검사자 삭제 중 오류가 발생했습니다: {str(e)}")
                             else:
                                 st.error("삭제를 확인해주세요.")
                 else:
-                    st.warning("선택한 사용자의 정보를 찾을 수 없습니다.")
+                    st.warning("선택한 검사자의 정보를 찾을 수 없습니다.")
             except Exception as e:
-                st.error(f"사용자 정보 표시 중 오류가 발생했습니다: {str(e)}")
-                st.info("사용자 데이터에 문제가 있을 수 있습니다. 데이터를 확인해주세요.")
+                st.error(f"검사자 정보 표시 중 오류가 발생했습니다: {str(e)}")
+                st.info("검사자 데이터에 문제가 있을 수 있습니다. 데이터를 확인해주세요.")
             
             # 삭제 효과 표시
             if 'deleted_user' in st.session_state and st.session_state.deleted_user:
@@ -2479,7 +2479,7 @@ elif st.session_state.page == "user_auth":
 
     with tab2:
         # 사용자 등록 섹션
-        st.subheader("새 사용자 등록")
+        st.subheader("신규 검사자 등록")
         
         # 폼 입력값 초기화를 위한 세션 상태 초기화
         if 'new_user_id' not in st.session_state:
@@ -2511,7 +2511,7 @@ elif st.session_state.page == "user_auth":
             new_user_process = st.selectbox("담당 공정", options=["선삭", "밀링", "검사", "설계", "관리"], index=["선삭", "밀링", "검사", "설계", "관리"].index(st.session_state.new_user_process) if st.session_state.new_user_process in ["선삭", "밀링", "검사", "설계", "관리"] else 0, key="new_user_process_2")
             new_user_memo = st.text_area("메모 (선택사항)", max_chars=200, key="new_user_memo_2")
             
-            submit_user = st.form_submit_button("사용자 등록")
+            submit_user = st.form_submit_button("검사자 등록")
         
         if submit_user:
             if not new_user_id or not new_user_name or not new_user_pwd:
@@ -2567,7 +2567,7 @@ elif st.session_state.page == "user_auth":
     
     with tab3:
         # 사용 통계 섹션
-        st.subheader("사용자 통계")
+        st.subheader("검사자 통계")
         
         if 'user_data' not in st.session_state or not isinstance(st.session_state.user_data, dict) or "아이디" not in st.session_state.user_data or len(st.session_state.user_data["아이디"]) == 0:
             st.info("등록된 사용자가 없습니다. 통계를 표시하려면 사용자를 등록해주세요.")
@@ -2578,31 +2578,31 @@ elif st.session_state.page == "user_auth":
                 # 부서별 사용자 분포
                 if "부서" in user_df.columns and not user_df["부서"].empty:
                     dept_counts = user_df["부서"].value_counts().reset_index()
-                    dept_counts.columns = ["부서", "사용자 수"]
+                    dept_counts.columns = ["부서", "검사자 수"]
                     
                     # 공정별 사용자 분포
                     process_counts = None
                     if "공정" in user_df.columns and not user_df["공정"].empty:
                         process_counts = user_df["공정"].value_counts().reset_index()
-                        process_counts.columns = ["공정", "사용자 수"]
+                        process_counts.columns = ["공정", "검사자 수"]
                     
                     # 상태별 사용자 분포
                     status_counts = None
                     if "상태" in user_df.columns and not user_df["상태"].empty:
                         status_counts = user_df["상태"].value_counts().reset_index()
-                        status_counts.columns = ["상태", "사용자 수"]
+                        status_counts.columns = ["상태", "검사자 수"]
                     
                     # 차트 표시
                     col1, col2 = st.columns(2)
                     
                     with col1:
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
-                        st.markdown("<div class='emoji-title'>👥 부서별 사용자 분포</div>", unsafe_allow_html=True)
+                        st.markdown("<div class='emoji-title'>👥 부서별 검사자 분포</div>", unsafe_allow_html=True)
                         
                         fig = px.bar(
                             dept_counts, 
                             x="부서", 
-                            y="사용자 수",
+                            y="검사자 수",
                             color="부서",
                             color_discrete_sequence=px.colors.qualitative.Bold
                         )
@@ -2620,12 +2620,12 @@ elif st.session_state.page == "user_auth":
                     with col2:
                         if process_counts is not None:
                             st.markdown("<div class='card'>", unsafe_allow_html=True)
-                            st.markdown("<div class='emoji-title'>🔧 공정별 사용자 분포</div>", unsafe_allow_html=True)
+                            st.markdown("<div class='emoji-title'>🔧 공정별 검사자 분포</div>", unsafe_allow_html=True)
                             
                             fig = px.bar(
                                 process_counts, 
                                 x="공정", 
-                                y="사용자 수",
+                                y="검사자 수",
                                 color="공정",
                                 color_discrete_sequence=px.colors.qualitative.Pastel
                             )
@@ -2643,11 +2643,11 @@ elif st.session_state.page == "user_auth":
                     # 상태별 사용자 분포 (파이 차트)
                     if status_counts is not None:
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
-                        st.markdown("<div class='emoji-title'>🔄 상태별 사용자 분포</div>", unsafe_allow_html=True)
+                        st.markdown("<div class='emoji-title'>🔄 상태별 검사자 분포</div>", unsafe_allow_html=True)
                         
                         fig = px.pie(
                             status_counts, 
-                            values="사용자 수", 
+                            values="검사자 수", 
                             names="상태",
                             hole=0.4,
                             color="상태",
@@ -2670,16 +2670,16 @@ elif st.session_state.page == "user_auth":
                         
                         # 간단한 현황 요약
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
-                        st.markdown("<div class='emoji-title'>📊 사용자 현황 요약</div>", unsafe_allow_html=True)
+                        st.markdown("<div class='emoji-title'>📊 검사자 현황 요약</div>", unsafe_allow_html=True)
                         
                         active_users = len(user_df[user_df["상태"] == "활성"]) if "상태" in user_df.columns else 0
                         inactive_users = len(user_df[user_df["상태"] != "활성"]) if "상태" in user_df.columns else 0
                         
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.metric("활성 사용자", active_users)
+                            st.metric("활성 검사자", active_users)
                         with col2:
-                            st.metric("비활성/휴면 사용자", inactive_users)
+                            st.metric("비활성/휴면 검사자", inactive_users)
                         
                         # 최근 등록된 사용자
                         if "계정생성일" in user_df.columns and len(user_df) > 0:
@@ -2687,7 +2687,7 @@ elif st.session_state.page == "user_auth":
                                 user_df["계정생성일"] = pd.to_datetime(user_df["계정생성일"], errors='coerce')
                                 recent_users = user_df.sort_values("계정생성일", ascending=False).head(3)
                                 
-                                st.subheader("최근 등록된 사용자")
+                                st.subheader("최근 등록된 검사자")
                                 for _, user in recent_users.iterrows():
                                     user_name = user["이름"] if "이름" in user and pd.notna(user["이름"]) else "이름 없음"
                                     user_dept = user["부서"] if "부서" in user and pd.notna(user["부서"]) else "부서 없음"
