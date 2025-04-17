@@ -122,6 +122,7 @@ INSPECTION_DATA_FILE = DATA_DIR / "inspection_data.json"
 INSPECTOR_DATA_FILE = DATA_DIR / "inspector_data.json"
 DEFECT_DATA_FILE = DATA_DIR / "defect_data.json"
 ADMIN_DATA_FILE = DATA_DIR / "admin_data.json"
+USER_DATA_FILE = DATA_DIR / "user_data.json"
 
 def load_admin_data():
     """관리자 데이터 파일에서 로드하는 함수"""
@@ -164,6 +165,34 @@ def init_db():
         if not DEFECT_DATA_FILE.exists():
             with open(DEFECT_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump({"defects": []}, f, ensure_ascii=False, indent=2)
+        
+        # 관리자 데이터 초기화
+        if not ADMIN_DATA_FILE.exists():
+            default_admin_data = {
+                "아이디": ["admin"],
+                "이름": ["관리자"],
+                "권한": ["관리자"],
+                "부서": ["관리부"],
+                "최근접속일": [datetime.now().strftime("%Y-%m-%d %H:%M")],
+                "상태": ["활성"]
+            }
+            with open(ADMIN_DATA_FILE, 'w', encoding='utf-8') as f:
+                json.dump(default_admin_data, f, ensure_ascii=False, indent=2)
+        
+        # 사용자 데이터 초기화
+        if not USER_DATA_FILE.exists():
+            default_user_data = {
+                "아이디": [],
+                "이름": [],
+                "부서": [],
+                "직급": [],
+                "공정": [],
+                "계정생성일": [],
+                "최근접속일": [],
+                "상태": []
+            }
+            with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
+                json.dump(default_user_data, f, ensure_ascii=False, indent=2)
         
         print("데이터베이스 초기화 완료!")
     except Exception as e:
@@ -2163,33 +2192,13 @@ elif st.session_state.page == "user_auth":
         # 사용자 목록 섹션
         st.subheader("등록된 사용자 목록")
         
-        # 샘플 사용자 데이터
-        user_data = {
-            "아이디": ["user1", "user2", "user3", "user4", "user5", "user6"],
-            "이름": ["홍길동", "김철수", "이영희", "박민수", "최지훈", "정수민"],
-            "부서": ["생산부", "생산부", "품질부", "품질부", "기술부", "관리부"],
-            "직급": ["사원", "대리", "사원", "주임", "과장", "사원"],
-            "공정": ["선삭", "밀링", "검사", "검사", "설계", "관리"],
-            "계정 생성일": [
-                (datetime.now() - timedelta(days=120)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=15)).strftime("%Y-%m-%d"),
-            ],
-            "최근 접속일": [
-                (datetime.now() - timedelta(hours=5)).strftime("%Y-%m-%d %H:%M"),
-                (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d %H:%M"),
-                (datetime.now() - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M"),
-                (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M"),
-                (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d %H:%M"),
-                (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M"),
-            ],
-            "상태": ["활성", "활성", "활성", "활성", "비활성", "휴면"]
-        }
+        # 세션 상태에 사용자 목록 초기화 (처음 접속 시에만)
+        if 'user_data' not in st.session_state:
+            # JSON 파일에서 사용자 데이터 로드
+            st.session_state.user_data = load_user_data()
         
-        user_df = pd.DataFrame(user_data)
+        # 사용자 데이터프레임 생성
+        user_df = pd.DataFrame(st.session_state.user_data)
         
         # 필터링 옵션
         col1, col2, col3 = st.columns(3)
@@ -2202,19 +2211,22 @@ elif st.session_state.page == "user_auth":
         
         # 필터 적용
         filtered_user_df = user_df.copy()
-        if dept_filter != "전체":
+        if dept_filter != "전체" and not filtered_user_df.empty:
             filtered_user_df = filtered_user_df[filtered_user_df["부서"] == dept_filter]
-        if process_filter != "전체":
+        if process_filter != "전체" and not filtered_user_df.empty:
             filtered_user_df = filtered_user_df[filtered_user_df["공정"] == process_filter]
-        if status_filter != "전체":
+        if status_filter != "전체" and not filtered_user_df.empty:
             filtered_user_df = filtered_user_df[filtered_user_df["상태"] == status_filter]
         
         # 필터링된 사용자 목록 표시
-        st.dataframe(filtered_user_df, use_container_width=True, hide_index=True)
+        if filtered_user_df.empty:
+            st.info("등록된 사용자가 없습니다. 먼저 사용자를 등록해주세요.")
+        else:
+            st.dataframe(filtered_user_df, use_container_width=True, hide_index=True)
         
         # 사용자 검색
         search_query = st.text_input("사용자 검색 (이름 또는 아이디)", key="user_search")
-        if search_query:
+        if search_query and not user_df.empty:
             search_results = user_df[
                 user_df["이름"].str.contains(search_query) | 
                 user_df["아이디"].str.contains(search_query)
@@ -2226,68 +2238,140 @@ elif st.session_state.page == "user_auth":
                 st.info("검색 결과가 없습니다.")
         
         # 선택한 사용자 상세 정보 및 관리
-        selected_user_id = st.selectbox(
-            "상세 정보를 볼 사용자 선택",
-            options=user_df["아이디"].tolist(),
-            format_func=lambda x: f"{x} ({user_df[user_df['아이디'] == x]['이름'].values[0]})"
-        )
-        
-        if selected_user_id:
-            st.subheader(f"사용자 상세 정보: {selected_user_id}")
+        if not user_df.empty:
+            selected_user_id = st.selectbox(
+                "상세 정보를 볼 사용자 선택",
+                options=user_df["아이디"].tolist(),
+                format_func=lambda x: f"{x} ({user_df[user_df['아이디'] == x]['이름'].values[0]})"
+            )
             
-            # 선택된 사용자 정보
-            user_info = user_df[user_df["아이디"] == selected_user_id].iloc[0]
+            if selected_user_id:
+                st.subheader(f"사용자 상세 정보: {selected_user_id}")
+                
+                # 선택된 사용자 정보
+                user_info = user_df[user_df["아이디"] == selected_user_id].iloc[0]
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("이름", user_info["이름"])
+                    st.metric("부서", user_info["부서"])
+                with col2:
+                    st.metric("직급", user_info["직급"])
+                    st.metric("공정", user_info["공정"])
+                with col3:
+                    st.metric("계정생성일", user_info["계정생성일"])
+                    st.metric("최근접속일", user_info["최근접속일"])
+                
+                # 계정 상태 관리
+                st.subheader("계정 상태 관리")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    new_status = st.radio(
+                        "계정 상태",
+                        options=["활성", "비활성", "휴면"],
+                        index=0 if user_info["상태"] == "활성" else 
+                              1 if user_info["상태"] == "비활성" else 2,
+                        key="user_status_change"
+                    )
+                
+                with col2:
+                    if st.button("비밀번호 초기화", key="user_reset_pwd"):
+                        st.success(f"'{user_info['이름']}' 계정의 비밀번호가 초기화되었습니다.")
+                        st.code("임시 비밀번호: User@1234")
+                
+                if st.button("상태 변경 저장", key="save_user_status"):
+                    # 세션 상태에서 해당 사용자의 상태 업데이트
+                    idx = st.session_state.user_data["아이디"].index(selected_user_id)
+                    user_name = st.session_state.user_data["이름"][idx]
+                    old_status = st.session_state.user_data["상태"][idx]  # 이전 상태 저장
+                    
+                    # 상태 업데이트
+                    st.session_state.user_data["상태"][idx] = new_status
+                    
+                    # 파일에 저장
+                    save_user_data(st.session_state.user_data)
+                    
+                    # 성공 메시지 및 시각적 효과
+                    st.success(f"사용자 '{user_name}'의 상태가 '{new_status}'로 성공적으로 변경되었습니다.")
+                    time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                    
+                    # 업데이트에 따른 메시지 커스터마이징
+                    if old_status != new_status:
+                        message = f"✅ {user_name}님의 상태가 {old_status}에서 {new_status}로 변경되었습니다"
+                        st.toast(message, icon="🔵")
+                    
+                    # 페이지 리로드
+                    st.experimental_rerun()
+                
+                # 사용자 삭제 섹션
+                st.subheader("사용자 삭제")
+                delete_confirm = st.checkbox("삭제를 확인합니다", key="delete_user_confirm")
+                
+                if st.button("사용자 삭제", type="primary", disabled=not delete_confirm):
+                    if delete_confirm:
+                        # 세션 상태에서 사용자 삭제
+                        idx = st.session_state.user_data["아이디"].index(selected_user_id)
+                        deleted_name = st.session_state.user_data["이름"][idx]
+                        
+                        # 사용자 삭제
+                        for key in st.session_state.user_data:
+                            st.session_state.user_data[key].pop(idx)
+                        
+                        # 파일에 저장
+                        save_user_data(st.session_state.user_data)
+                        
+                        # 성공 메시지 및 시각적 효과 - 페이지 리로드 전에 표시
+                        st.warning(f"사용자 '{selected_user_id}'가 시스템에서 삭제되었습니다.")
+                        time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                        st.toast(f"🗑️ {deleted_name} 사용자가 삭제되었습니다", icon="🔴")
+                        
+                        # 삭제 효과를 위한 플래그 설정
+                        if 'deleted_user' not in st.session_state:
+                            st.session_state.deleted_user = True
+                        
+                        # 페이지 리로드
+                        st.experimental_rerun()
+                    else:
+                        st.error("삭제를 확인해주세요.")
             
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("이름", user_info["이름"])
-                st.metric("부서", user_info["부서"])
-            with col2:
-                st.metric("직급", user_info["직급"])
-                st.metric("공정", user_info["공정"])
-            with col3:
-                st.metric("계정 생성일", user_info["계정 생성일"])
-                st.metric("최근 접속일", user_info["최근 접속일"])
-            
-            # 계정 상태 관리
-            st.subheader("계정 상태 관리")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                new_status = st.radio(
-                    "계정 상태",
-                    options=["활성", "비활성", "휴면"],
-                    index=0 if user_info["상태"] == "활성" else 
-                          1 if user_info["상태"] == "비활성" else 2,
-                    key="user_status_change"
-                )
-            
-            with col2:
-                if st.button("비밀번호 초기화", key="user_reset_pwd"):
-                    st.success(f"'{user_info['이름']}' 계정의 비밀번호가 초기화되었습니다.")
-                    st.code("임시 비밀번호: User@1234")
-                    st.info("실제 데이터베이스 연동 시 비밀번호가 변경됩니다.")
-            
-            if st.button("상태 변경 저장", key="save_user_status"):
-                st.success(f"'{user_info['이름']}' 계정의 상태가 '{new_status}'로 변경되었습니다.")
-                st.info("실제 데이터베이스 연동 시 상태가 변경됩니다.")
+            # 삭제 효과 표시
+            if 'deleted_user' in st.session_state and st.session_state.deleted_user:
+                st.session_state.deleted_user = False
+                st.snow()  # 삭제 임팩트 효과
 
     with tab2:
         # 사용자 등록 섹션
         st.subheader("새 사용자 등록")
         
+        # 폼 입력값 초기화를 위한 세션 상태 초기화
+        if 'new_user_id' not in st.session_state:
+            st.session_state.new_user_id = ""
+        if 'new_user_name' not in st.session_state:
+            st.session_state.new_user_name = ""
+        if 'new_user_pwd' not in st.session_state:
+            st.session_state.new_user_pwd = ""
+        if 'new_user_pwd_confirm' not in st.session_state:
+            st.session_state.new_user_pwd_confirm = ""
+        if 'new_user_dept' not in st.session_state:
+            st.session_state.new_user_dept = "생산부"
+        if 'new_user_position' not in st.session_state:
+            st.session_state.new_user_position = "사원"
+        if 'new_user_process' not in st.session_state:
+            st.session_state.new_user_process = "선삭"
+        
         with st.form("new_user_form_2"):
             col1, col2 = st.columns(2)
             with col1:
-                new_user_id = st.text_input("아이디", key="new_user_id_2")
-                new_user_name = st.text_input("이름", key="new_user_name_2")
-                new_user_dept = st.selectbox("부서", options=["생산부", "품질부", "기술부", "관리부"], key="new_user_dept_2")
+                new_user_id = st.text_input("아이디", value=st.session_state.new_user_id, key="new_user_id_2")
+                new_user_name = st.text_input("이름", value=st.session_state.new_user_name, key="new_user_name_2")
+                new_user_dept = st.selectbox("부서", options=["생산부", "품질부", "기술부", "관리부"], index=["생산부", "품질부", "기술부", "관리부"].index(st.session_state.new_user_dept) if st.session_state.new_user_dept in ["생산부", "품질부", "기술부", "관리부"] else 0, key="new_user_dept_2")
             with col2:
-                new_user_pwd = st.text_input("비밀번호", type="password", key="new_user_pwd_2")
-                new_user_pwd_confirm = st.text_input("비밀번호 확인", type="password", key="new_user_pwd_confirm_2")
-                new_user_position = st.selectbox("직급", options=["사원", "주임", "대리", "과장", "부장"], key="new_user_position_2")
+                new_user_pwd = st.text_input("비밀번호", type="password", value=st.session_state.new_user_pwd, key="new_user_pwd_2")
+                new_user_pwd_confirm = st.text_input("비밀번호 확인", type="password", value=st.session_state.new_user_pwd_confirm, key="new_user_pwd_confirm_2")
+                new_user_position = st.selectbox("직급", options=["사원", "주임", "대리", "과장", "부장"], index=["사원", "주임", "대리", "과장", "부장"].index(st.session_state.new_user_position) if st.session_state.new_user_position in ["사원", "주임", "대리", "과장", "부장"] else 0, key="new_user_position_2")
             
-            new_user_process = st.selectbox("담당 공정", options=["선삭", "밀링", "검사", "설계", "관리"], key="new_user_process_2")
+            new_user_process = st.selectbox("담당 공정", options=["선삭", "밀링", "검사", "설계", "관리"], index=["선삭", "밀링", "검사", "설계", "관리"].index(st.session_state.new_user_process) if st.session_state.new_user_process in ["선삭", "밀링", "검사", "설계", "관리"] else 0, key="new_user_process_2")
             new_user_memo = st.text_area("메모 (선택사항)", max_chars=200, key="new_user_memo_2")
             
             submit_user = st.form_submit_button("사용자 등록")
@@ -2297,120 +2381,160 @@ elif st.session_state.page == "user_auth":
                 st.error("필수 항목을 모두 입력하세요.")
             elif new_user_pwd != new_user_pwd_confirm:
                 st.error("비밀번호가 일치하지 않습니다.")
-            elif new_user_id in user_df["아이디"].values:
+            elif 'user_data' in st.session_state and new_user_id in st.session_state.user_data["아이디"]:
                 st.error("이미 존재하는 아이디입니다.")
             else:
+                # 세션 상태에 새 사용자 추가
+                if 'user_data' not in st.session_state:
+                    st.session_state.user_data = load_user_data()
+                
+                st.session_state.user_data["아이디"].append(new_user_id)
+                st.session_state.user_data["이름"].append(new_user_name)
+                st.session_state.user_data["부서"].append(new_user_dept)
+                st.session_state.user_data["직급"].append(new_user_position)
+                st.session_state.user_data["공정"].append(new_user_process)
+                st.session_state.user_data["계정생성일"].append(datetime.now().strftime("%Y-%m-%d"))
+                st.session_state.user_data["최근접속일"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                st.session_state.user_data["상태"].append("활성")
+                
+                # 파일에 저장
+                save_user_data(st.session_state.user_data)
+                
+                # 성공 메시지 및 시각적 효과
                 st.success(f"사용자 '{new_user_name}'이(가) 성공적으로 등록되었습니다.")
-                st.info("실제 데이터베이스 연동 시 사용자 정보가 저장됩니다.")
+                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                
+                # 추가 효과를 위한 플래그 설정
+                if 'added_user' not in st.session_state:
+                    st.session_state.added_user = True
+                
+                # 폼 입력값 리셋을 위한 세션 상태 설정
+                st.session_state.new_user_id = ""
+                st.session_state.new_user_name = ""
+                st.session_state.new_user_pwd = ""
+                st.session_state.new_user_pwd_confirm = ""
+                
+                # 페이지 리로드
+                st.experimental_rerun()
+        
+        # 추가 효과 표시
+        if 'added_user' in st.session_state and st.session_state.added_user:
+            st.session_state.added_user = False
+            st.balloons()  # 풍선 효과 추가
     
     with tab3:
         # 사용 통계 섹션
         st.subheader("사용자 통계")
         
-        # 부서별 사용자 분포
-        dept_counts = user_df["부서"].value_counts().reset_index()
-        dept_counts.columns = ["부서", "사용자 수"]
-        
-        # 공정별 사용자 분포
-        process_counts = user_df["공정"].value_counts().reset_index()
-        process_counts.columns = ["공정", "사용자 수"]
-        
-        # 상태별 사용자 분포
-        status_counts = user_df["상태"].value_counts().reset_index()
-        status_counts.columns = ["상태", "사용자 수"]
-        
-        # 차트 표시
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("<div class='emoji-title'>👥 부서별 사용자 분포</div>", unsafe_allow_html=True)
+        if 'user_data' not in st.session_state or not st.session_state.user_data["아이디"]:
+            st.info("등록된 사용자가 없습니다. 통계를 표시하려면 사용자를 등록해주세요.")
+        else:
+            user_df = pd.DataFrame(st.session_state.user_data)
             
-            fig = px.bar(
-                dept_counts, 
-                x="부서", 
-                y="사용자 수",
-                color="부서",
-                color_discrete_sequence=px.colors.qualitative.Bold
-            )
+            # 부서별 사용자 분포
+            dept_counts = user_df["부서"].value_counts().reset_index()
+            dept_counts.columns = ["부서", "사용자 수"]
             
-            fig.update_layout(
-                height=300,
-                margin=dict(l=20, r=20, t=10, b=20),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-            )
+            # 공정별 사용자 분포
+            process_counts = user_df["공정"].value_counts().reset_index()
+            process_counts.columns = ["공정", "사용자 수"]
             
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            # 상태별 사용자 분포
+            status_counts = user_df["상태"].value_counts().reset_index()
+            status_counts.columns = ["상태", "사용자 수"]
             
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("<div class='emoji-title'>⚙️ 공정별 사용자 분포</div>", unsafe_allow_html=True)
-            
-            fig = px.pie(
-                process_counts, 
-                names="공정", 
-                values="사용자 수",
-                hole=0.4,
-                color_discrete_sequence=px.colors.qualitative.Set2
-            )
-            
-            fig.update_layout(
-                height=300,
-                margin=dict(l=20, r=20, t=10, b=20),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("<div class='emoji-title'>🔄 계정 상태 분포</div>", unsafe_allow_html=True)
-            
-            fig = px.pie(
-                status_counts, 
-                names="상태", 
-                values="사용자 수",
-                color="상태",
-                color_discrete_map={
-                    "활성": "#4cb782",
-                    "비활성": "#fb8c00",
-                    "휴면": "#7c3aed"
-                }
-            )
-            
-            fig.update_layout(
-                height=300,
-                margin=dict(l=20, r=20, t=10, b=20),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            # 접속 활동 요약
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("<div class='emoji-title'>📈 접속 활동 요약</div>", unsafe_allow_html=True)
-            
+            # 차트 표시
             col1, col2 = st.columns(2)
+            
             with col1:
-                active_users = len(user_df[user_df["상태"] == "활성"])
-                st.metric("활성 사용자", f"{active_users}명")
+                st.markdown("<div class='card'>", unsafe_allow_html=True)
+                st.markdown("<div class='emoji-title'>👥 부서별 사용자 분포</div>", unsafe_allow_html=True)
                 
-                recent_users = len(user_df[pd.to_datetime(user_df["최근 접속일"]) > (datetime.now() - timedelta(days=7))])
-                st.metric("최근 7일 접속자", f"{recent_users}명")
+                fig = px.bar(
+                    dept_counts, 
+                    x="부서", 
+                    y="사용자 수",
+                    color="부서",
+                    color_discrete_sequence=px.colors.qualitative.Bold
+                )
+                
+                fig.update_layout(
+                    height=300,
+                    margin=dict(l=20, r=20, t=10, b=20),
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                st.markdown("<div class='card'>", unsafe_allow_html=True)
+                st.markdown("<div class='emoji-title'>⚙️ 공정별 사용자 분포</div>", unsafe_allow_html=True)
+                
+                fig = px.pie(
+                    process_counts, 
+                    names="공정", 
+                    values="사용자 수",
+                    hole=0.4,
+                    color_discrete_sequence=px.colors.qualitative.Set2
+                )
+                
+                fig.update_layout(
+                    height=300,
+                    margin=dict(l=20, r=20, t=10, b=20),
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
             
             with col2:
-                inactive_users = len(user_df[user_df["상태"] != "활성"])
-                st.metric("비활성/휴면 사용자", f"{inactive_users}명")
+                st.markdown("<div class='card'>", unsafe_allow_html=True)
+                st.markdown("<div class='emoji-title'>🔄 계정 상태 분포</div>", unsafe_allow_html=True)
                 
-                no_login_users = len(user_df[pd.to_datetime(user_df["최근 접속일"]) < (datetime.now() - timedelta(days=30))])
-                st.metric("30일 이상 미접속자", f"{no_login_users}명")
-            
-            st.markdown("</div>", unsafe_allow_html=True)
+                fig = px.pie(
+                    status_counts, 
+                    names="상태", 
+                    values="사용자 수",
+                    color="상태",
+                    color_discrete_map={
+                        "활성": "#4cb782",
+                        "비활성": "#fb8c00",
+                        "휴면": "#7c3aed"
+                    }
+                )
+                
+                fig.update_layout(
+                    height=300,
+                    margin=dict(l=20, r=20, t=10, b=20),
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                # 접속 활동 요약
+                st.markdown("<div class='card'>", unsafe_allow_html=True)
+                st.markdown("<div class='emoji-title'>📈 접속 활동 요약</div>", unsafe_allow_html=True)
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    active_users = len(user_df[user_df["상태"] == "활성"])
+                    st.metric("활성 사용자", f"{active_users}명")
+                    
+                    recent_users = len(user_df[pd.to_datetime(user_df["최근접속일"]) > (datetime.now() - timedelta(days=7))])
+                    st.metric("최근 7일 접속자", f"{recent_users}명")
+                
+                with col2:
+                    inactive_users = len(user_df[user_df["상태"] != "활성"])
+                    st.metric("비활성/휴면 사용자", f"{inactive_users}명")
+                    
+                    no_login_users = len(user_df[pd.to_datetime(user_df["최근접속일"]) < (datetime.now() - timedelta(days=30))])
+                    st.metric("30일 이상 미접속자", f"{no_login_users}명")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "inspection_data":
     # 생산 실적 관리 페이지
@@ -3313,3 +3437,29 @@ def sync_offline_data():
                 st.warning(f"{len(st.session_state.saved_inspectors)}개의 데이터는 여전히 동기화되지 않았습니다.")
 
 # 관리자 데이터 저장 및 로드 함수 추가
+
+def load_user_data():
+    """사용자 데이터 파일에서 로드하는 함수"""
+    try:
+        with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # 파일이 없거나 내용이 없을 경우 기본 구조 반환
+        return {
+            "아이디": [],
+            "이름": [],
+            "부서": [],
+            "직급": [],
+            "공정": [],
+            "계정생성일": [],
+            "최근접속일": [],
+            "상태": []
+        }
+
+def save_user_data(user_data):
+    """사용자 데이터를 파일에 저장하는 함수"""
+    # 디렉토리가 없으면 생성
+    os.makedirs(DATA_DIR, exist_ok=True)
+    
+    with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(user_data, f, ensure_ascii=False, indent=2)
