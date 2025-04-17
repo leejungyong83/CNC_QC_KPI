@@ -152,7 +152,13 @@ def load_user_data():
     """사용자 데이터 파일에서 로드하는 함수"""
     try:
         with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+            # 누락된 키가 있는지 확인하고 필요하면 초기화
+            required_keys = ["아이디", "이름", "부서", "직급", "공정", "계정생성일", "최근접속일", "상태"]
+            for key in required_keys:
+                if key not in data:
+                    data[key] = []
+            return data
     except (FileNotFoundError, json.JSONDecodeError):
         # 파일이 없거나 내용이 없을 경우 기본 구조 반환
         return {
@@ -2218,26 +2224,36 @@ elif st.session_state.page == "user_auth":
         # 사용자 목록 섹션
         st.subheader("등록된 사용자 목록")
         
-        # 세션 상태에 사용자 목록 초기화 (처음 접속 시에만)
-        if 'user_data' not in st.session_state:
-            # JSON 파일에서 사용자 데이터 로드
-            st.session_state.user_data = load_user_data()
+        try:
+            # 세션 상태에 사용자 목록 초기화 (처음 접속 시에만)
+            if 'user_data' not in st.session_state:
+                # JSON 파일에서 사용자 데이터 로드
+                st.session_state.user_data = load_user_data()
+            
+            # 사용자 데이터가 올바른 형식인지 확인
+            if not isinstance(st.session_state.user_data, dict) or "아이디" not in st.session_state.user_data:
+                # 잘못된 형식의 데이터인 경우 초기화
+                st.session_state.user_data = load_user_data()
+                st.warning("사용자 데이터가 올바른 형식이 아닙니다. 데이터를 재설정했습니다.")
+            
+            # 사용자 데이터프레임 생성
+            user_df = pd.DataFrame(st.session_state.user_data)
+            
+            # DataFrame이 비어있는 경우 빈 DataFrame을 만들어주기
+            if user_df.empty:
+                user_df = pd.DataFrame({
+                    "아이디": [],
+                    "이름": [],
+                    "부서": [],
+                    "직급": [],
+                    "공정": [],
+                    "계정생성일": [],
+                    "최근접속일": [],
+                    "상태": []
+                })
         
-        # 사용자 데이터프레임 생성
-        user_df = pd.DataFrame(st.session_state.user_data)
-        
-        # DataFrame이 비어있는 경우 빈 DataFrame을 만들어주기
-        if user_df.empty:
-            user_df = pd.DataFrame({
-                "아이디": [],
-                "이름": [],
-                "부서": [],
-                "직급": [],
-                "공정": [],
-                "계정생성일": [],
-                "최근접속일": [],
-                "상태": []
-            })
+        except Exception as e:
+            st.error(f"사용자 데이터를 불러오는데 실패했습니다: {str(e)}")
         
         # 필터링 옵션
         col1, col2, col3 = st.columns(3)
@@ -2250,11 +2266,11 @@ elif st.session_state.page == "user_auth":
         
         # 필터 적용
         filtered_user_df = user_df.copy()
-        if dept_filter != "전체" and not filtered_user_df.empty:
+        if dept_filter != "전체" and not filtered_user_df.empty and "부서" in filtered_user_df.columns:
             filtered_user_df = filtered_user_df[filtered_user_df["부서"] == dept_filter]
-        if process_filter != "전체" and not filtered_user_df.empty:
+        if process_filter != "전체" and not filtered_user_df.empty and "공정" in filtered_user_df.columns:
             filtered_user_df = filtered_user_df[filtered_user_df["공정"] == process_filter]
-        if status_filter != "전체" and not filtered_user_df.empty:
+        if status_filter != "전체" and not filtered_user_df.empty and "상태" in filtered_user_df.columns:
             filtered_user_df = filtered_user_df[filtered_user_df["상태"] == status_filter]
         
         # 필터링된 사용자 목록 표시
@@ -2267,116 +2283,139 @@ elif st.session_state.page == "user_auth":
         search_query = st.text_input("사용자 검색 (이름 또는 아이디)", key="user_search")
         if search_query and not user_df.empty:
             try:
-                search_results = user_df[
-                    user_df["이름"].str.contains(search_query) | 
-                    user_df["아이디"].str.contains(search_query)
-                ]
-                if not search_results.empty:
-                    st.subheader("검색 결과")
-                    st.dataframe(search_results, use_container_width=True, hide_index=True)
+                if "이름" in user_df.columns and "아이디" in user_df.columns:
+                    search_results = user_df[
+                        user_df["이름"].str.contains(search_query) | 
+                        user_df["아이디"].str.contains(search_query)
+                    ]
+                    if not search_results.empty:
+                        st.subheader("검색 결과")
+                        st.dataframe(search_results, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("검색 결과가 없습니다.")
                 else:
-                    st.info("검색 결과가 없습니다.")
+                    st.warning("사용자 데이터에 필요한 열이 없습니다.")
             except Exception as e:
                 st.error(f"검색 중 오류가 발생했습니다: {str(e)}")
         
         # 선택한 사용자 상세 정보 및 관리
         if not user_df.empty:
             try:
-                selected_user_id = st.selectbox(
-                    "상세 정보를 볼 사용자 선택",
-                    options=user_df["아이디"].tolist(),
-                    format_func=lambda x: f"{x} ({user_df[user_df['아이디'] == x]['이름'].values[0] if not user_df[user_df['아이디'] == x].empty else '알 수 없음'})"
-                )
-                
-                if selected_user_id:
-                    st.subheader(f"사용자 상세 정보: {selected_user_id}")
+                if "아이디" in user_df.columns:
+                    selected_user_id = st.selectbox(
+                        "상세 정보를 볼 사용자 선택",
+                        options=user_df["아이디"].tolist(),
+                        format_func=lambda x: f"{x} ({user_df[user_df['아이디'] == x]['이름'].values[0] if not user_df[user_df['아이디'] == x].empty and '이름' in user_df.columns else '알 수 없음'})"
+                    )
                     
-                    # 선택된 사용자 정보
-                    user_info = user_df[user_df["아이디"] == selected_user_id].iloc[0]
-                    
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("이름", user_info["이름"])
-                        st.metric("부서", user_info["부서"])
-                    with col2:
-                        st.metric("직급", user_info["직급"])
-                        st.metric("공정", user_info["공정"])
-                    with col3:
-                        st.metric("계정생성일", user_info["계정생성일"])
-                        st.metric("최근접속일", user_info["최근접속일"])
-                    
-                    # 계정 상태 관리
-                    st.subheader("계정 상태 관리")
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        new_status = st.radio(
-                            "계정 상태",
-                            options=["활성", "비활성", "휴면"],
-                            index=0 if user_info["상태"] == "활성" else 
-                                  1 if user_info["상태"] == "비활성" else 2,
-                            key="user_status_change"
-                        )
-                    
-                    with col2:
-                        if st.button("비밀번호 초기화", key="user_reset_pwd"):
-                            st.success(f"'{user_info['이름']}' 계정의 비밀번호가 초기화되었습니다.")
-                            st.code("임시 비밀번호: User@1234")
-                    
-                    if st.button("상태 변경 저장", key="save_user_status"):
-                        # 세션 상태에서 해당 사용자의 상태 업데이트
-                        idx = st.session_state.user_data["아이디"].index(selected_user_id)
-                        user_name = st.session_state.user_data["이름"][idx]
-                        old_status = st.session_state.user_data["상태"][idx]  # 이전 상태 저장
+                    if selected_user_id:
+                        st.subheader(f"사용자 상세 정보: {selected_user_id}")
                         
-                        # 상태 업데이트
-                        st.session_state.user_data["상태"][idx] = new_status
-                        
-                        # 파일에 저장
-                        save_user_data(st.session_state.user_data)
-                        
-                        # 성공 메시지 및 시각적 효과
-                        st.success(f"사용자 '{user_name}'의 상태가 '{new_status}'로 성공적으로 변경되었습니다.")
-                        time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
-                        
-                        # 업데이트에 따른 메시지 커스터마이징
-                        if old_status != new_status:
-                            message = f"✅ {user_name}님의 상태가 {old_status}에서 {new_status}로 변경되었습니다"
-                            st.toast(message, icon="🔵")
-                        
-                        # 페이지 리로드
-                        st.experimental_rerun()
-                    
-                    # 사용자 삭제 섹션
-                    st.subheader("사용자 삭제")
-                    delete_confirm = st.checkbox("삭제를 확인합니다", key="delete_user_confirm")
-                    
-                    if st.button("사용자 삭제", type="primary", disabled=not delete_confirm):
-                        if delete_confirm:
-                            # 세션 상태에서 사용자 삭제
-                            idx = st.session_state.user_data["아이디"].index(selected_user_id)
-                            deleted_name = st.session_state.user_data["이름"][idx]
+                        # 선택된 사용자 정보
+                        if not user_df[user_df["아이디"] == selected_user_id].empty:
+                            user_info = user_df[user_df["아이디"] == selected_user_id].iloc[0]
                             
-                            # 사용자 삭제
-                            for key in st.session_state.user_data:
-                                st.session_state.user_data[key].pop(idx)
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("이름", user_info["이름"] if "이름" in user_info else "정보 없음")
+                                st.metric("부서", user_info["부서"] if "부서" in user_info else "정보 없음")
+                            with col2:
+                                st.metric("직급", user_info["직급"] if "직급" in user_info else "정보 없음")
+                                st.metric("공정", user_info["공정"] if "공정" in user_info else "정보 없음")
+                            with col3:
+                                st.metric("계정생성일", user_info["계정생성일"] if "계정생성일" in user_info else "정보 없음")
+                                st.metric("최근접속일", user_info["최근접속일"] if "최근접속일" in user_info else "정보 없음")
                             
-                            # 파일에 저장
-                            save_user_data(st.session_state.user_data)
+                            # 계정 상태 관리
+                            st.subheader("계정 상태 관리")
                             
-                            # 성공 메시지 및 시각적 효과 - 페이지 리로드 전에 표시
-                            st.warning(f"사용자 '{selected_user_id}'가 시스템에서 삭제되었습니다.")
-                            time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
-                            st.toast(f"🗑️ {deleted_name} 사용자가 삭제되었습니다", icon="🔴")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                current_status = user_info["상태"] if "상태" in user_info else "활성"
+                                new_status = st.radio(
+                                    "계정 상태",
+                                    options=["활성", "비활성", "휴면"],
+                                    index=0 if current_status == "활성" else 
+                                          1 if current_status == "비활성" else 2,
+                                    key="user_status_change"
+                                )
                             
-                            # 삭제 효과를 위한 플래그 설정
-                            if 'deleted_user' not in st.session_state:
-                                st.session_state.deleted_user = True
-                            
-                            # 페이지 리로드
-                            st.experimental_rerun()
-                        else:
-                            st.error("삭제를 확인해주세요.")
+                            with col2:
+                                if st.button("비밀번호 초기화", key="user_reset_pwd"):
+                                    st.success(f"'{user_info['이름'] if '이름' in user_info else selected_user_id}' 계정의 비밀번호가 초기화되었습니다.")
+                                    st.code("임시 비밀번호: User@1234")
+                                
+                                if st.button("상태 변경 저장", key="save_user_status"):
+                                    try:
+                                        # 세션 상태에서 해당 사용자의 상태 업데이트
+                                        idx = st.session_state.user_data["아이디"].index(selected_user_id)
+                                        user_name = st.session_state.user_data["이름"][idx] if "이름" in st.session_state.user_data and idx < len(st.session_state.user_data["이름"]) else selected_user_id
+                                        old_status = st.session_state.user_data["상태"][idx] if "상태" in st.session_state.user_data and idx < len(st.session_state.user_data["상태"]) else "알 수 없음"
+                                        
+                                        # 상태 업데이트
+                                        if "상태" in st.session_state.user_data:
+                                            if idx < len(st.session_state.user_data["상태"]):
+                                                st.session_state.user_data["상태"][idx] = new_status
+                                            else:
+                                                # 인덱스가 범위를 벗어나면 필요한 만큼 확장
+                                                st.session_state.user_data["상태"].extend([None] * (idx - len(st.session_state.user_data["상태"]) + 1))
+                                                st.session_state.user_data["상태"][idx] = new_status
+                                        else:
+                                            # "상태" 키가 없으면 생성
+                                            st.session_state.user_data["상태"] = ["활성"] * len(st.session_state.user_data["아이디"])
+                                            st.session_state.user_data["상태"][idx] = new_status
+                                        
+                                        # 파일에 저장
+                                        save_user_data(st.session_state.user_data)
+                                        
+                                        # 성공 메시지 및 시각적 효과
+                                        st.success(f"사용자 '{user_name}'의 상태가 '{new_status}'로 성공적으로 변경되었습니다.")
+                                        time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                                        
+                                        # 업데이트에 따른 메시지 커스터마이징
+                                        if old_status != new_status:
+                                            message = f"✅ {user_name}님의 상태가 {old_status}에서 {new_status}로 변경되었습니다"
+                                            st.toast(message, icon="🔵")
+                                        
+                                        # 페이지 리로드
+                                        st.experimental_rerun()
+                                    except Exception as e:
+                                        st.error(f"상태 변경 중 오류가 발생했습니다: {str(e)}")
+                                
+                                # 사용자 삭제 섹션
+                                st.subheader("사용자 삭제")
+                                delete_confirm = st.checkbox("삭제를 확인합니다", key="delete_user_confirm")
+                                
+                                if st.button("사용자 삭제", type="primary", disabled=not delete_confirm):
+                                    if delete_confirm:
+                                        try:
+                                            # 세션 상태에서 사용자 삭제
+                                            idx = st.session_state.user_data["아이디"].index(selected_user_id)
+                                            deleted_name = st.session_state.user_data["이름"][idx] if "이름" in st.session_state.user_data and idx < len(st.session_state.user_data["이름"]) else selected_user_id
+                                            
+                                            # 사용자 삭제
+                                            for key in st.session_state.user_data:
+                                                if idx < len(st.session_state.user_data[key]):
+                                                    st.session_state.user_data[key].pop(idx)
+                                            
+                                            # 파일에 저장
+                                            save_user_data(st.session_state.user_data)
+                                            
+                                            # 성공 메시지 및 시각적 효과 - 페이지 리로드 전에 표시
+                                            st.warning(f"사용자 '{selected_user_id}'가 시스템에서 삭제되었습니다.")
+                                            time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                                            st.toast(f"🗑️ {deleted_name} 사용자가 삭제되었습니다", icon="🔴")
+                                            
+                                            # 삭제 효과를 위한 플래그 설정
+                                            if 'deleted_user' not in st.session_state:
+                                                st.session_state.deleted_user = True
+                                            
+                                            # 페이지 리로드
+                                            st.experimental_rerun()
+                                        except Exception as e:
+                                            st.error(f"사용자 삭제 중 오류가 발생했습니다: {str(e)}")
+                                    else:
+                                        st.error("삭제를 확인해주세요.")
             except Exception as e:
                 st.error(f"사용자 정보 표시 중 오류가 발생했습니다: {str(e)}")
                 st.info("사용자 데이터에 문제가 있을 수 있습니다. 데이터를 확인해주세요.")
