@@ -148,6 +148,32 @@ def save_admin_data(admin_data):
     with open(ADMIN_DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(admin_data, f, ensure_ascii=False, indent=2)
 
+def load_user_data():
+    """사용자 데이터 파일에서 로드하는 함수"""
+    try:
+        with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # 파일이 없거나 내용이 없을 경우 기본 구조 반환
+        return {
+            "아이디": [],
+            "이름": [],
+            "부서": [],
+            "직급": [],
+            "공정": [],
+            "계정생성일": [],
+            "최근접속일": [],
+            "상태": []
+        }
+
+def save_user_data(user_data):
+    """사용자 데이터를 파일에 저장하는 함수"""
+    # 디렉토리가 없으면 생성
+    os.makedirs(DATA_DIR, exist_ok=True)
+    
+    with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(user_data, f, ensure_ascii=False, indent=2)
+
 def init_db():
     """JSON 파일 기반 데이터베이스 초기화"""
     try:
@@ -3435,31 +3461,3 @@ def sync_offline_data():
             
             if st.session_state.saved_inspectors:
                 st.warning(f"{len(st.session_state.saved_inspectors)}개의 데이터는 여전히 동기화되지 않았습니다.")
-
-# 관리자 데이터 저장 및 로드 함수 추가
-
-def load_user_data():
-    """사용자 데이터 파일에서 로드하는 함수"""
-    try:
-        with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        # 파일이 없거나 내용이 없을 경우 기본 구조 반환
-        return {
-            "아이디": [],
-            "이름": [],
-            "부서": [],
-            "직급": [],
-            "공정": [],
-            "계정생성일": [],
-            "최근접속일": [],
-            "상태": []
-        }
-
-def save_user_data(user_data):
-    """사용자 데이터를 파일에 저장하는 함수"""
-    # 디렉토리가 없으면 생성
-    os.makedirs(DATA_DIR, exist_ok=True)
-    
-    with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(user_data, f, ensure_ascii=False, indent=2)
