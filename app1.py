@@ -353,7 +353,7 @@ TRANSLATIONS = {
         },
         "admin_menu": {
             "manager_auth": "👥 관리자 및 사용자 관리",
-            "process_auth": "⚙️ 관리자 동록 및 관리",
+            "process_auth": "⚙️ 관리자 등록 및 관리",
             "user_auth": "🔑 사용자 등록 및 관리",
             "inspection_data": "📊 검사실적 관리"
         },
@@ -1964,36 +1964,26 @@ elif st.session_state.page == "process_auth":
         # 관리자 목록 섹션
         st.subheader("등록된 관리자 목록")
         
-        # 샘플 관리자 데이터
-        admin_data = {
-            "아이디": ["admin", "manager1", "manager2", "supervisor1"],
-            "이름": ["시스템 관리자", "이부장", "김과장", "최대리"],
-            "직급": ["관리자", "부장", "과장", "대리"],
-            "부서": ["IT부", "생산부", "품질부", "관리부"],
-            "권한레벨": ["최고관리자", "부서관리자", "부서관리자", "부서관리자"],
-            "계정생성일": [
-                (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d"),
-                (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
-            ],
-            "상태": ["활성", "활성", "활성", "비활성"]
-        }
+        # 세션 상태에 관리자 목록 초기화 (처음 접속 시에만)
+        if 'admin_users' not in st.session_state:
+            # JSON 파일에서 관리자 데이터 로드
+            st.session_state.admin_users = load_admin_data()
         
-        admin_df = pd.DataFrame(admin_data)
+        # 사용자 데이터프레임 생성 (manager_auth 페이지와 동일한 데이터 사용)
+        admin_df = pd.DataFrame(st.session_state.admin_users)
         
         # 관리자 목록 필터링
         col1, col2 = st.columns(2)
         with col1:
-            dept_filter = st.selectbox("부서 필터", options=["전체", "IT부", "생산부", "품질부", "관리부"])
+            dept_filter = st.selectbox("부서 필터", options=["전체", "관리부", "생산부", "품질부", "기술부"])
         with col2:
             status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성"])
         
         # 필터 적용
         filtered_df = admin_df.copy()
-        if dept_filter != "전체":
+        if dept_filter != "전체" and not filtered_df.empty:
             filtered_df = filtered_df[filtered_df["부서"] == dept_filter]
-        if status_filter != "전체":
+        if status_filter != "전체" and not filtered_df.empty:
             filtered_df = filtered_df[filtered_df["상태"] == status_filter]
         
         # 필터링된 관리자 목록 표시
@@ -2015,61 +2005,104 @@ elif st.session_state.page == "process_auth":
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("이름", admin_info["이름"])
-                st.metric("직급", admin_info["직급"])
+                st.metric("권한", admin_info["권한"])
             with col2:
                 st.metric("부서", admin_info["부서"])
-                st.metric("권한레벨", admin_info["권한레벨"])
-            with col3:
-                st.metric("계정생성일", admin_info["계정생성일"])
                 st.metric("상태", admin_info["상태"])
+            with col3:
+                st.metric("최근접속일", admin_info["최근접속일"])
             
             # 계정 활성화/비활성화 버튼
             col1, col2 = st.columns(2)
             with col1:
                 if admin_info["상태"] == "활성":
                     if st.button(f"'{admin_info['이름']}' 계정 비활성화", key="deactivate_admin"):
+                        # 세션 상태에서 해당 관리자의 상태 업데이트
+                        idx = st.session_state.admin_users["아이디"].index(selected_admin)
+                        st.session_state.admin_users["상태"][idx] = "비활성"
+                        
+                        # 파일에 저장
+                        save_admin_data(st.session_state.admin_users)
+                        
                         st.warning(f"'{admin_info['이름']}' 계정이 비활성화되었습니다.")
-                        st.info("실제 데이터베이스 연동 시 상태가 변경됩니다.")
+                        time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                        st.experimental_rerun()
                 else:
                     if st.button(f"'{admin_info['이름']}' 계정 활성화", key="activate_admin"):
+                        # 세션 상태에서 해당 관리자의 상태 업데이트
+                        idx = st.session_state.admin_users["아이디"].index(selected_admin)
+                        st.session_state.admin_users["상태"][idx] = "활성"
+                        
+                        # 파일에 저장
+                        save_admin_data(st.session_state.admin_users)
+                        
                         st.success(f"'{admin_info['이름']}' 계정이 활성화되었습니다.")
-                        st.info("실제 데이터베이스 연동 시 상태가 변경됩니다.")
+                        time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                        st.experimental_rerun()
             
             with col2:
                 if st.button(f"'{admin_info['이름']}' 비밀번호 초기화", key="reset_admin_pwd"):
                     st.success(f"'{admin_info['이름']}' 계정의 비밀번호가 초기화되었습니다.")
                     st.code("임시 비밀번호: Admin@1234")
-                    st.info("실제 데이터베이스 연동 시 비밀번호가 변경됩니다.")
             
-            # 권한 레벨 변경
-            st.subheader("권한 레벨 변경")
-            new_auth_level = st.radio(
-                "권한 레벨 선택",
-                options=["최고관리자", "부서관리자", "일반관리자"],
-                index=0 if admin_info["권한레벨"] == "최고관리자" else 
-                      1 if admin_info["권한레벨"] == "부서관리자" else 2
+            # 권한 변경
+            st.subheader("권한 변경")
+            new_role = st.radio(
+                "권한 선택",
+                options=["일반", "관리자"],
+                index=0 if admin_info["권한"] == "일반" else 1
             )
             
-            if st.button("권한 레벨 변경 저장"):
-                st.success(f"'{admin_info['이름']}' 계정의 권한 레벨이 '{new_auth_level}'로 변경되었습니다.")
-                st.info("실제 데이터베이스 연동 시 권한이 변경됩니다.")
+            if st.button("권한 변경 저장"):
+                # 세션 상태에서 해당 관리자의 권한 업데이트
+                idx = st.session_state.admin_users["아이디"].index(selected_admin)
+                user_name = st.session_state.admin_users["이름"][idx]
+                old_role = st.session_state.admin_users["권한"][idx]  # 이전 권한 저장
+                
+                # 권한 업데이트
+                st.session_state.admin_users["권한"][idx] = new_role
+                
+                # 파일에 저장
+                save_admin_data(st.session_state.admin_users)
+                
+                # 성공 메시지 및 시각적 효과
+                st.success(f"관리자 '{selected_admin}'의 권한이 성공적으로 변경되었습니다.")
+                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                
+                # 업데이트에 따른 메시지 커스터마이징
+                if old_role != new_role:
+                    message = f"✅ {user_name}님의 권한이 {old_role}에서 {new_role}로 변경되었습니다"
+                    st.toast(message, icon="🔵")
+                
+                # 페이지 리로드
+                st.experimental_rerun()
     
     with tab2:
         # 관리자 등록 섹션
         st.subheader("새 관리자 등록")
         
+        # 폼 입력값 초기화를 위한 세션 상태 초기화
+        if 'new_admin_id' not in st.session_state:
+            st.session_state.new_admin_id = ""
+        if 'new_admin_name' not in st.session_state:
+            st.session_state.new_admin_name = ""
+        if 'new_admin_password' not in st.session_state:
+            st.session_state.new_admin_password = ""
+        if 'new_admin_password_confirm' not in st.session_state:
+            st.session_state.new_admin_password_confirm = ""
+        if 'new_admin_dept' not in st.session_state:
+            st.session_state.new_admin_dept = "관리부"
+        
         with st.form("new_admin_form"):
             col1, col2 = st.columns(2)
             with col1:
-                new_admin_id = st.text_input("아이디")
-                new_admin_name = st.text_input("이름")
-                new_admin_position = st.selectbox("직급", options=["부장", "과장", "대리", "주임", "사원"])
+                new_admin_id = st.text_input("아이디", value=st.session_state.new_admin_id)
+                new_admin_name = st.text_input("이름", value=st.session_state.new_admin_name)
+                new_admin_dept = st.selectbox("부서", options=["관리부", "생산부", "품질부", "기술부"], index=["관리부", "생산부", "품질부", "기술부"].index(st.session_state.new_admin_dept) if st.session_state.new_admin_dept in ["관리부", "생산부", "품질부", "기술부"] else 0)
             with col2:
-                new_admin_pwd = st.text_input("비밀번호", type="password")
-                new_admin_pwd_confirm = st.text_input("비밀번호 확인", type="password")
-                new_admin_dept = st.selectbox("부서", options=["IT부", "생산부", "품질부", "관리부"])
-            
-            new_admin_level = st.radio("권한 레벨", options=["최고관리자", "부서관리자", "일반관리자"])
+                new_admin_pwd = st.text_input("비밀번호", type="password", value=st.session_state.new_admin_password)
+                new_admin_pwd_confirm = st.text_input("비밀번호 확인", type="password", value=st.session_state.new_admin_password_confirm)
+                new_admin_role = st.selectbox("권한", options=["일반", "관리자"], index=0)
             
             submit_admin = st.form_submit_button("관리자 등록")
         
@@ -2078,11 +2111,41 @@ elif st.session_state.page == "process_auth":
                 st.error("필수 항목을 모두 입력하세요.")
             elif new_admin_pwd != new_admin_pwd_confirm:
                 st.error("비밀번호가 일치하지 않습니다.")
-            elif new_admin_id in admin_df["아이디"].values:
+            elif new_admin_id in st.session_state.admin_users["아이디"]:
                 st.error("이미 존재하는 아이디입니다.")
             else:
+                # 세션 상태에 새 관리자 추가
+                st.session_state.admin_users["아이디"].append(new_admin_id)
+                st.session_state.admin_users["이름"].append(new_admin_name)
+                st.session_state.admin_users["권한"].append(new_admin_role)
+                st.session_state.admin_users["부서"].append(new_admin_dept)
+                st.session_state.admin_users["최근접속일"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                st.session_state.admin_users["상태"].append("활성")
+                
+                # 파일에 저장
+                save_admin_data(st.session_state.admin_users)
+                
+                # 성공 메시지 및 시각적 효과
                 st.success(f"관리자 '{new_admin_name}'이(가) 성공적으로 등록되었습니다.")
-                st.info("실제 데이터베이스 연동 시 관리자 정보가 저장됩니다.")
+                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                
+                # 추가 효과를 위한 플래그 설정
+                if 'added_admin' not in st.session_state:
+                    st.session_state.added_admin = True
+                
+                # 폼 입력값 리셋을 위한 세션 상태 설정
+                st.session_state.new_admin_id = ""
+                st.session_state.new_admin_name = ""
+                st.session_state.new_admin_password = ""
+                st.session_state.new_admin_password_confirm = ""
+                
+                # 페이지 리로드
+                st.experimental_rerun()
+        
+        # 추가 효과 표시
+        if 'added_admin' in st.session_state and st.session_state.added_admin:
+            st.session_state.added_admin = False
+            st.balloons()  # 풍선 효과 추가
 
 elif st.session_state.page == "user_auth":
     # 사용자 등록 및 관리 페이지
