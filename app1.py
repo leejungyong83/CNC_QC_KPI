@@ -246,6 +246,26 @@ def init_db():
             with open(DEFECT_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump({"defects": []}, f, ensure_ascii=False, indent=2)
         
+        # 생산모델 데이터 초기화 - 기존 데이터 보존
+        if not (DATA_DIR / "product_models.json").exists():
+            # 샘플 모델 데이터
+            default_models = {
+                "models": [
+                    {"id": 1, "모델명": "PA1", "공정": "C1"},
+                    {"id": 2, "모델명": "PA1", "공정": "C2"},
+                    {"id": 3, "모델명": "PA2", "공정": "C1"},
+                    {"id": 4, "모델명": "PA2", "공정": "C2"},
+                    {"id": 5, "모델명": "PA3", "공정": "C1"},
+                    {"id": 6, "모델명": "PA3", "공정": "C2"},
+                    {"id": 7, "모델명": "PA3", "공정": "C2-1"},
+                    {"id": 8, "모델명": "B6", "공정": "C1"},
+                    {"id": 9, "모델명": "B6", "공정": "C2"},
+                    {"id": 10, "모델명": "B6M", "공정": "C1"}
+                ]
+            }
+            with open(DATA_DIR / "product_models.json", 'w', encoding='utf-8') as f:
+                json.dump(default_models, f, ensure_ascii=False, indent=2)
+        
         # 관리자 데이터 초기화 - 기존 데이터 보존
         if not ADMIN_DATA_FILE.exists():
             default_admin_data = {
@@ -464,7 +484,8 @@ TRANSLATIONS = {
             "manager_auth": "👥 관리자 및 사용자 관리",
             "process_auth": "⚙️ 관리자 등록 및 관리",
             "user_auth": "🔑 사용자 등록 및 관리",
-            "inspection_data": "📊 검사실적 관리"
+            "inspection_data": "📊 검사실적 관리",
+            "product_model": "📦 생산모델 관리"
         },
         "report_menu": {
             "total_dashboard": "📈 종합 대시보드",
@@ -484,7 +505,8 @@ TRANSLATIONS = {
             "manager_auth": "👥 Quản lý quản trị viên và người dùng",
             "process_auth": "⚙️ Đăng ký và quản lý quản trị viên",
             "user_auth": "🔑 Đăng ký và quản lý người dùng",
-            "inspection_data": "📊 Quản lý dữ liệu kiểm tra"
+            "inspection_data": "📊 Quản lý dữ liệu kiểm tra",
+            "product_model": "📦 Quản lý mô hình sản xuất"
         },
         "report_menu": {
             "total_dashboard": "📈 Bảng điều khiển tổng hợp",
@@ -2643,12 +2665,9 @@ elif st.session_state.page == "user_auth":
                         fig.update_layout(
                             height=300,
                             margin=dict(l=20, r=20, t=10, b=20),
-                            plot_bgcolor="rgba(0,0,0,0)",
-                            paper_bgcolor="rgba(0,0,0,0)",
                         )
                         
                         st.plotly_chart(fig, use_container_width=True)
-                        st.markdown("</div>", unsafe_allow_html=True)
                     
                     with col2:
                         if process_counts is not None:
@@ -3640,3 +3659,45 @@ def sync_offline_data():
             
             if st.session_state.saved_inspectors:
                 st.warning(f"{len(st.session_state.saved_inspectors)}개의 데이터는 여전히 동기화되지 않았습니다.")
+
+# 생산모델 데이터 가져오기
+def load_product_models():
+    try:
+        with open(DATA_DIR / "product_models.json", 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return pd.DataFrame(data["models"]) if "models" in data else pd.DataFrame()
+    except (FileNotFoundError, json.JSONDecodeError):
+        # 샘플 데이터 반환
+        default_models = {
+            "models": [
+                {"id": 1, "모델명": "PA1", "공정": "C1"},
+                {"id": 2, "모델명": "PA1", "공정": "C2"},
+                {"id": 3, "모델명": "PA2", "공정": "C1"},
+                {"id": 4, "모델명": "PA2", "공정": "C2"},
+                {"id": 5, "모델명": "PA3", "공정": "C1"},
+                {"id": 6, "모델명": "PA3", "공정": "C2"},
+                {"id": 7, "모델명": "PA3", "공정": "C2-1"},
+                {"id": 8, "모델명": "B6", "공정": "C1"},
+                {"id": 9, "모델명": "B6", "공정": "C2"},
+                {"id": 10, "모델명": "B6M", "공정": "C1"}
+            ]
+        }
+        
+        # 저장해두기
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(DATA_DIR / "product_models.json", 'w', encoding='utf-8') as f:
+            json.dump(default_models, f, ensure_ascii=False, indent=2)
+            
+        return pd.DataFrame(default_models["models"])
+
+# 생산모델 데이터 저장
+def save_product_models(models_df):
+    try:
+        models_data = {"models": models_df.to_dict(orient='records')}
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(DATA_DIR / "product_models.json", 'w', encoding='utf-8') as f:
+            json.dump(models_data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"생산모델 데이터 저장 중 오류: {str(e)}")
+        return False
