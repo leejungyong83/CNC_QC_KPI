@@ -3662,42 +3662,198 @@ def sync_offline_data():
 
 # 생산모델 데이터 가져오기
 def load_product_models():
+    """
+    생산모델 데이터를 로드합니다.
+    """
     try:
-        with open(DATA_DIR / "product_models.json", 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            return pd.DataFrame(data["models"]) if "models" in data else pd.DataFrame()
-    except (FileNotFoundError, json.JSONDecodeError):
-        # 샘플 데이터 반환
-        default_models = {
-            "models": [
-                {"id": 1, "모델명": "PA1", "공정": "C1"},
-                {"id": 2, "모델명": "PA1", "공정": "C2"},
-                {"id": 3, "모델명": "PA2", "공정": "C1"},
-                {"id": 4, "모델명": "PA2", "공정": "C2"},
-                {"id": 5, "모델명": "PA3", "공정": "C1"},
-                {"id": 6, "모델명": "PA3", "공정": "C2"},
-                {"id": 7, "모델명": "PA3", "공정": "C2-1"},
-                {"id": 8, "모델명": "B6", "공정": "C1"},
-                {"id": 9, "모델명": "B6", "공정": "C2"},
-                {"id": 10, "모델명": "B6M", "공정": "C1"}
-            ]
-        }
-        
-        # 저장해두기
-        os.makedirs(DATA_DIR, exist_ok=True)
-        with open(DATA_DIR / "product_models.json", 'w', encoding='utf-8') as f:
-            json.dump(default_models, f, ensure_ascii=False, indent=2)
-            
-        return pd.DataFrame(default_models["models"])
+        if os.path.exists("data/product_models.csv"):
+            df = pd.read_csv("data/product_models.csv")
+            return df
+        else:
+            # 데이터가 없으면 빈 DataFrame 생성
+            return pd.DataFrame(columns=["id", "모델명", "공정"])
+    except Exception as e:
+        print(f"생산모델 데이터 로드 중 오류: {str(e)}")
+        return pd.DataFrame(columns=["id", "모델명", "공정"])
 
 # 생산모델 데이터 저장
-def save_product_models(models_df):
+def save_product_models(df):
+    """
+    생산모델 데이터를 저장합니다.
+    
+    Args:
+        df (pandas.DataFrame): 저장할 생산모델 데이터
+        
+    Returns:
+        bool: 저장 성공 여부
+    """
     try:
-        models_data = {"models": models_df.to_dict(orient='records')}
-        os.makedirs(DATA_DIR, exist_ok=True)
-        with open(DATA_DIR / "product_models.json", 'w', encoding='utf-8') as f:
-            json.dump(models_data, f, ensure_ascii=False, indent=2)
+        # 데이터 디렉토리 확인
+        if not os.path.exists("data"):
+            os.makedirs("data")
+            
+        # 데이터 저장
+        df.to_csv("data/product_models.csv", index=False)
         return True
     except Exception as e:
         print(f"생산모델 데이터 저장 중 오류: {str(e)}")
         return False
+
+# 여기서부터 제품 모델 관리 페이지 코드를 다른 페이지 코드와 같은 패턴으로 배치합니다
+if st.session_state.page == "product_model":
+    # 생산모델 관리 페이지
+    st.markdown("<div class='title-area'><h1>📦 생산모델 관리</h1></div>", unsafe_allow_html=True)
+    
+    # 관리자 권한 확인
+    if st.session_state.user_role != "관리자":
+        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+        st.stop()
+    
+    # 생산모델 데이터 로드
+    product_models_df = load_product_models()
+    
+    # 탭 생성
+    tab1, tab2 = st.tabs(["📋 생산모델 목록", "➕ 생산모델 추가/수정"])
+    
+    with tab1:
+        st.subheader("생산모델 목록")
+        
+        # 검색 필터
+        col1, col2 = st.columns(2)
+        with col1:
+            search_model = st.text_input("모델명 검색", placeholder="검색어를 입력하세요")
+        with col2:
+            process_filter = st.selectbox("공정 필터", options=["전체"] + sorted(product_models_df["공정"].unique().tolist()))
+        
+        # 필터링 적용
+        filtered_df = product_models_df.copy()
+        if search_model:
+            filtered_df = filtered_df[filtered_df["모델명"].str.contains(search_model, case=False)]
+        if process_filter != "전체":
+            filtered_df = filtered_df[filtered_df["공정"] == process_filter]
+        
+        # 결과 표시
+        if len(filtered_df) > 0:
+            st.dataframe(
+                filtered_df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "id": st.column_config.NumberColumn("ID", format="%d"),
+                    "모델명": st.column_config.TextColumn("모델명"),
+                    "공정": st.column_config.TextColumn("공정")
+                }
+            )
+        else:
+            st.info("검색 조건에 맞는 생산모델이 없습니다.")
+    
+    with tab2:
+        st.subheader("생산모델 추가/수정")
+        
+        # 양식 생성
+        with st.form("model_form", clear_on_submit=True):
+            # 새 모델 추가 또는 기존 모델 수정 선택
+            edit_mode = st.radio("작업 선택", ["새 모델 추가", "기존 모델 수정", "모델 삭제"], horizontal=True)
+            
+            if edit_mode == "새 모델 추가":
+                # 새 ID 생성 (기존 최대 ID + 1)
+                new_id = 1
+                if not product_models_df.empty:
+                    new_id = product_models_df["id"].max() + 1
+                
+                st.number_input("모델 ID", value=new_id, disabled=True, key="new_model_id")
+                model_name = st.text_input("모델명", placeholder="예: PA1, B7SUB6", key="new_model_name")
+                process_name = st.text_input("공정", placeholder="예: C1, C2, 연삭", key="new_process")
+                
+                submit_button = st.form_submit_button("생산모델 추가")
+                
+                if submit_button:
+                    if not model_name or not process_name:
+                        st.error("모든 필드를 입력해주세요.")
+                    else:
+                        # 새 모델 추가
+                        new_model = {"id": new_id, "모델명": model_name, "공정": process_name}
+                        updated_df = pd.concat([product_models_df, pd.DataFrame([new_model])], ignore_index=True)
+                        
+                        # 저장
+                        if save_product_models(updated_df):
+                            st.success("생산모델이 성공적으로 추가되었습니다!")
+                            st.experimental_rerun()
+                        else:
+                            st.error("생산모델 저장 중 오류가 발생했습니다.")
+            
+            elif edit_mode == "기존 모델 수정":
+                # 수정할 모델 선택
+                model_ids = product_models_df["id"].tolist()
+                model_labels = [f"{row['id']} - {row['모델명']} ({row['공정']})" for _, row in product_models_df.iterrows()]
+                
+                if model_ids:
+                    selected_id_index = st.selectbox("수정할 모델 선택", 
+                                                    range(len(model_ids)), 
+                                                    format_func=lambda i: model_labels[i],
+                                                    key="edit_model_select")
+                    
+                    selected_id = model_ids[selected_id_index]
+                    selected_row = product_models_df[product_models_df["id"] == selected_id].iloc[0]
+                    
+                    st.number_input("모델 ID", value=selected_id, disabled=True, key="edit_model_id")
+                    edited_model_name = st.text_input("모델명", value=selected_row["모델명"], key="edit_model_name")
+                    edited_process = st.text_input("공정", value=selected_row["공정"], key="edit_process")
+                    
+                    submit_button = st.form_submit_button("변경사항 저장")
+                    
+                    if submit_button:
+                        if not edited_model_name or not edited_process:
+                            st.error("모든 필드를 입력해주세요.")
+                        else:
+                            # 모델 업데이트
+                            updated_df = product_models_df.copy()
+                            updated_df.loc[updated_df["id"] == selected_id, "모델명"] = edited_model_name
+                            updated_df.loc[updated_df["id"] == selected_id, "공정"] = edited_process
+                            
+                            # 저장
+                            if save_product_models(updated_df):
+                                st.success("생산모델이 성공적으로 수정되었습니다!")
+                                st.experimental_rerun()
+                            else:
+                                st.error("생산모델 수정 중 오류가 발생했습니다.")
+                else:
+                    st.warning("수정할 생산모델이 없습니다. 먼저 모델을 추가해주세요.")
+            
+            else:  # 모델 삭제
+                # 삭제할 모델 선택
+                model_ids = product_models_df["id"].tolist()
+                model_labels = [f"{row['id']} - {row['모델명']} ({row['공정']})" for _, row in product_models_df.iterrows()]
+                
+                if model_ids:
+                    selected_id_index = st.selectbox("삭제할 모델 선택", 
+                                                   range(len(model_ids)), 
+                                                   format_func=lambda i: model_labels[i],
+                                                   key="delete_model_select")
+                    
+                    selected_id = model_ids[selected_id_index]
+                    selected_row = product_models_df[product_models_df["id"] == selected_id].iloc[0]
+                    
+                    st.info(f"선택한 모델: {selected_row['모델명']} (공정: {selected_row['공정']})")
+                    
+                    confirm_delete = st.checkbox("삭제를 확인합니다", key="confirm_delete")
+                    submit_button = st.form_submit_button("모델 삭제")
+                    
+                    if submit_button:
+                        if not confirm_delete:
+                            st.error("삭제를 확인하려면 체크박스를 선택해주세요.")
+                        else:
+                            # 모델 삭제
+                            updated_df = product_models_df[product_models_df["id"] != selected_id].reset_index(drop=True)
+                            
+                            # 저장
+                            if save_product_models(updated_df):
+                                st.success("생산모델이 성공적으로 삭제되었습니다!")
+                                st.experimental_rerun()
+                            else:
+                                st.error("생산모델 삭제 중 오류가 발생했습니다.")
+                else:
+                    st.warning("삭제할 생산모델이 없습니다.")
+elif st.session_state.page == "another_page":
+    # 다른 페이지 로직
+    pass
