@@ -2877,9 +2877,9 @@ elif st.session_state.page == "inspection_data":
             
             model_name = st.selectbox(
                 "모델명",
-                options=["모델을 선택하세요", "E1", "E2", "B6 SUB", "B7", "B8", "E3", "E4", "E5", 
-                         "E6", "E7", "E8", "E9", "E10", "G1", "G2", "G3", "G4", "G5", 
-                         "G6", "G7", "H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9"],
+                options=["모델을 선택하세요", "BY2", "PA1", "PS SUB6", "E1", "PA3", "B7DUALSIM", "Y2", 
+                         "B7R SUB6", "B6S6", "B5S6", "B7SUB", "B6", "B7MMW", "B7R MMW", "PA2", 
+                         "B5M", "B7RR", "B7R SUB", "B7R", "B6M", "B7SUB6"],
                 index=0,
                 key="input_model"
             )
