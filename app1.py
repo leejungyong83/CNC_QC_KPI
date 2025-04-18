@@ -228,6 +228,9 @@ def save_user_data(user_data):
 def init_db():
     """JSON 파일 기반 데이터베이스 초기화"""
     try:
+        # 디렉토리가 없으면 생성
+        os.makedirs(DATA_DIR, exist_ok=True)
+        
         # 검사원 데이터 초기화
         if not INSPECTOR_DATA_FILE.exists():
             with open(INSPECTOR_DATA_FILE, 'w', encoding='utf-8') as f:
@@ -243,7 +246,7 @@ def init_db():
             with open(DEFECT_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump({"defects": []}, f, ensure_ascii=False, indent=2)
         
-        # 관리자 데이터 초기화
+        # 관리자 데이터 초기화 - 기존 데이터 보존
         if not ADMIN_DATA_FILE.exists():
             default_admin_data = {
                 "아이디": ["admin"],
@@ -256,7 +259,7 @@ def init_db():
             with open(ADMIN_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(default_admin_data, f, ensure_ascii=False, indent=2)
         
-        # 사용자 데이터 초기화
+        # 사용자 데이터 초기화 - 기존 데이터 보존
         if not USER_DATA_FILE.exists():
             default_user_data = {
                 "아이디": [],
@@ -1819,25 +1822,55 @@ elif st.session_state.page == "manager_auth":
         if 'admin_users' not in st.session_state:
             # JSON 파일에서 관리자 데이터 로드
             st.session_state.admin_users = load_admin_data()
+            
+            # 데이터가 비어있는지 확인하고, 비어있으면 기본 관리자 데이터 추가
+            if len(st.session_state.admin_users.get("아이디", [])) == 0:
+                st.session_state.admin_users = {
+                    "아이디": ["admin"],
+                    "이름": ["관리자"],
+                    "권한": ["관리자"],
+                    "부서": ["관리부"],
+                    "최근접속일": [datetime.now().strftime("%Y-%m-%d %H:%M")],
+                    "상태": ["활성"]
+                }
+                # 기본 관리자 데이터 저장
+                save_admin_data(st.session_state.admin_users)
+                st.info("기본 관리자 계정이 생성되었습니다.")
         
-        # 사용자 데이터프레임 생성
-        users_df = pd.DataFrame(st.session_state.admin_users)
+        # 데이터프레임 변환 시 에러 처리
+        try:
+            # 사용자 데이터프레임 생성 (manager_auth 페이지와 동일한 데이터 사용)
+            admin_df = pd.DataFrame(st.session_state.admin_users)
+        except Exception as e:
+            st.error(f"관리자 데이터 로드 중 오류가 발생했습니다: {str(e)}")
+            # 데이터 구조 오류 시 재설정
+            st.session_state.admin_users = {
+                "아이디": ["admin"],
+                "이름": ["관리자"],
+                "권한": ["관리자"],
+                "부서": ["관리부"],
+                "최근접속일": [datetime.now().strftime("%Y-%m-%d %H:%M")],
+                "상태": ["활성"]
+            }
+            admin_df = pd.DataFrame(st.session_state.admin_users)
+            save_admin_data(st.session_state.admin_users)
+            st.warning("관리자 데이터가 재설정되었습니다.")
         
-        # 사용자 목록 필터링
+        # 관리자 목록 필터링
         col1, col2 = st.columns(2)
         with col1:
-            role_filter = st.selectbox("권한 필터", options=["전체", "관리자", "일반"])
+            dept_filter = st.selectbox("부서 필터", options=["전체", "관리부", "생산부", "품질부", "기술부"])
         with col2:
             status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성"])
         
         # 필터 적용
-        filtered_df = users_df.copy()
-        if role_filter != "전체" and not filtered_df.empty:
-            filtered_df = filtered_df[filtered_df["권한"] == role_filter]
-        if status_filter != "전체" and not filtered_df.empty:
+        filtered_df = admin_df.copy()
+        if dept_filter != "전체" and not filtered_df.empty and "부서" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["부서"] == dept_filter]
+        if status_filter != "전체" and not filtered_df.empty and "상태" in filtered_df.columns:
             filtered_df = filtered_df[filtered_df["상태"] == status_filter]
         
-        # 필터링된 사용자 목록 표시
+        # 필터링된 관리자 목록 표시
         st.dataframe(filtered_df, use_container_width=True, hide_index=True)
         
         # 관리자 삭제 섹션 (관리자가 있을 경우에만 표시)
@@ -2875,13 +2908,17 @@ elif st.session_state.page == "inspection_data":
                 key="input_process"
             )
             
+            # 모델명 선택 (캐시 새로고침을 위한 고유 키 사용)
+            if 'model_options_ver' not in st.session_state:
+                st.session_state.model_options_ver = 1
+            
             model_name = st.selectbox(
                 "모델명",
                 options=["모델을 선택하세요", "BY2", "PA1", "PS SUB6", "E1", "PA3", "B7DUALSIM", "Y2", 
                          "B7R SUB6", "B6S6", "B5S6", "B7SUB", "B6", "B7MMW", "B7R MMW", "PA2", 
                          "B5M", "B7RR", "B7R SUB", "B7R", "B6M", "B7SUB6"],
                 index=0,
-                key="input_model"
+                key=f"input_model_{st.session_state.model_options_ver}"
             )
             
         with col2:
