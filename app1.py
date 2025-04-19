@@ -483,7 +483,7 @@ TRANSLATIONS = {
         "admin_menu": {
             "manager_auth": "👥 관리자 및 사용자 관리",
             "process_auth": "⚙️ 관리자 등록 및 관리",
-            "user_auth": "🔑 사용자 등록 및 관리",
+            "user_auth": "🔑 검사자 등록 및 관리",
             "inspection_data": "📊 검사실적 관리",
             "product_model": "📦 생산모델 관리"
         },
@@ -2309,8 +2309,8 @@ elif st.session_state.page == "process_auth":
             st.balloons()  # 풍선 효과 추가
 
 elif st.session_state.page == "user_auth":
-    # 사용자 등록 및 관리 페이지
-    st.markdown("<div class='title-area'><h1>🔑 사용자 등록 및 관리</h1></div>", unsafe_allow_html=True)
+    # 검사자 등록 및 관리 페이지
+    st.markdown("<div class='title-area'><h1>🔑 검사자 등록 및 관리</h1></div>", unsafe_allow_html=True)
     
     # 관리자 권한 확인
     if st.session_state.user_role != "관리자":
