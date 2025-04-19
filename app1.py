@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 from supabase import create_client
 import pandas as pd
 import plotly.express as px
@@ -604,6 +604,7 @@ def save_inspection_data(data):
             "검사수량": "total_inspected",
             "불량수량": "total_defects",
             "불량률(%)": "defect_rate",
+            "달성률(%)": "achievement_rate",
             "비고": "remarks"
         }
         
@@ -615,12 +616,28 @@ def save_inspection_data(data):
             else:
                 english_data[k] = v
         
+        # 불량 세부정보 처리
+        if "불량세부" in data:
+            defect_details = []
+            for item in data["불량세부"]:
+                defect_details.append({
+                    "type": item["type"],
+                    "quantity": item["quantity"]
+                })
+            english_data["defect_details"] = json.dumps(defect_details, ensure_ascii=False)
+        
         # 영문 필드명으로 저장
-        response = supabase.table('inspection_data').insert(english_data).execute()
-        return response
+        try:
+            response = supabase.table('inspection_data').insert(english_data).execute()
+            return response
+        except Exception as db_error:
+            # 데이터베이스 연결 실패 시 로컬에 저장
+            if 'saved_inspections' not in st.session_state:
+                st.session_state.saved_inspections = []
+            st.session_state.saved_inspections.append(data)
+            raise db_error
+            
     except Exception as e:
-        # Supabase 테이블이 없는 경우나 다른 오류 처리
-        st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
         # 세션에 데이터 저장(백업)
         if 'saved_inspections' not in st.session_state:
             st.session_state.saved_inspections = []
@@ -649,11 +666,17 @@ def save_defect_data(data):
                 english_data[k] = v
         
         # 영문 필드명으로 저장
-        response = supabase.table('defect_data').insert(english_data).execute()
-        return response
+        try:
+            response = supabase.table('defect_data').insert(english_data).execute()
+            return response
+        except Exception as db_error:
+            # 데이터베이스 연결 실패 시 로컬에 저장
+            if 'saved_defects' not in st.session_state:
+                st.session_state.saved_defects = []
+            st.session_state.saved_defects.append(data)
+            raise db_error
+            
     except Exception as e:
-        # Supabase 테이블이 없는 경우나 다른 오류 처리
-        st.error(f"불량 데이터 저장 중 오류가 발생했습니다: {str(e)}")
         # 세션에 데이터 저장(백업)
         if 'saved_defects' not in st.session_state:
             st.session_state.saved_defects = []
@@ -4017,3 +4040,336 @@ if st.session_state.page == "product_model":
 elif st.session_state.page == "another_page":
     # 다른 페이지 로직
     pass
+
+# 검사 데이터 불러오기
+def load_inspection_data():
+    try:
+        # Supabase에서 데이터 가져오기
+        response = supabase.table('inspection_data').select('*').execute()
+        data = response.data
+        
+        # 데이터가 없으면 빈 DataFrame 반환
+        if not data:
+            return pd.DataFrame()
+        
+        # 영문 필드명을 한글로 변환
+        field_mapping = {
+            "inspector_name": "검사원",
+            "process": "공정",
+            "model_name": "모델명",
+            "inspection_date": "검사일자",
+            "inspection_time": "검사시간",
+            "lot_number": "LOT번호",
+            "work_time_minutes": "작업시간(분)",
+            "planned_quantity": "계획수량",
+            "total_inspected": "검사수량",
+            "total_defects": "불량수량",
+            "defect_rate": "불량률(%)",
+            "achievement_rate": "달성률(%)",
+            "remarks": "비고"
+        }
+        
+        # DataFrame 변환
+        df = pd.DataFrame(data)
+        
+        # 필드명 변환
+        renamed_columns = {}
+        for eng, kor in field_mapping.items():
+            if eng in df.columns:
+                renamed_columns[eng] = kor
+        
+        # 컬럼 이름 변경
+        df = df.rename(columns=renamed_columns)
+        
+        # 불량 세부정보 처리
+        if "defect_details" in df.columns:
+            try:
+                df["불량세부"] = df["defect_details"].apply(lambda x: json.loads(x) if x and isinstance(x, str) else [])
+                df = df.drop(columns=["defect_details"])
+            except:
+                df["불량세부"] = [[]]
+        
+        return df
+    
+    except Exception as e:
+        # 오류 발생시 세션 데이터 반환(백업)
+        if 'saved_inspections' in st.session_state and st.session_state.saved_inspections:
+            return pd.DataFrame(st.session_state.saved_inspections)
+        # 아무 데이터도 없는 경우
+        return pd.DataFrame()
+
+# 불량 데이터 불러오기
+def load_defect_data():
+    try:
+        # Supabase에서 데이터 가져오기
+        response = supabase.table('defect_data').select('*').execute()
+        data = response.data
+        
+        # 데이터가 없으면 빈 DataFrame 반환
+        if not data:
+            return pd.DataFrame()
+        
+        # 영문 필드명을 한글로 변환
+        field_mapping = {
+            "defect_type": "불량유형",
+            "quantity": "수량",
+            "inspection_id": "검사ID",
+            "registration_date": "등록일자",
+            "registered_by": "등록자",
+            "remarks": "비고"
+        }
+        
+        # DataFrame 변환
+        df = pd.DataFrame(data)
+        
+        # 필드명 변환
+        renamed_columns = {}
+        for eng, kor in field_mapping.items():
+            if eng in df.columns:
+                renamed_columns[eng] = kor
+        
+        # 컬럼 이름 변경
+        df = df.rename(columns=renamed_columns)
+        
+        return df
+    
+    except Exception as e:
+        # 오류 발생시 세션 데이터 반환(백업)
+        if 'saved_defects' in st.session_state and st.session_state.saved_defects:
+            return pd.DataFrame(st.session_state.saved_defects)
+        # 아무 데이터도 없는 경우
+        return pd.DataFrame()
+
+# 실적 데이터 입력 탭에서 불량 유형 선택 및 수량 입력 UI 수정
+def load_defect_types():
+    try:
+        # 데이터베이스에서 불량 유형 목록 불러오기
+        response = supabase.table('defect_types').select('*').execute()
+        data = response.data
+        
+        if data:
+            return [item['type_name'] for item in data]
+        else:
+            # 기본 불량 유형 목록
+            return ["ATN CRACK", "BONG BIA", "BULONG", "BUỒN", "BỤI NƯỚC", "CHỎM", "DA BEO", "DÂY", 
+                    "DẬP", "DP - KÝ", "DẬP - TRỤC A", "DẬP PHÔI", "GIOĂNG", "HẤP", "KẼM", "KHẤC",
+                    "KHUYẾT", "LỒI", "LỬNG", "NHẤN", "NƯỚC NGOÀI", "OV VÍT", "ĂN MÒN", "CHAI CẠNH", 
+                    "CHẾT MÁY", "CHÊNH", "CỬA NƯỚC", "DROP", "KẸP", "NG PHÔI", "NG T CUT", 
+                    "ø1 CRACK", "ø1 CRACK PIN JIG", "SETTING", "TẮC NƯỚC", "TÊN LỖI", 
+                    "THAO TÁC1", "THAO TÁC2", "THAO TÁC3", "TOOL RUNG LẮC", "TRÀN NHỰA", 
+                    "TRỤC A", "VẾT ĐÂM"]
+    except Exception as e:
+        # 오류 발생시 기본 목록 반환
+        return ["규격 불량", "외관 불량", "기능 불량", "치수 불량", "기타"]
+
+# 불량 유형 입력 UI 부분
+def render_defect_input():
+    defect_types = load_defect_types()
+    
+    st.subheader("불량 상세 정보")
+    
+    defect_types = st.multiselect(
+        "불량 유형 선택",
+        options=defect_types,
+        placeholder="불량 유형을 선택하세요",
+        key="defect_types"
+    )
+    
+    if defect_types:
+        # 불량 유형별 수량 입력
+        cols = st.columns(len(defect_types))
+        defect_details = []
+        
+        for i, defect_type in enumerate(defect_types):
+            with cols[i]:
+                st.write(f"**{defect_type}**")
+                quantity = st.number_input(
+                    "수량",
+                    min_value=0,
+                    max_value=1000,
+                    value=1,
+                    key=f"defect_quantity_{i}"
+                )
+                defect_details.append({
+                    "type": defect_type,
+                    "quantity": quantity
+                })
+        
+        return defect_details
+    return []
+
+# 데이터 검증 함수
+def validate_inspection_data(df):
+    validation_results = []
+    
+    # 데이터가 없는 경우
+    if df.empty:
+        return [{"severity": "info", "message": "검증할 데이터가 없습니다."}]
+    
+    # 필수 컬럼 확인
+    required_columns = ["검사원", "공정", "모델명", "검사일자", "검사수량"]
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    
+    if missing_columns:
+        validation_results.append({
+            "severity": "error",
+            "message": f"필수 컬럼이 누락되었습니다: {', '.join(missing_columns)}"
+        })
+    
+    # 컬럼 존재하는 경우에만 검증 수행
+    if "검사일자" in df.columns:
+        # 날짜 형식 검증
+        invalid_dates = df[~df["검사일자"].astype(str).str.match(r'^\d{4}-\d{2}-\d{2}$')]["검사일자"].tolist()
+        if invalid_dates:
+            validation_results.append({
+                "severity": "warning",
+                "message": f"올바르지 않은 날짜 형식이 {len(invalid_dates)}건 발견되었습니다."
+            })
+    
+    if "검사수량" in df.columns and "불량수량" in df.columns:
+        # 불량수량 > 검사수량 검증
+        invalid_defects = df[df["불량수량"] > df["검사수량"]]
+        if not invalid_defects.empty:
+            validation_results.append({
+                "severity": "error",
+                "message": f"불량수량이 검사수량보다 큰 데이터가 {len(invalid_defects)}건 발견되었습니다."
+            })
+    
+    if "불량률(%)" in df.columns:
+        # 불량률 계산 오류 검증
+        if "검사수량" in df.columns and "불량수량" in df.columns:
+            # 계산된 불량률
+            calculated_rates = df.apply(
+                lambda row: round((row["불량수량"] / row["검사수량"]) * 100, 2) if row["검사수량"] > 0 else 0, 
+                axis=1
+            )
+            
+            # 저장된 불량률과 계산된 불량률 비교 (소수점 둘째자리까지 반올림하여 비교)
+            rate_errors = df[abs(calculated_rates - df["불량률(%)"]) > 0.02]
+            
+            if not rate_errors.empty:
+                validation_results.append({
+                    "severity": "warning",
+                    "message": f"불량률 계산이 일치하지 않는 데이터가 {len(rate_errors)}건 발견되었습니다."
+                })
+    
+    # 검증 결과가 없으면 정상
+    if not validation_results:
+        validation_results.append({
+            "severity": "success",
+            "message": "모든 데이터가 정상적으로 검증되었습니다."
+        })
+    
+    return validation_results
+
+# 데이터 검증 결과 표시 함수
+def display_validation_results(validation_results):
+    for result in validation_results:
+        severity = result["severity"]
+        message = result["message"]
+        
+        if severity == "error":
+            st.error(message)
+        elif severity == "warning":
+            st.warning(message)
+        elif severity == "info":
+            st.info(message)
+        elif severity == "success":
+            st.success(message)
+
+# 데이터 검증 탭 UI
+def inspection_data_validation_ui():
+    st.subheader("실적 데이터 검증")
+    
+    # 데이터 불러오기
+    df = load_inspection_data()
+    
+    # 필터링 옵션
+    st.write("#### 필터링 옵션")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        start_date = st.date_input(
+            "시작 날짜",
+            datetime.date.today() - datetime.timedelta(days=30),
+            key="validation_start_date"
+        )
+    
+    with col2:
+        end_date = st.date_input(
+            "종료 날짜",
+            datetime.date.today(),
+            key="validation_end_date"
+        )
+    
+    # 모델 필터
+    if "모델명" in df.columns and not df.empty:
+        model_options = ["모두"] + sorted(df["모델명"].unique().tolist())
+        selected_model = st.selectbox("모델 선택", model_options, key="validation_model")
+    else:
+        selected_model = "모두"
+    
+    # 검사원 필터
+    if "검사원" in df.columns and not df.empty:
+        inspector_options = ["모두"] + sorted(df["검사원"].unique().tolist())
+        selected_inspector = st.selectbox("검사원 선택", inspector_options, key="validation_inspector")
+    else:
+        selected_inspector = "모두"
+    
+    # 데이터 필터링
+    filtered_df = df.copy()
+    
+    if not df.empty and "검사일자" in df.columns:
+        # 날짜 필터링
+        filtered_df = filtered_df[
+            (pd.to_datetime(filtered_df["검사일자"]).dt.date >= start_date) &
+            (pd.to_datetime(filtered_df["검사일자"]).dt.date <= end_date)
+        ]
+        
+        # 모델 필터링
+        if selected_model != "모두" and "모델명" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["모델명"] == selected_model]
+        
+        # 검사원 필터링
+        if selected_inspector != "모두" and "검사원" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["검사원"] == selected_inspector]
+    
+    # 검증 실행 버튼
+    if st.button("데이터 검증 실행", key="run_validation"):
+        with st.spinner("데이터 검증 중..."):
+            validation_results = validate_inspection_data(filtered_df)
+            
+            st.write("#### 검증 결과")
+            display_validation_results(validation_results)
+            
+            # 검증 결과 표시
+            if not filtered_df.empty:
+                st.write(f"검증 데이터: {len(filtered_df)}건")
+                
+                # 테이블로 표시
+                st.dataframe(filtered_df, use_container_width=True)
+            else:
+                st.info("필터링 조건에 맞는 데이터가 없습니다.")
+    
+    # 데이터 수정 안내
+    st.markdown("""
+    **데이터 수정이 필요한 경우:**
+    1. '실적 데이터 조회' 탭에서 해당 데이터를 찾아 수정할 수 있습니다.
+    2. 대량 수정이 필요한 경우 관리자에게 문의하세요.
+    """)
+
+# 검사실적 관리 메인 UI에 데이터 검증 탭 추가
+def inspection_data_management_ui():
+    st.title("검사실적 관리")
+    
+    tabs = st.tabs(["실적 데이터 조회", "실적 데이터 입력", "데이터 검증"])
+    
+    with tabs[0]:
+        inspection_data_query_ui()
+    
+    with tabs[1]:
+        inspection_data_input_ui()
+    
+    with tabs[2]:
+        inspection_data_validation_ui()
