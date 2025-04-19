@@ -1,0 +1,22 @@
+
+===== Supabase 연동 문제 해결 요약 =====
+
+[문제 원인]
+app1.py 파일의 save_inspection_data 함수에서 달성률(%) 필드를 Supabase에 저장하려고 시도했으나,
+Supabase 테이블에는 해당 컬럼(achievement_rate)이 존재하지 않아 오류가 발생했습니다.
+
+[해결 방법]
+1. save_inspection_data 함수에서 달성률(%) 필드 제외:
+   - field_mapping에서 달성률(%) 항목 주석 처리
+   - 데이터 변환 시 달성률(%) 필드를 무시하는 로직 추가
+
+2. load_inspection_data 함수에서 achievement_rate 매핑 제거:
+   - 필드 매핑에서 achievement_rate 항목 주석 처리
+
+[적용 방법]
+1. app1_fixed_supabase_upload.py 파일을 app1.py로 교체하세요.
+2. 앱을 실행하여 검사실적관리 페이지가 정상적으로 작동하는지 확인하세요.
+
+[수정 효과]
+이 수정으로 검사실적관리 페이지에서 데이터 입력과 조회가 정상적으로 작동합니다.
+달성률(%) 필드는 UI에서는 표시되지만 Supabase에는 저장되지 않습니다.
