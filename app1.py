@@ -2809,7 +2809,7 @@ elif st.session_state.page == "inspection_data":
                 
                 # 안전하게 데이터 로드 시도
                 try:
-                    inspection_data = load_inspection_data()
+                    inspection_data = init_inspection_data()
                     if not inspection_data.empty and "공정" in inspection_data.columns:
                         process_options += sorted(inspection_data["공정"].unique().tolist())
                 except Exception as load_err:
@@ -2993,7 +2993,7 @@ elif st.session_state.page == "inspection_data":
             model_options = ["모델을 선택하세요"]
             
             try:
-                models_df = load_product_models()
+                models_df = init_product_models()
                 if not models_df.empty and "모델명" in models_df.columns:
                     model_options += sorted(models_df["모델명"].unique().tolist())
             except Exception as model_err:
@@ -3907,7 +3907,7 @@ if st.session_state.page == "product_model":
     
     # 생산모델 데이터 로드
     try:
-        product_models_df = load_product_models()
+        product_models_df = init_product_models()
     except Exception as e:
         st.error(f"생산모델 데이터 로드 중 오류가 발생했습니다: {str(e)}")
         product_models_df = pd.DataFrame(columns=["id", "모델명", "공정"])
@@ -4446,6 +4446,23 @@ def inspection_data_validation_ui():
     2. 대량 수정이 필요한 경우 관리자에게 문의하세요.
     """)
 
+# 실적 데이터 조회 탭에 사용할 전역 변수
+def init_inspection_data():
+    """검사 데이터 초기화 함수"""
+    try:
+        # 함수가 정의되어 있는지 확인
+        if 'load_inspection_data' in globals():
+            return load_inspection_data()
+        else:
+            # CSV 파일이 있는지 확인
+            if os.path.exists("data/inspection_data.csv"):
+                return pd.read_csv("data/inspection_data.csv")
+            # 기본 빈 데이터 반환
+            return pd.DataFrame(columns=["검사원", "공정", "모델명", "검사일자", "검사시간", "LOT번호"])
+    except Exception as e:
+        print(f"검사 데이터 초기화 오류: {str(e)}")
+        return pd.DataFrame(columns=["검사원", "공정", "모델명", "검사일자", "검사시간", "LOT번호"])
+
 # 검사실적 관리 메인 UI에 데이터 검증 탭 추가
 def inspection_data_management_ui():
     st.title("검사실적 관리")
@@ -4465,13 +4482,22 @@ def inspection_data_management_ui():
         with col3:
             # 실제 데이터에서 공정 목록 추출
             try:
-                inspection_data = load_inspection_data()
+                # 기본 옵션 설정
                 process_options = ["전체"]
-                if not inspection_data.empty and "공정" in inspection_data.columns:
-                    process_options += sorted(inspection_data["공정"].unique().tolist())
+                
+                # 안전하게 데이터 로드 시도
+                try:
+                    inspection_data = init_inspection_data()
+                    if not inspection_data.empty and "공정" in inspection_data.columns:
+                        process_options += sorted(inspection_data["공정"].unique().tolist())
+                except Exception as load_err:
+                    st.error(f"데이터 로드 중 오류 발생: {str(load_err)}")
+                    inspection_data = pd.DataFrame()
+                
+                # UI 컴포넌트 표시
                 process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
             except Exception as e:
-                st.error(f"데이터 로드 중 오류 발생: {str(e)}")
+                st.error(f"UI 구성 중 오류 발생: {str(e)}")
                 process_options = ["전체"]
                 process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
                 inspection_data = pd.DataFrame()
@@ -4490,3 +4516,29 @@ def inspection_data_management_ui():
     with tabs[2]:
         # 데이터 검증 탭 UI 구현
         inspection_data_validation_ui()
+
+# 모델 데이터 초기화 함수
+def init_product_models():
+    """생산모델 데이터 초기화 함수"""
+    try:
+        # 함수가 정의되어 있는지 확인
+        if 'load_product_models' in globals():
+            return load_product_models()
+        else:
+            # CSV 파일이 있는지 확인
+            if os.path.exists("data/product_models.csv"):
+                return pd.read_csv("data/product_models.csv")
+            
+            # 기본 모델 데이터 생성
+            default_models = [
+                {"id": 1, "모델명": "PA1", "공정": "C1"},
+                {"id": 2, "모델명": "PA1", "공정": "C2"},
+                {"id": 3, "모델명": "PA2", "공정": "C1"},
+                {"id": 4, "모델명": "PA2", "공정": "C2"},
+                {"id": 5, "모델명": "B6", "공정": "C1"},
+                {"id": 6, "모델명": "B6M", "공정": "C1"}
+            ]
+            return pd.DataFrame(default_models)
+    except Exception as e:
+        print(f"모델 데이터 초기화 오류: {str(e)}")
+        return pd.DataFrame(columns=["id", "모델명", "공정"])
