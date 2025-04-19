@@ -2779,103 +2779,127 @@ elif st.session_state.page == "inspection_data":
         with col2:
             end_date = st.date_input("종료일", datetime.now(), key="prod_end_date")
         with col3:
-            process_filter = st.selectbox("공정 필터", options=["전체", "선삭", "밀링", "연삭", "조립"], key="prod_process")
+            # 실제 데이터에서 공정 목록 추출
+            inspection_data = load_inspection_data()
+            process_options = ["전체"]
+            if not inspection_data.empty and "공정" in inspection_data.columns:
+                process_options += sorted(inspection_data["공정"].unique().tolist())
+            process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
         
-        # 샘플 생산 실적 데이터
-        production_data = {
-            "날짜": pd.date_range(start=datetime.now()-timedelta(days=30), periods=50, freq='B').strftime("%Y-%m-%d"),
-            "작업지시번호": [f"WO-{i:05d}" for i in range(1001, 1051)],
-            "품목코드": [f"ITEM-{i:04d}" for i in range(1, 51)],
-            "품목명": [f"부품 {chr(65 + i % 26)}-{i % 10}" for i in range(50)],
-            "공정": np.random.choice(["선삭", "밀링", "연삭", "조립"], 50),
-            "작업자": np.random.choice(["홍길동", "김철수", "이영희", "박민수", "최지훈"], 50),
-            "계획수량": np.random.randint(50, 200, 50),
-            "생산수량": [np.random.randint(40, x+1) for x in np.random.randint(50, 200, 50)],
-            "불량수량": np.random.randint(0, 10, 50)
-        }
-        
-        production_data["작업시작시간"] = [(datetime.now() - timedelta(days=d, hours=np.random.randint(0, 5))).strftime("%H:%M") 
-                       for d in range(30, 0, -1)] + [(datetime.now() - timedelta(hours=np.random.randint(0, 5))).strftime("%H:%M") 
-                       for _ in range(20)]
-        
-        production_data["작업종료시간"] = [(datetime.now() - timedelta(days=d, hours=np.random.randint(0, 3))).strftime("%H:%M") 
-                       for d in range(30, 0, -1)] + [(datetime.now() - timedelta(hours=np.random.randint(0, 3))).strftime("%H:%M") 
-                       for _ in range(20)]
-        
-        production_data["상태"] = np.random.choice(["완료", "진행중", "대기"], 50, p=[0.7, 0.2, 0.1])
-        
-        prod_df = pd.DataFrame(production_data)
-        
-        # 데이터프레임에 불량률 계산 추가
-        prod_df["불량률(%)"] = (prod_df["불량수량"] / prod_df["생산수량"] * 100).round(2)
-        prod_df["달성률(%)"] = (prod_df["생산수량"] / prod_df["계획수량"] * 100).round(2)
-        
-        # 필터 적용
-        filtered_prod_df = prod_df.copy()
-        
-        # 날짜 필터 적용
-        filtered_prod_df = filtered_prod_df[
-            (pd.to_datetime(filtered_prod_df["날짜"]) >= pd.Timestamp(start_date)) & 
-            (pd.to_datetime(filtered_prod_df["날짜"]) <= pd.Timestamp(end_date))
-        ]
-        
-        # 공정 필터 적용
-        if process_filter != "전체":
-            filtered_prod_df = filtered_prod_df[filtered_prod_df["공정"] == process_filter]
-        
-        # 검색 기능
-        search_query = st.text_input("품목 또는 작업지시번호 검색", key="prod_search")
-        if search_query:
-            filtered_prod_df = filtered_prod_df[
-                filtered_prod_df["품목명"].str.contains(search_query) | 
-                filtered_prod_df["작업지시번호"].str.contains(search_query) |
-                filtered_prod_df["품목코드"].str.contains(search_query)
-            ]
-        
-        # 데이터 정렬 옵션
-        sort_option = st.selectbox(
-            "정렬 기준",
-            options=["날짜(최신순)", "날짜(오래된순)", "달성률(높은순)", "달성률(낮은순)", "불량률(높은순)", "불량률(낮은순)"],
-            index=0
-        )
-        
-        # 정렬 적용
-        if sort_option == "날짜(최신순)":
-            filtered_prod_df = filtered_prod_df.sort_values(by="날짜", ascending=False)
-        elif sort_option == "날짜(오래된순)":
-            filtered_prod_df = filtered_prod_df.sort_values(by="날짜", ascending=True)
-        elif sort_option == "달성률(높은순)":
-            filtered_prod_df = filtered_prod_df.sort_values(by="달성률(%)", ascending=False)
-        elif sort_option == "달성률(낮은순)":
-            filtered_prod_df = filtered_prod_df.sort_values(by="달성률(%)", ascending=True)
-        elif sort_option == "불량률(높은순)":
-            filtered_prod_df = filtered_prod_df.sort_values(by="불량률(%)", ascending=False)
-        elif sort_option == "불량률(낮은순)":
-            filtered_prod_df = filtered_prod_df.sort_values(by="불량률(%)", ascending=True)
-        
-        # 필터링된 생산 실적 표시
-        st.dataframe(
-            filtered_prod_df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "불량률(%)": st.column_config.ProgressColumn(
-                    "불량률(%)",
-                    help="생산된 제품 중 불량 비율",
-                    format="%.2f%%",
-                    min_value=0,
-                    max_value=10,
-                ),
-                "달성률(%)": st.column_config.ProgressColumn(
-                    "달성률(%)",
-                    help="계획 대비 생산 달성률",
-                    format="%.2f%%",
-                    min_value=0,
-                    max_value=120,
-                    width="medium"
-                ),
-            }
-        )
+        # 데이터 로드 후 표시
+        if inspection_data.empty:
+            st.info("저장된 검사 실적 데이터가 없습니다. '실적 데이터 입력' 탭에서 데이터를 입력해주세요.")
+        else:
+            # 필요한 경우 날짜 열 변환
+            if "검사일자" in inspection_data.columns and inspection_data["검사일자"].dtype == 'object':
+                try:
+                    inspection_data["검사일자"] = pd.to_datetime(inspection_data["검사일자"])
+                except:
+                    pass
+            
+            # 필터 적용
+            filtered_df = inspection_data.copy()
+            
+            # 날짜 필터 적용
+            if "검사일자" in filtered_df.columns:
+                # 날짜 형식 확인
+                if filtered_df["검사일자"].dtype == 'datetime64[ns]':
+                    filtered_df = filtered_df[
+                        (filtered_df["검사일자"].dt.date >= pd.Timestamp(start_date).date()) & 
+                        (filtered_df["검사일자"].dt.date <= pd.Timestamp(end_date).date())
+                    ]
+                else:
+                    # 문자열인 경우 처리
+                    filtered_df = filtered_df[
+                        (pd.to_datetime(filtered_df["검사일자"]).dt.date >= pd.Timestamp(start_date).date()) & 
+                        (pd.to_datetime(filtered_df["검사일자"]).dt.date <= pd.Timestamp(end_date).date())
+                    ]
+            
+            # 공정 필터 적용
+            if process_filter != "전체" and "공정" in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df["공정"] == process_filter]
+            
+            # 검색 기능
+            search_query = st.text_input("모델명 또는 LOT번호 검색", key="prod_search")
+            if search_query:
+                search_condition = False
+                if "모델명" in filtered_df.columns:
+                    search_condition |= filtered_df["모델명"].astype(str).str.contains(search_query, case=False, na=False)
+                if "LOT번호" in filtered_df.columns:
+                    search_condition |= filtered_df["LOT번호"].astype(str).str.contains(search_query, case=False, na=False)
+                
+                filtered_df = filtered_df[search_condition]
+            
+            # 데이터 정렬 옵션
+            sort_columns = ["검사일자"]
+            if "불량률(%)" in filtered_df.columns:
+                sort_columns.append("불량률(%)")
+            
+            sort_options = []
+            if "검사일자" in filtered_df.columns:
+                sort_options += ["날짜(최신순)", "날짜(오래된순)"]
+            if "불량률(%)" in filtered_df.columns:
+                sort_options += ["불량률(높은순)", "불량률(낮은순)"]
+            
+            sort_option = st.selectbox(
+                "정렬 기준",
+                options=sort_options,
+                index=0 if sort_options else 0
+            )
+            
+            # 정렬 적용
+            if sort_option == "날짜(최신순)" and "검사일자" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="검사일자", ascending=False)
+            elif sort_option == "날짜(오래된순)" and "검사일자" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="검사일자", ascending=True)
+            elif sort_option == "불량률(높은순)" and "불량률(%)" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="불량률(%)", ascending=False)
+            elif sort_option == "불량률(낮은순)" and "불량률(%)" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="불량률(%)", ascending=True)
+            
+            # 필터링된 생산 실적 표시
+            if filtered_df.empty:
+                st.warning("검색 조건에 맞는 데이터가 없습니다.")
+            else:
+                # 날짜 형식 변환 (표시용)
+                if "검사일자" in filtered_df.columns and filtered_df["검사일자"].dtype == 'datetime64[ns]':
+                    filtered_df["검사일자"] = filtered_df["검사일자"].dt.strftime("%Y-%m-%d")
+                
+                # 컬럼 구성 설정
+                column_config = {}
+                
+                # 불량률 프로그레스 바 설정
+                if "불량률(%)" in filtered_df.columns:
+                    column_config["불량률(%)"] = st.column_config.ProgressColumn(
+                        "불량률(%)",
+                        help="검사 수량 중 불량 비율",
+                        format="%.2f%%",
+                        min_value=0,
+                        max_value=10,
+                    )
+                
+                # 달성률 프로그레스 바 설정 (계획수량 대비 검사수량)
+                if "계획수량" in filtered_df.columns and "검사수량" in filtered_df.columns:
+                    # 달성률 계산이 안 되어있으면 계산
+                    if "달성률(%)" not in filtered_df.columns:
+                        filtered_df["달성률(%)"] = (filtered_df["검사수량"] / filtered_df["계획수량"] * 100).round(2)
+                    
+                    column_config["달성률(%)"] = st.column_config.ProgressColumn(
+                        "달성률(%)",
+                        help="계획 대비 검사 달성률",
+                        format="%.2f%%",
+                        min_value=0,
+                        max_value=120,
+                        width="medium"
+                    )
+                
+                # 데이터 표시
+                st.dataframe(
+                    filtered_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config=column_config
+                )
     
     # 나머지 탭은 구현이 복잡하므로 간단한 안내 메시지로 대체
     with tab2:
@@ -2927,17 +2951,23 @@ elif st.session_state.page == "inspection_data":
                 key="input_process"
             )
             
-            # 모델명 선택 (캐시 새로고침을 위한 고유 키 사용)
-            if 'model_options_ver' not in st.session_state:
-                st.session_state.model_options_ver = 1
+            # 모델명 선택 - 생산모델 데이터에서 가져오기
+            models_df = load_product_models()
+            model_options = ["모델을 선택하세요"]
+            
+            if not models_df.empty and "모델명" in models_df.columns:
+                model_options += sorted(models_df["모델명"].unique().tolist())
+            else:
+                # 기본 모델 이름 목록
+                model_options += ["BY2", "PA1", "PS SUB6", "E1", "PA3", "B7DUALSIM", "Y2", 
+                         "B7R SUB6", "B6S6", "B5S6", "B7SUB", "B6", "B7MMW", "B7R MMW", "PA2", 
+                         "B5M", "B7RR", "B7R SUB", "B7R", "B6M", "B7SUB6"]
             
             model_name = st.selectbox(
                 "모델명",
-                options=["모델을 선택하세요", "BY2", "PA1", "PS SUB6", "E1", "PA3", "B7DUALSIM", "Y2", 
-                         "B7R SUB6", "B6S6", "B5S6", "B7SUB", "B6", "B7MMW", "B7R MMW", "PA2", 
-                         "B5M", "B7RR", "B7R SUB", "B7R", "B6M", "B7SUB6"],
+                options=model_options,
                 index=0,
-                key=f"input_model_{st.session_state.model_options_ver}"
+                key="input_model"
             )
             
         with col2:
@@ -2994,6 +3024,12 @@ elif st.session_state.page == "inspection_data":
                 
                 if total_defects != defect_quantity:
                     st.warning(f"입력한 불량 수량 합계 ({total_defects})가 총 불량 수량 ({defect_quantity})과 일치하지 않습니다.")
+            
+            # 불량 세부정보를 세션에 저장
+            st.session_state.defect_details = defect_details if defect_types else []
+        else:
+            # 불량이 없는 경우 세션에서 불량 세부정보 초기화
+            st.session_state.defect_details = []
         
         # 지표 계산 및 표시
         if total_quantity > 0:
@@ -3053,16 +3089,40 @@ elif st.session_state.page == "inspection_data":
                     "검사수량": total_quantity,
                     "불량수량": defect_quantity,
                     "불량률(%)": defect_rate if total_quantity > 0 else 0,
+                    "달성률(%)": inspection_rate if plan_quantity > 0 else 0,
                     "비고": memo
                 }
+                
+                # 불량 세부정보가 있는 경우 함께 저장
+                if defect_quantity > 0 and hasattr(st.session_state, 'defect_details') and st.session_state.defect_details:
+                    inspection_data["불량세부"] = st.session_state.defect_details
                 
                 try:
                     # 데이터베이스에 저장 시도
                     response = save_inspection_data(inspection_data)
+                    
+                    # 불량 상세 저장 (각 불량 유형별로)
+                    if defect_quantity > 0 and hasattr(st.session_state, 'defect_details'):
+                        for defect_item in st.session_state.defect_details:
+                            defect_data = {
+                                "불량유형": defect_item["type"],
+                                "수량": defect_item["quantity"],
+                                "검사ID": inspection_data.get("id", ""),  # 검사 ID가 있는 경우
+                                "등록일자": datetime.now().strftime("%Y-%m-%d"),
+                                "등록자": inspector_name,
+                                "비고": memo
+                            }
+                            try:
+                                save_defect_data(defect_data)
+                            except Exception as e:
+                                st.warning(f"불량 세부 데이터 저장 중 오류: {str(e)}")
+                    
                     st.success("검사실적 데이터가 성공적으로 저장되었습니다!")
                     
                     # 저장 성공 시 입력 필드 초기화 또는 다른 액션
                     st.balloons()
+                    time.sleep(1)
+                    st.experimental_rerun()  # 페이지 새로고침
                 except Exception as e:
                     # 로컬 세션에 저장 (데이터베이스 연결 실패 시)
                     if 'saved_inspections' not in st.session_state:
@@ -3071,6 +3131,8 @@ elif st.session_state.page == "inspection_data":
                     st.session_state.saved_inspections.append(inspection_data)
                     st.success("검사실적 데이터가 세션에 저장되었습니다. (데이터베이스 연결이 되면 자동으로 동기화됩니다)")
                     st.info(f"참고: {str(e)}")
+                    time.sleep(1)
+                    st.experimental_rerun()  # 페이지 새로고침
     
     with tab3:
         # 간단한 데이터 검증 기능 구현
@@ -3097,70 +3159,131 @@ elif st.session_state.page == "inspection_data":
             with st.spinner("데이터 검증 중..."):
                 time.sleep(1)  # 검증 작업 시뮬레이션
                 
-                # 세션에 저장된 검사 데이터 사용 (실제로는 데이터베이스에서 조회)
-                if 'saved_inspections' in st.session_state and st.session_state.saved_inspections:
-                    inspections = st.session_state.saved_inspections
-                    df = pd.DataFrame(inspections)
+                # 실제 검사 데이터 로드
+                inspection_data = load_inspection_data()
+                
+                if not inspection_data.empty:
+                    df = inspection_data.copy()
+                    
+                    # 날짜 필터 적용
+                    if "검사일자" in df.columns:
+                        try:
+                            # 날짜 형식 확인 및 변환
+                            if df["검사일자"].dtype != 'datetime64[ns]':
+                                df["검사일자"] = pd.to_datetime(df["검사일자"])
+                            
+                            # 필터링
+                            df = df[
+                                (df["검사일자"].dt.date >= pd.Timestamp(start_date).date()) & 
+                                (df["검사일자"].dt.date <= pd.Timestamp(end_date).date())
+                            ]
+                        except Exception as e:
+                            st.warning(f"날짜 필터링 중 오류 발생: {str(e)}")
                     
                     st.success(f"총 {len(df)}개의 검사 데이터를 검증했습니다.")
                     
                     # 선택한 검증 유형에 따른 결과 표시
                     if verification_type == "누락 데이터 검사" or verification_type == "전체 검사":
-                        missing_data = df[df.isnull().any(axis=1)]
+                        # 필수 필드 정의
+                        required_fields = ["검사원", "공정", "모델명", "검사일자", "검사수량"]
+                        
+                        # 필수 필드 누락 검사
+                        missing_mask = df[required_fields].isnull().any(axis=1)
+                        missing_data = df[missing_mask]
+                        
                         if len(missing_data) > 0:
-                            st.warning(f"{len(missing_data)}개의 검사 데이터에 누락된 값이 있습니다.")
+                            st.warning(f"{len(missing_data)}개의 검사 데이터에 필수 값이 누락되었습니다.")
                             st.dataframe(missing_data)
                         else:
-                            st.info("누락된 데이터가 없습니다.")
+                            st.info("누락된 필수 데이터가 없습니다.")
                     
                     if verification_type == "불량률 이상치 검사" or verification_type == "전체 검사":
                         if "불량률(%)" in df.columns:
-                            outliers = df[df["불량률(%)"] > 5]  # 불량률 5% 초과를 이상치로 간주
+                            # 이상치 기준: 불량률 5% 초과
+                            outlier_threshold = 5.0
+                            outliers = df[df["불량률(%)"] > outlier_threshold]
+                            
                             if len(outliers) > 0:
-                                st.warning(f"{len(outliers)}개의 검사 데이터에 불량률 이상치가 있습니다.")
-                                st.dataframe(outliers[["검사일자", "모델명", "공정", "검사수량", "불량수량", "불량률(%)"]])
+                                st.warning(f"{len(outliers)}개의 검사 데이터에 불량률 이상치가 있습니다. (기준: {outlier_threshold}% 초과)")
+                                display_cols = ["검사일자", "모델명", "공정", "검사수량", "불량수량", "불량률(%)"]
+                                display_cols = [col for col in display_cols if col in outliers.columns]
+                                st.dataframe(outliers[display_cols])
                             else:
                                 st.info("불량률 이상치가 없습니다.")
                     
                     if verification_type == "LOT 중복 검사" or verification_type == "전체 검사":
                         if "LOT번호" in df.columns:
-                            duplicates = df[df.duplicated("LOT번호", keep=False)]
+                            # LOT번호가 비어있지 않은 데이터만 고려
+                            df_with_lot = df[df["LOT번호"].notna() & (df["LOT번호"] != "")]
+                            duplicates = df_with_lot[df_with_lot.duplicated("LOT번호", keep=False)]
+                            
                             if len(duplicates) > 0:
                                 st.warning(f"{len(duplicates)}개의 검사 데이터에 LOT 번호 중복이 있습니다.")
-                                st.dataframe(duplicates[["검사일자", "LOT번호", "모델명", "공정"]])
+                                display_cols = ["검사일자", "LOT번호", "모델명", "공정", "검사수량"]
+                                display_cols = [col for col in display_cols if col in duplicates.columns]
+                                st.dataframe(duplicates[display_cols].sort_values(by="LOT번호"))
                             else:
                                 st.info("LOT 번호 중복이 없습니다.")
                 else:
-                    # 데이터가 없을 경우 샘플 결과 표시
-                    st.info("검사 데이터가 없습니다. 샘플 검증 결과를 표시합니다.")
-                    
-                    # 샘플 검증 결과 생성
-                    sample_results = [
-                        {"검사일자": "2025-04-10", "LOT번호": "LT2025041001", "모델명": "E1", "공정": "CNC1_PQC", "검사수량": 100, "불량수량": 2, "불량률(%)": 2.0, "문제": "정상"},
-                        {"검사일자": "2025-04-09", "LOT번호": "LT2025040901", "모델명": "E2", "공정": "CNC2_PQC", "검사수량": 150, "불량수량": 8, "불량률(%)": 5.33, "문제": "불량률 높음"},
-                        {"검사일자": "2025-04-08", "LOT번호": "LT2025040801", "모델명": "B6 SUB", "공정": "OQC", "검사수량": 80, "불량수량": 0, "불량률(%)": 0.0, "문제": "정상"}
-                    ]
-                    
-                    sample_df = pd.DataFrame(sample_results)
-                    st.dataframe(sample_df)
+                    # 데이터가 없을 경우
+                    st.info("검사 데이터가 없습니다. '실적 데이터 입력' 탭에서 데이터를 입력해주세요.")
             
             # 검증 완료 후 요약 정보
-            st.subheader("검증 요약")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("총 검사 데이터", "3건")
-            with col2:
-                st.metric("문제 발견", "1건", delta="-1건", delta_color="inverse")
-            with col3:
-                st.metric("검증 성공률", "66.7%")
+            if not inspection_data.empty:
+                st.subheader("검증 요약")
+                col1, col2, col3 = st.columns(3)
                 
-            # 검증 보고서 다운로드 버튼 (실제로는 기능 구현 필요)
-            st.download_button(
-                label="검증 보고서 다운로드",
-                data=b"Sample Verification Report",
-                file_name=f"data_verification_report_{datetime.now().strftime('%Y%m%d')}.xlsx",
-                mime="application/vnd.ms-excel"
-            )
+                with col1:
+                    # 검사 데이터 수
+                    filtered_count = len(df) if 'df' in locals() else 0
+                    total_count = len(inspection_data)
+                    st.metric("총 검사 데이터", f"{total_count}건", f"조회 기간: {filtered_count}건")
+                
+                with col2:
+                    # 평균 불량률
+                    if "불량률(%)" in inspection_data.columns:
+                        avg_defect_rate = inspection_data["불량률(%)"].mean()
+                        st.metric("평균 불량률", f"{avg_defect_rate:.2f}%")
+                    else:
+                        st.metric("평균 불량률", "데이터 없음")
+                
+                with col3:
+                    # 가장 많은 모델
+                    if "모델명" in inspection_data.columns and not inspection_data.empty:
+                        top_model = inspection_data["모델명"].value_counts().idxmax()
+                        model_count = inspection_data["모델명"].value_counts().max()
+                        st.metric("최다 검사 모델", f"{top_model}", f"{model_count}건")
+                    else:
+                        st.metric("최다 검사 모델", "데이터 없음")
+                
+                # 어제와 오늘의 검사 데이터 비교
+                today = datetime.now().date()
+                yesterday = today - timedelta(days=1)
+                
+                if "검사일자" in inspection_data.columns:
+                    try:
+                        # 날짜 형식 변환 (필요한 경우)
+                        if inspection_data["검사일자"].dtype != 'datetime64[ns]':
+                            date_column = pd.to_datetime(inspection_data["검사일자"])
+                        else:
+                            date_column = inspection_data["검사일자"]
+                        
+                        # 오늘과 어제 데이터 카운트
+                        today_count = sum(date_column.dt.date == today)
+                        yesterday_count = sum(date_column.dt.date == yesterday)
+                        
+                        # 변화율 계산
+                        if yesterday_count > 0:
+                            change_pct = ((today_count - yesterday_count) / yesterday_count) * 100
+                            change_text = f"{change_pct:.1f}% ({yesterday_count}건 대비)"
+                        else:
+                            change_text = "어제 데이터 없음"
+                        
+                        st.metric("오늘 검사 건수", f"{today_count}건", change_text)
+                    except Exception as e:
+                        st.metric("오늘 검사 건수", "계산 오류", f"오류: {str(e)}")
+                else:
+                    st.metric("오늘 검사 건수", "데이터 없음")
 
 elif st.session_state.page == "quality_report":
     # 월간 품질 리포트 페이지
