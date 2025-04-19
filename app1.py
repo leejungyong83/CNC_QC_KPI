@@ -585,7 +585,11 @@ def load_inspectors():
     except Exception as e:
         # 오류 발생 시 기본 데이터 반환
         st.error(f"검사원 정보 로딩 중 오류: {str(e)}")
-        default_inspectors = [...]
+        default_inspectors = [
+            {"id": "INS001", "name": "홍길동", "department": "CNC_1"},
+            {"id": "INS002", "name": "김철수", "department": "CNC_2"},
+            {"id": "INS003", "name": "이영희", "department": "PQC_LINE"}
+        ]
         return pd.DataFrame(default_inspectors)
 
 # 검사 데이터 저장
@@ -4064,11 +4068,7 @@ def load_inspection_data():
         # 샘플 데이터 생성 (테스트용)
         try:
             # 데이터 디렉토리 확인
-            data_dir = Path("data")
-            if not data_dir.exists():
-                data_dir = Path.cwd() / "data"
-                if not data_dir.exists():
-                    data_dir.mkdir(parents=True, exist_ok=True)
+            data_dir = DATA_DIR
             
             # JSON 파일에서 로드 시도
             inspection_file = data_dir / "inspection_data.json"
