@@ -4084,10 +4084,15 @@ def load_inspection_data():
         # 불량 세부정보 처리
         if "defect_details" in df.columns:
             try:
-                df["불량세부"] = df["defect_details"].apply(lambda x: json.loads(x) if x and isinstance(x, str) else [])
+                df["불량세부"] = df["defect_details"].apply(
+                    lambda x: json.loads(x) if isinstance(x, str) else 
+                             (json.loads(json.dumps(x, ensure_ascii=False)) if isinstance(x, (list, dict)) else [])
+                )
                 df = df.drop(columns=["defect_details"])
-            except:
+            except Exception as json_err:
+                st.warning(f"불량 세부 정보 처리 오류: {str(json_err)}")
                 df["불량세부"] = [[]]
+                df = df.drop(columns=["defect_details"], errors='ignore')
         
         return df
     
@@ -4150,16 +4155,16 @@ def load_defect_types():
         if data:
             return [item['type_name'] for item in data]
         else:
-            # 기본 불량 유형 목록
+            # 기본 불량 유형 목록 - 베트남어 문자 포함
             return ["ATN CRACK", "BONG BIA", "BULONG", "BUỒN", "BỤI NƯỚC", "CHỎM", "DA BEO", "DÂY", 
                     "DẬP", "DP - KÝ", "DẬP - TRỤC A", "DẬP PHÔI", "GIOĂNG", "HẤP", "KẼM", "KHẤC",
                     "KHUYẾT", "LỒI", "LỬNG", "NHẤN", "NƯỚC NGOÀI", "OV VÍT", "ĂN MÒN", "CHAI CẠNH", 
                     "CHẾT MÁY", "CHÊNH", "CỬA NƯỚC", "DROP", "KẸP", "NG PHÔI", "NG T CUT", 
                     "ø1 CRACK", "ø1 CRACK PIN JIG", "SETTING", "TẮC NƯỚC", "TÊN LỖI", 
                     "THAO TÁC1", "THAO TÁC2", "THAO TÁC3", "TOOL RUNG LẮC", "TRÀN NHỰA", 
-                    "TRỤC A", "VẾT ĐÂM"]
+                    "TRỤC A", "VẾT ĐÂM", "규격 불량", "외관 불량", "기능 불량", "치수 불량", "기타"]
     except Exception as e:
-        # 오류 발생시 기본 목록 반환
+        # 오류 발생시 기본 한국어 불량 유형 목록 반환
         return ["규격 불량", "외관 불량", "기능 불량", "치수 불량", "기타"]
 
 # 불량 유형 입력 UI 부분
@@ -4168,20 +4173,20 @@ def render_defect_input():
     
     st.subheader("불량 상세 정보")
     
-    defect_types = st.multiselect(
+    defect_types_selected = st.multiselect(
         "불량 유형 선택",
         options=defect_types,
         placeholder="불량 유형을 선택하세요",
-        key="defect_types"
+        key="defect_types_selected"
     )
     
-    if defect_types:
+    if defect_types_selected:
         # 불량 유형별 수량 입력
-        cols = st.columns(len(defect_types))
+        cols = st.columns(min(len(defect_types_selected), 3))
         defect_details = []
         
-        for i, defect_type in enumerate(defect_types):
-            with cols[i]:
+        for i, defect_type in enumerate(defect_types_selected):
+            with cols[i % 3]:
                 st.write(f"**{defect_type}**")
                 quantity = st.number_input(
                     "수량",
@@ -4321,11 +4326,27 @@ def inspection_data_validation_ui():
     filtered_df = df.copy()
     
     if not df.empty and "검사일자" in df.columns:
-        # 날짜 필터링
-        filtered_df = filtered_df[
-            (pd.to_datetime(filtered_df["검사일자"]).dt.date >= start_date) &
-            (pd.to_datetime(filtered_df["검사일자"]).dt.date <= end_date)
-        ]
+        try:
+            # 날짜 형식을 datetime으로 변환 시도
+            filtered_df["검사일자"] = pd.to_datetime(filtered_df["검사일자"])
+            
+            # 날짜 필터링
+            filtered_df = filtered_df[
+                (filtered_df["검사일자"].dt.date >= start_date) &
+                (filtered_df["검사일자"].dt.date <= end_date)
+            ]
+        except Exception as date_err:
+            st.warning(f"날짜 처리 오류: {str(date_err)}")
+            # 문자열 비교로 대체 시도
+            try:
+                start_date_str = start_date.strftime("%Y-%m-%d")
+                end_date_str = end_date.strftime("%Y-%m-%d")
+                filtered_df = filtered_df[
+                    (filtered_df["검사일자"] >= start_date_str) &
+                    (filtered_df["검사일자"] <= end_date_str)
+                ]
+            except:
+                st.error("날짜 필터링 실패")
         
         # 모델 필터링
         if selected_model != "모두" and "모델명" in filtered_df.columns:
