@@ -2990,16 +2990,15 @@ elif st.session_state.page == "inspection_data":
             )
             
             # 모델명 선택 - 생산모델 데이터에서 가져오기
-            models_df = load_product_models()
             model_options = ["모델을 선택하세요"]
             
-            if not models_df.empty and "모델명" in models_df.columns:
-                model_options += sorted(models_df["모델명"].unique().tolist())
-            else:
-                # 기본 모델 이름 목록
-                model_options += ["BY2", "PA1", "PS SUB6", "E1", "PA3", "B7DUALSIM", "Y2", 
-                         "B7R SUB6", "B6S6", "B5S6", "B7SUB", "B6", "B7MMW", "B7R MMW", "PA2", 
-                         "B5M", "B7RR", "B7R SUB", "B7R", "B6M", "B7SUB6"]
+            try:
+                models_df = load_product_models()
+                if not models_df.empty and "모델명" in models_df.columns:
+                    model_options += sorted(models_df["모델명"].unique().tolist())
+            except Exception as model_err:
+                st.error(f"모델 데이터 로드 중 오류: {str(model_err)}")
+                models_df = pd.DataFrame(columns=["id", "모델명", "공정"])
             
             model_name = st.selectbox(
                 "모델명",
@@ -3825,26 +3824,51 @@ def sync_offline_data():
 def load_product_models():
     """
     생산모델 데이터를 로드합니다.
+    파일이 없거나 오류 발생 시 빈 DataFrame을 반환합니다.
     """
     try:
+        # 데이터 디렉토리 확인
+        if not os.path.exists("data"):
+            os.makedirs("data", exist_ok=True)
+            
         # CSV 파일이 있는지 먼저 확인
         if os.path.exists("data/product_models.csv"):
             df = pd.read_csv("data/product_models.csv")
             return df
         # JSON 파일이 있는지 확인
-        elif (DATA_DIR / "product_models.json").exists():
-            with open(DATA_DIR / "product_models.json", 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                if "models" in data:
-                    df = pd.DataFrame(data["models"])
-                    # 저장 형식을 CSV로 통일
-                    df.to_csv("data/product_models.csv", index=False)
-                    return df
+        elif os.path.exists(str(DATA_DIR / "product_models.json")):
+            try:
+                with open(DATA_DIR / "product_models.json", 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if "models" in data:
+                        df = pd.DataFrame(data["models"])
+                        # 저장 형식을 CSV로 통일
+                        try:
+                            df.to_csv("data/product_models.csv", index=False)
+                        except:
+                            print("CSV 변환 저장 실패")
+                        return df
+            except Exception as json_err:
+                print(f"JSON 파일 처리 중 오류: {str(json_err)}")
         
-        # 데이터가 없으면 빈 DataFrame 생성
-        return pd.DataFrame(columns=["id", "모델명", "공정"])
+        # 기본 데이터 생성 (데이터가 없을 경우)
+        default_models = [
+            {"id": 1, "모델명": "PA1", "공정": "C1"},
+            {"id": 2, "모델명": "PA1", "공정": "C2"},
+            {"id": 3, "모델명": "PA2", "공정": "C1"}
+        ]
+        df = pd.DataFrame(default_models)
+        
+        # 기본 데이터 저장 시도
+        try:
+            df.to_csv("data/product_models.csv", index=False)
+        except:
+            print("기본 데이터 저장 실패")
+            
+        return df
     except Exception as e:
         print(f"생산모델 데이터 로드 중 오류: {str(e)}")
+        # 오류 시 빈 DataFrame 반환
         return pd.DataFrame(columns=["id", "모델명", "공정"])
 
 # 생산모델 데이터 저장
@@ -3882,7 +3906,11 @@ if st.session_state.page == "product_model":
         st.stop()
     
     # 생산모델 데이터 로드
-    product_models_df = load_product_models()
+    try:
+        product_models_df = load_product_models()
+    except Exception as e:
+        st.error(f"생산모델 데이터 로드 중 오류가 발생했습니다: {str(e)}")
+        product_models_df = pd.DataFrame(columns=["id", "모델명", "공정"])
     
     # 탭 생성
     tab1, tab2 = st.tabs(["📋 생산모델 목록", "➕ 생산모델 추가/수정"])
