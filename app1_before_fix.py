@@ -668,7 +668,7 @@ def save_inspection_data(data):
             "검사수량": "total_inspected",
             "불량수량": "total_defects",
             "불량률(%)": "defect_rate",
-            # "달성률(%)": "achievement_rate",  # 스키마에 존재하지 않는 컬럼이므로 제거
+            "달성률(%)": "achievement_rate",
             "비고": "remarks"
         }
         
@@ -677,7 +677,7 @@ def save_inspection_data(data):
         for k, v in data.items():
             if k in field_mapping:
                 english_data[field_mapping[k]] = v
-            elif k != "달성률(%)":  # 달성률(%) 필드는 무시
+            else:
                 english_data[k] = v
         
         # 불량 세부정보 처리
@@ -4185,7 +4185,7 @@ def load_inspection_data():
             "total_inspected": "검사수량",
             "total_defects": "불량수량",
             "defect_rate": "불량률(%)",
-            # "achievement_rate": "달성률(%)",  # 스키마에 존재하지 않는 컬럼이므로 주석 처리
+            "achievement_rate": "달성률(%)",
             "remarks": "비고"
         }
 
