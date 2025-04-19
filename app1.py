@@ -2804,15 +2804,22 @@ elif st.session_state.page == "inspection_data":
         with col3:
             # 실제 데이터에서 공정 목록 추출
             try:
-                # 함수 안전하게 호출
-                inspection_data = load_inspection_data()
-                
+                # 기본 옵션 설정
                 process_options = ["전체"]
-                if not inspection_data.empty and "공정" in inspection_data.columns:
-                    process_options += sorted(inspection_data["공정"].unique().tolist())
+                
+                # 안전하게 데이터 로드 시도
+                try:
+                    inspection_data = load_inspection_data()
+                    if not inspection_data.empty and "공정" in inspection_data.columns:
+                        process_options += sorted(inspection_data["공정"].unique().tolist())
+                except Exception as load_err:
+                    st.error(f"데이터 로드 중 오류 발생: {str(load_err)}")
+                    inspection_data = pd.DataFrame()
+                
+                # UI 컴포넌트 표시
                 process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
             except Exception as e:
-                st.error(f"데이터 로드 중 오류 발생: {str(e)}")
+                st.error(f"UI 구성 중 오류 발생: {str(e)}")
                 process_options = ["전체"]
                 process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
                 inspection_data = pd.DataFrame()
@@ -4051,11 +4058,19 @@ elif st.session_state.page == "another_page":
 
 # 검사 데이터 불러오기
 def load_inspection_data():
+    """
+    검사 데이터를 데이터베이스 또는 로컬 저장소에서 로드합니다.
+    오류가 발생하는 경우 빈 DataFrame을 반환합니다.
+    """
     try:
-        # Supabase 변수가 정의되었는지 확인
+        # 전역 변수 supabase가 정의되었는지 확인
         if 'supabase' not in globals():
-            st.warning("데이터베이스 연결이 설정되지 않았습니다. 로컬 데이터를 사용합니다.")
-            return pd.DataFrame()
+            print("데이터베이스 연결이 설정되지 않았습니다. 로컬 데이터를 사용합니다.")
+            # 로컬 파일 체크
+            if os.path.exists("data/inspection_data.csv"):
+                return pd.read_csv("data/inspection_data.csv")
+            else:
+                return pd.DataFrame()
             
         # Supabase에서 데이터 가져오기
         response = supabase.table('inspection_data').select('*').execute()
@@ -4084,16 +4099,16 @@ def load_inspection_data():
 
         # DataFrame 변환
         df = pd.DataFrame(data)
-        
+
         # 필드명 변환
         renamed_columns = {}
         for eng, kor in field_mapping.items():
             if eng in df.columns:
                 renamed_columns[eng] = kor
-        
+
         # 컬럼 이름 변경
         df = df.rename(columns=renamed_columns)
-        
+
         # 불량 세부정보 처리
         if "defect_details" in df.columns:
             try:
@@ -4103,16 +4118,26 @@ def load_inspection_data():
                 )
                 df = df.drop(columns=["defect_details"])
             except Exception as json_err:
-                st.warning(f"불량 세부 정보 처리 오류: {str(json_err)}")
+                print(f"불량 세부 정보 처리 오류: {str(json_err)}")
                 df["불량세부"] = [[]]
                 df = df.drop(columns=["defect_details"], errors='ignore')
-        
+
         return df
-    
+
     except Exception as e:
+        print(f"검사 데이터 로드 중 오류 발생: {str(e)}")
+        
+        # 로컬 파일 체크
+        try:
+            if os.path.exists("data/inspection_data.csv"):
+                return pd.read_csv("data/inspection_data.csv")
+        except:
+            pass
+            
         # 오류 발생시 세션 데이터 반환(백업)
         if 'saved_inspections' in st.session_state and st.session_state.saved_inspections:
             return pd.DataFrame(st.session_state.saved_inspections)
+        
         # 아무 데이터도 없는 경우
         return pd.DataFrame()
 
