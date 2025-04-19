@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 from supabase import create_client
 import pandas as pd
 import plotly.express as px
@@ -19,31 +19,31 @@ import re
 import random
 from PIL import Image
 
-# Supabase 초기화
+# Supabase ì´ˆê¸°í™”
 try:
-    # Supabase 연결 (가장 기본적인 형태)
-    # 매개변수를 위치 기반으로만 전달
+    # Supabase ì—°ê²° (ê°€ìž¥ ê¸°ë³¸ì ì¸ í˜•íƒœ)
+    # ë§¤ê°œë³€ìˆ˜ë¥¼ ìœ„ì¹˜ ê¸°ë°˜ìœ¼ë¡œë§Œ ì „ë‹¬
     supabase = create_client(
         "https://czfvtkbndsfoznmknwsx.supabase.co",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
     )
 except Exception as e:
-    st.error(f"데이터베이스 연결에 실패했습니다: {str(e)}")
+    st.error(f"ë°ì´í„°ë² ì´ìŠ¤ ì—°ê²°ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤: {str(e)}")
     st.stop()
 
-# 페이지 설정
+# íŽ˜ì´ì§€ ì„¤ì •
 st.set_page_config(
-    page_title="CNC 품질관리 시스템", 
+    page_title="CNC í’ˆì§ˆê´€ë¦¬ ì‹œìŠ¤í…œ", 
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://github.com/leejungyong83/CNC_QC_KPI',
         'Report a bug': 'https://github.com/leejungyong83/CNC_QC_KPI/issues',
-        'About': '# CNC 품질관리 시스템\n 품질 데이터 수집 및 분석을 위한 앱입니다.'
+        'About': '# CNC í’ˆì§ˆê´€ë¦¬ ì‹œìŠ¤í…œ\n í’ˆì§ˆ ë°ì´í„° ìˆ˜ì§‘ ë° ë¶„ì„ì„ ìœ„í•œ ì•±ìž…ë‹ˆë‹¤.'
     }
 )
 
-# 카드 스타일 CSS 추가
+# ì¹´ë“œ ìŠ¤íƒ€ì¼ CSS ì¶”ê°€
 st.markdown("""
 <style>
     .card {
@@ -94,7 +94,7 @@ st.markdown("""
         margin-right: 8px;
         vertical-align: middle;
     }
-    /* 각 지표별 색상 */
+    /* ê° ì§€í‘œë³„ ìƒ‰ìƒ */
     .blue-indicator {
         border-left-color: #4361ee;
     }
@@ -110,14 +110,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 데이터 파일 경로 설정
+# ë°ì´í„° íŒŒì¼ ê²½ë¡œ ì„¤ì •
 if 'data_path' in st.secrets.get('database', {}):
     DATA_DIR = Path(st.secrets['database']['data_path'])
 else:
     DATA_DIR = Path(__file__).resolve().parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-# 데이터 파일 경로
+# ë°ì´í„° íŒŒì¼ ê²½ë¡œ
 INSPECTION_DATA_FILE = DATA_DIR / "inspection_data.json"
 INSPECTOR_DATA_FILE = DATA_DIR / "inspector_data.json"
 DEFECT_DATA_FILE = DATA_DIR / "defect_data.json"
@@ -125,186 +125,186 @@ ADMIN_DATA_FILE = DATA_DIR / "admin_data.json"
 USER_DATA_FILE = DATA_DIR / "user_data.json"
 
 def load_admin_data():
-    """관리자 데이터 파일에서 로드하는 함수"""
+    """ê´€ë¦¬ìž ë°ì´í„° íŒŒì¼ì—ì„œ ë¡œë“œí•˜ëŠ” í•¨ìˆ˜"""
     try:
         with open(ADMIN_DATA_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        # 파일이 없거나 내용이 없을 경우 기본 구조 반환
+        # íŒŒì¼ì´ ì—†ê±°ë‚˜ ë‚´ìš©ì´ ì—†ì„ ê²½ìš° ê¸°ë³¸ êµ¬ì¡° ë°˜í™˜
         return {
-            "아이디": [],
-            "이름": [],
-            "권한": [],
-            "부서": [],
-            "최근접속일": [],
-            "상태": []
+            "ì•„ì´ë””": [],
+            "ì´ë¦„": [],
+            "ê¶Œí•œ": [],
+            "ë¶€ì„œ": [],
+            "ìµœê·¼ì ‘ì†ì¼": [],
+            "ìƒíƒœ": []
         }
 
 def save_admin_data(admin_data):
-    """관리자 데이터를 파일에 저장하는 함수"""
-    # 디렉토리가 없으면 생성
+    """ê´€ë¦¬ìž ë°ì´í„°ë¥¼ íŒŒì¼ì— ì €ìž¥í•˜ëŠ” í•¨ìˆ˜"""
+    # ë””ë ‰í† ë¦¬ê°€ ì—†ìœ¼ë©´ ìƒì„±
     os.makedirs(DATA_DIR, exist_ok=True)
     
     with open(ADMIN_DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(admin_data, f, ensure_ascii=False, indent=2)
 
 def load_user_data():
-    """사용자 데이터 파일에서 로드하는 함수"""
+    """ì‚¬ìš©ìž ë°ì´í„° íŒŒì¼ì—ì„œ ë¡œë“œí•˜ëŠ” í•¨ìˆ˜"""
     try:
         with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
             raw_data = json.load(f)
             
-            # 새로운 형식과 기존 형식 모두 처리
+            # ìƒˆë¡œìš´ í˜•ì‹ê³¼ ê¸°ì¡´ í˜•ì‹ ëª¨ë‘ ì²˜ë¦¬
             if isinstance(raw_data, dict) and "users" in raw_data:
-                # 기존 형식: {"users": [{"email": "...", "name": "...", ...}, ...]}
+                # ê¸°ì¡´ í˜•ì‹: {"users": [{"email": "...", "name": "...", ...}, ...]}
                 users_list = raw_data["users"]
                 data = {
-                    "아이디": [],
-                    "이름": [],
-                    "부서": [],
-                    "직급": [],
-                    "공정": [],
-                    "계정생성일": [],
-                    "최근접속일": [],
-                    "상태": []
+                    "ì•„ì´ë””": [],
+                    "ì´ë¦„": [],
+                    "ë¶€ì„œ": [],
+                    "ì§ê¸‰": [],
+                    "ê³µì •": [],
+                    "ê³„ì •ìƒì„±ì¼": [],
+                    "ìµœê·¼ì ‘ì†ì¼": [],
+                    "ìƒíƒœ": []
                 }
                 
                 for user in users_list:
-                    data["아이디"].append(user.get("email", ""))
-                    data["이름"].append(user.get("name", ""))
-                    data["부서"].append("관리부")  # 기본값
-                    data["직급"].append("사원")    # 기본값
-                    data["공정"].append("관리")    # 기본값
-                    data["계정생성일"].append(user.get("registered_date", ""))
-                    data["최근접속일"].append(user.get("last_login", ""))
-                    data["상태"].append("활성")    # 기본값
+                    data["ì•„ì´ë””"].append(user.get("email", ""))
+                    data["ì´ë¦„"].append(user.get("name", ""))
+                    data["ë¶€ì„œ"].append("ê´€ë¦¬ë¶€")  # ê¸°ë³¸ê°’
+                    data["ì§ê¸‰"].append("ì‚¬ì›")    # ê¸°ë³¸ê°’
+                    data["ê³µì •"].append("ê´€ë¦¬")    # ê¸°ë³¸ê°’
+                    data["ê³„ì •ìƒì„±ì¼"].append(user.get("registered_date", ""))
+                    data["ìµœê·¼ì ‘ì†ì¼"].append(user.get("last_login", ""))
+                    data["ìƒíƒœ"].append("í™œì„±")    # ê¸°ë³¸ê°’
                 
                 return data
             elif isinstance(raw_data, dict):
-                # 누락된 키가 있는지 확인하고 필요하면 초기화
-                required_keys = ["아이디", "이름", "부서", "직급", "공정", "계정생성일", "최근접속일", "상태"]
+                # ëˆ„ë½ëœ í‚¤ê°€ ìžˆëŠ”ì§€ í™•ì¸í•˜ê³  í•„ìš”í•˜ë©´ ì´ˆê¸°í™”
+                required_keys = ["ì•„ì´ë””", "ì´ë¦„", "ë¶€ì„œ", "ì§ê¸‰", "ê³µì •", "ê³„ì •ìƒì„±ì¼", "ìµœê·¼ì ‘ì†ì¼", "ìƒíƒœ"]
                 for key in required_keys:
                     if key not in raw_data:
                         raw_data[key] = []
                 return raw_data
             else:
                 return {
-                    "아이디": [],
-                    "이름": [],
-                    "부서": [],
-                    "직급": [],
-                    "공정": [],
-                    "계정생성일": [],
-                    "최근접속일": [],
-                    "상태": []
+                    "ì•„ì´ë””": [],
+                    "ì´ë¦„": [],
+                    "ë¶€ì„œ": [],
+                    "ì§ê¸‰": [],
+                    "ê³µì •": [],
+                    "ê³„ì •ìƒì„±ì¼": [],
+                    "ìµœê·¼ì ‘ì†ì¼": [],
+                    "ìƒíƒœ": []
                 }
     except (FileNotFoundError, json.JSONDecodeError):
         return {
-            "아이디": [],
-            "이름": [],
-            "부서": [],
-            "직급": [],
-            "공정": [],
-            "계정생성일": [],
-            "최근접속일": [],
-            "상태": []
+            "ì•„ì´ë””": [],
+            "ì´ë¦„": [],
+            "ë¶€ì„œ": [],
+            "ì§ê¸‰": [],
+            "ê³µì •": [],
+            "ê³„ì •ìƒì„±ì¼": [],
+            "ìµœê·¼ì ‘ì†ì¼": [],
+            "ìƒíƒœ": []
         }
 
 def save_user_data(user_data):
-    """사용자 데이터를 파일에 저장하는 함수"""
-    # 디렉토리가 없으면 생성
+    """ì‚¬ìš©ìž ë°ì´í„°ë¥¼ íŒŒì¼ì— ì €ìž¥í•˜ëŠ” í•¨ìˆ˜"""
+    # ë””ë ‰í† ë¦¬ê°€ ì—†ìœ¼ë©´ ìƒì„±
     os.makedirs(DATA_DIR, exist_ok=True)
     
-    # 올바른 키가 있는지 확인
-    required_keys = ["아이디", "이름", "부서", "직급", "공정", "계정생성일", "최근접속일", "상태"]
+    # ì˜¬ë°”ë¥¸ í‚¤ê°€ ìžˆëŠ”ì§€ í™•ì¸
+    required_keys = ["ì•„ì´ë””", "ì´ë¦„", "ë¶€ì„œ", "ì§ê¸‰", "ê³µì •", "ê³„ì •ìƒì„±ì¼", "ìµœê·¼ì ‘ì†ì¼", "ìƒíƒœ"]
     for key in required_keys:
         if key not in user_data:
             user_data[key] = []
     
-    # 데이터 저장 - 이 형식은 load_user_data()와 일관되어야 함
+    # ë°ì´í„° ì €ìž¥ - ì´ í˜•ì‹ì€ load_user_data()ì™€ ì¼ê´€ë˜ì–´ì•¼ í•¨
     with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(user_data, f, ensure_ascii=False, indent=2)
 
 def init_db():
-    """JSON 파일 기반 데이터베이스 초기화"""
+    """JSON íŒŒì¼ ê¸°ë°˜ ë°ì´í„°ë² ì´ìŠ¤ ì´ˆê¸°í™”"""
     try:
-        # 디렉토리가 없으면 생성
+        # ë””ë ‰í† ë¦¬ê°€ ì—†ìœ¼ë©´ ìƒì„±
         os.makedirs(DATA_DIR, exist_ok=True)
         
-        # 검사원 데이터 초기화
+        # ê²€ì‚¬ì› ë°ì´í„° ì´ˆê¸°í™”
         if not INSPECTOR_DATA_FILE.exists():
             with open(INSPECTOR_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump({"inspectors": []}, f, ensure_ascii=False, indent=2)
         
-        # 검사 데이터 초기화
+        # ê²€ì‚¬ ë°ì´í„° ì´ˆê¸°í™”
         if not INSPECTION_DATA_FILE.exists():
             with open(INSPECTION_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump({"inspections": []}, f, ensure_ascii=False, indent=2)
         
-        # 불량 데이터 초기화
+        # ë¶ˆëŸ‰ ë°ì´í„° ì´ˆê¸°í™”
         if not DEFECT_DATA_FILE.exists():
             with open(DEFECT_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump({"defects": []}, f, ensure_ascii=False, indent=2)
         
-        # 생산모델 데이터 초기화 - 기존 데이터 보존
+        # ìƒì‚°ëª¨ë¸ ë°ì´í„° ì´ˆê¸°í™” - ê¸°ì¡´ ë°ì´í„° ë³´ì¡´
         if not (DATA_DIR / "product_models.json").exists():
-            # 샘플 모델 데이터
+            # ìƒ˜í”Œ ëª¨ë¸ ë°ì´í„°
             default_models = {
                 "models": [
-                    {"id": 1, "모델명": "PA1", "공정": "C1"},
-                    {"id": 2, "모델명": "PA1", "공정": "C2"},
-                    {"id": 3, "모델명": "PA2", "공정": "C1"},
-                    {"id": 4, "모델명": "PA2", "공정": "C2"},
-                    {"id": 5, "모델명": "PA3", "공정": "C1"},
-                    {"id": 6, "모델명": "PA3", "공정": "C2"},
-                    {"id": 7, "모델명": "PA3", "공정": "C2-1"},
-                    {"id": 8, "모델명": "B6", "공정": "C1"},
-                    {"id": 9, "모델명": "B6", "공정": "C2"},
-                    {"id": 10, "모델명": "B6M", "공정": "C1"}
+                    {"id": 1, "ëª¨ë¸ëª…": "PA1", "ê³µì •": "C1"},
+                    {"id": 2, "ëª¨ë¸ëª…": "PA1", "ê³µì •": "C2"},
+                    {"id": 3, "ëª¨ë¸ëª…": "PA2", "ê³µì •": "C1"},
+                    {"id": 4, "ëª¨ë¸ëª…": "PA2", "ê³µì •": "C2"},
+                    {"id": 5, "ëª¨ë¸ëª…": "PA3", "ê³µì •": "C1"},
+                    {"id": 6, "ëª¨ë¸ëª…": "PA3", "ê³µì •": "C2"},
+                    {"id": 7, "ëª¨ë¸ëª…": "PA3", "ê³µì •": "C2-1"},
+                    {"id": 8, "ëª¨ë¸ëª…": "B6", "ê³µì •": "C1"},
+                    {"id": 9, "ëª¨ë¸ëª…": "B6", "ê³µì •": "C2"},
+                    {"id": 10, "ëª¨ë¸ëª…": "B6M", "ê³µì •": "C1"}
                 ]
             }
             with open(DATA_DIR / "product_models.json", 'w', encoding='utf-8') as f:
                 json.dump(default_models, f, ensure_ascii=False, indent=2)
         
-        # 관리자 데이터 초기화 - 기존 데이터 보존
+        # ê´€ë¦¬ìž ë°ì´í„° ì´ˆê¸°í™” - ê¸°ì¡´ ë°ì´í„° ë³´ì¡´
         if not ADMIN_DATA_FILE.exists():
             default_admin_data = {
-                "아이디": ["admin"],
-                "이름": ["관리자"],
-                "권한": ["관리자"],
-                "부서": ["관리부"],
-                "최근접속일": [datetime.now().strftime("%Y-%m-%d %H:%M")],
-                "상태": ["활성"]
+                "ì•„ì´ë””": ["admin"],
+                "ì´ë¦„": ["ê´€ë¦¬ìž"],
+                "ê¶Œí•œ": ["ê´€ë¦¬ìž"],
+                "ë¶€ì„œ": ["ê´€ë¦¬ë¶€"],
+                "ìµœê·¼ì ‘ì†ì¼": [datetime.now().strftime("%Y-%m-%d %H:%M")],
+                "ìƒíƒœ": ["í™œì„±"]
             }
             with open(ADMIN_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(default_admin_data, f, ensure_ascii=False, indent=2)
         
-        # 사용자 데이터 초기화 - 기존 데이터 보존
+        # ì‚¬ìš©ìž ë°ì´í„° ì´ˆê¸°í™” - ê¸°ì¡´ ë°ì´í„° ë³´ì¡´
         if not USER_DATA_FILE.exists():
             default_user_data = {
-                "아이디": [],
-                "이름": [],
-                "부서": [],
-                "직급": [],
-                "공정": [],
-                "계정생성일": [],
-                "최근접속일": [],
-                "상태": []
+                "ì•„ì´ë””": [],
+                "ì´ë¦„": [],
+                "ë¶€ì„œ": [],
+                "ì§ê¸‰": [],
+                "ê³µì •": [],
+                "ê³„ì •ìƒì„±ì¼": [],
+                "ìµœê·¼ì ‘ì†ì¼": [],
+                "ìƒíƒœ": []
             }
             with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(default_user_data, f, ensure_ascii=False, indent=2)
         
-        print("데이터베이스 초기화 완료!")
+        print("ë°ì´í„°ë² ì´ìŠ¤ ì´ˆê¸°í™” ì™„ë£Œ!")
     except Exception as e:
-        print(f"데이터베이스 초기화 중 오류 발생: {str(e)}")
+        print(f"ë°ì´í„°ë² ì´ìŠ¤ ì´ˆê¸°í™” ì¤‘ ì˜¤ë¥˜ ë°œìƒ: {str(e)}")
         import traceback
         traceback.print_exc()
 
-# 앱 시작 시 데이터베이스 초기화
+# ì•± ì‹œìž‘ ì‹œ ë°ì´í„°ë² ì´ìŠ¤ ì´ˆê¸°í™”
 init_db()
 
 def init_session_state():
-    """세션 상태 초기화"""
+    """ì„¸ì…˜ ìƒíƒœ ì´ˆê¸°í™”"""
     if 'page' not in st.session_state:
         st.session_state.page = 'login'
     
@@ -315,7 +315,7 @@ def init_session_state():
         st.session_state.username = ""
     
     if 'user_role' not in st.session_state:
-        st.session_state.user_role = "일반"
+        st.session_state.user_role = "ì¼ë°˜"
     
     if 'login_attempts' not in st.session_state:
         st.session_state.login_attempts = 0
@@ -330,8 +330,8 @@ def init_session_state():
     
     if 'defect_types' not in st.session_state:
         st.session_state.defect_types = [
-            "외관불량", "치수불량", "기능불량", "누락불량", "라벨불량",
-            "포장불량", "케이블불량", "조립불량", "기타불량"
+            "ì™¸ê´€ë¶ˆëŸ‰", "ì¹˜ìˆ˜ë¶ˆëŸ‰", "ê¸°ëŠ¥ë¶ˆëŸ‰", "ëˆ„ë½ë¶ˆëŸ‰", "ë¼ë²¨ë¶ˆëŸ‰",
+            "í¬ìž¥ë¶ˆëŸ‰", "ì¼€ì´ë¸”ë¶ˆëŸ‰", "ì¡°ë¦½ë¶ˆëŸ‰", "ê¸°íƒ€ë¶ˆëŸ‰"
         ]
     
     if 'basic_info_valid' not in st.session_state:
@@ -340,35 +340,35 @@ def init_session_state():
     if 'registered_defects' not in st.session_state:
         st.session_state.registered_defects = []
 
-# 세션 상태 초기화 실행
+# ì„¸ì…˜ ìƒíƒœ ì´ˆê¸°í™” ì‹¤í–‰
 init_session_state()
 
-# 앱이 잠자기 모드로 들어가지 않도록 하는 함수
+# ì•±ì´ ìž ìžê¸° ëª¨ë“œë¡œ ë“¤ì–´ê°€ì§€ ì•Šë„ë¡ í•˜ëŠ” í•¨ìˆ˜
 def prevent_sleep():
-    # 백그라운드 로깅 - 스레딩 사용하지 않음
-    print("앱 활성 상태 유지 모드 활성화")
+    # ë°±ê·¸ë¼ìš´ë“œ ë¡œê¹… - ìŠ¤ë ˆë”© ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
+    print("ì•± í™œì„± ìƒíƒœ ìœ ì§€ ëª¨ë“œ í™œì„±í™”")
 
-# 세션 유지를 위한 숨겨진 요소 추가
+# ì„¸ì…˜ ìœ ì§€ë¥¼ ìœ„í•œ ìˆ¨ê²¨ì§„ ìš”ì†Œ ì¶”ê°€
 def add_keep_alive_element():
-    # 타임스탬프 표시 (작게 표시)
+    # íƒ€ìž„ìŠ¤íƒ¬í”„ í‘œì‹œ (ìž‘ê²Œ í‘œì‹œ)
     current_time = datetime.now().strftime("%H:%M:%S")
-    st.sidebar.markdown(f"<small>세션 활성 상태: {current_time}</small>", unsafe_allow_html=True)
+    st.sidebar.markdown(f"<small>ì„¸ì…˜ í™œì„± ìƒíƒœ: {current_time}</small>", unsafe_allow_html=True)
 
-# 앱 시작 시 prevent_sleep 함수 호출
+# ì•± ì‹œìž‘ ì‹œ prevent_sleep í•¨ìˆ˜ í˜¸ì¶œ
 prevent_sleep()
 
 def verify_login(username, password):
-    """로그인 검증"""
-    # 하드코딩된 사용자 정보로 먼저 확인
+    """ë¡œê·¸ì¸ ê²€ì¦"""
+    # í•˜ë“œì½”ë”©ëœ ì‚¬ìš©ìž ì •ë³´ë¡œ ë¨¼ì € í™•ì¸
     if username == "admin" and password == "admin123":
-        return True, "관리자"
+        return True, "ê´€ë¦¬ìž"
         
     try:
-        # 기본 사용자 정보
+        # ê¸°ë³¸ ì‚¬ìš©ìž ì •ë³´
         default_users = {"admin": "admin123"}
-        default_roles = {"admin": "관리자"}
+        default_roles = {"admin": "ê´€ë¦¬ìž"}
         
-        # Streamlit Cloud의 secrets에서 사용자 정보 가져오기
+        # Streamlit Cloudì˜ secretsì—ì„œ ì‚¬ìš©ìž ì •ë³´ ê°€ì ¸ì˜¤ê¸°
         try:
             users = st.secrets.get("users", default_users)
             roles = st.secrets.get("roles", default_roles)
@@ -378,169 +378,169 @@ def verify_login(username, password):
             
         if username in users:
             if password == users[username]:
-                user_role = roles.get(username, "일반")
+                user_role = roles.get(username, "ì¼ë°˜")
                 return True, user_role
         return False, None
     except Exception as e:
-        st.error(f"로그인 검증 중 오류 발생: {str(e)}")
+        st.error(f"ë¡œê·¸ì¸ ê²€ì¦ ì¤‘ ì˜¤ë¥˜ ë°œìƒ: {str(e)}")
         return False, None
 
 def check_password():
-    """비밀번호 확인 및 로그인 처리"""
-    # 이미 로그인되어 있다면 바로 성공 반환
+    """ë¹„ë°€ë²ˆí˜¸ í™•ì¸ ë° ë¡œê·¸ì¸ ì²˜ë¦¬"""
+    # ì´ë¯¸ ë¡œê·¸ì¸ë˜ì–´ ìžˆë‹¤ë©´ ë°”ë¡œ ì„±ê³µ ë°˜í™˜
     if st.session_state.get('logged_in', False):
         return True
         
-    # 세션 유지를 위한 요소 추가
+    # ì„¸ì…˜ ìœ ì§€ë¥¼ ìœ„í•œ ìš”ì†Œ ì¶”ê°€
     add_keep_alive_element()
     
-    # 디버그 모드 - 개발 환경에서만 사용 (프로덕션에서는 제거 필요)
-    if st.sidebar.button("디버그 모드로 로그인"):
-        # 로그인 성공 상태 설정
+    # ë””ë²„ê·¸ ëª¨ë“œ - ê°œë°œ í™˜ê²½ì—ì„œë§Œ ì‚¬ìš© (í”„ë¡œë•ì…˜ì—ì„œëŠ” ì œê±° í•„ìš”)
+    if st.sidebar.button("ë””ë²„ê·¸ ëª¨ë“œë¡œ ë¡œê·¸ì¸"):
+        # ë¡œê·¸ì¸ ì„±ê³µ ìƒíƒœ ì„¤ì •
         st.session_state.logged_in = True
-        st.session_state.user_role = "관리자"
+        st.session_state.user_role = "ê´€ë¦¬ìž"
         st.session_state.username = "admin_debug"
         st.session_state.login_attempts = 0
         st.session_state.page = "dashboard"
-        # 페이지 새로고침
+        # íŽ˜ì´ì§€ ìƒˆë¡œê³ ì¹¨
         st.rerun()
         return True
     
-    # 로그인 시도 횟수 확인
+    # ë¡œê·¸ì¸ ì‹œë„ íšŸìˆ˜ í™•ì¸
     login_attempts = st.session_state.get('login_attempts', 0)
     if login_attempts >= 3:
-        st.error("로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.")
-        st.session_state.login_attempts = 0  # 제한 시간 후 리셋
+        st.error("ë¡œê·¸ì¸ ì‹œë„ íšŸìˆ˜ë¥¼ ì´ˆê³¼í–ˆìŠµë‹ˆë‹¤. ìž ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•´ì£¼ì„¸ìš”.")
+        st.session_state.login_attempts = 0  # ì œí•œ ì‹œê°„ í›„ ë¦¬ì…‹
         return False
 
-    # 로그인 UI
-    st.title("CNC 품질관리 시스템")
-    st.subheader("로그인")
+    # ë¡œê·¸ì¸ UI
+    st.title("CNC í’ˆì§ˆê´€ë¦¬ ì‹œìŠ¤í…œ")
+    st.subheader("ë¡œê·¸ì¸")
     
-    # 로그인 입력 필드
-    username = st.text_input("아이디", key="login_username")
-    password = st.text_input("비밀번호", type="password", key="login_password")
-    login_button = st.button("로그인", key="login_button")
+    # ë¡œê·¸ì¸ ìž…ë ¥ í•„ë“œ
+    username = st.text_input("ì•„ì´ë””", key="login_username")
+    password = st.text_input("ë¹„ë°€ë²ˆí˜¸", type="password", key="login_password")
+    login_button = st.button("ë¡œê·¸ì¸", key="login_button")
     
     if login_button:
         if not username:
-            st.error("아이디를 입력하세요.")
+            st.error("ì•„ì´ë””ë¥¼ ìž…ë ¥í•˜ì„¸ìš”.")
             return False
         if not password:
-            st.error("비밀번호를 입력하세요.")
+            st.error("ë¹„ë°€ë²ˆí˜¸ë¥¼ ìž…ë ¥í•˜ì„¸ìš”.")
             return False
 
         success, user_role = verify_login(username, password)
         if success:
-            # 로그인 성공 상태 설정
+            # ë¡œê·¸ì¸ ì„±ê³µ ìƒíƒœ ì„¤ì •
             st.session_state.logged_in = True
             st.session_state.user_role = user_role
             st.session_state.username = username
             st.session_state.login_attempts = 0
             st.session_state.page = "dashboard"
-            st.success(f"{username}님 환영합니다!")
-            time.sleep(1)  # 1초 후 리로드
+            st.success(f"{username}ë‹˜ í™˜ì˜í•©ë‹ˆë‹¤!")
+            time.sleep(1)  # 1ì´ˆ í›„ ë¦¬ë¡œë“œ
             st.rerun()
             return True
         else:
-            # 로그인 실패 처리
+            # ë¡œê·¸ì¸ ì‹¤íŒ¨ ì²˜ë¦¬
             st.session_state.login_attempts = login_attempts + 1
-            st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
+            st.error("ì•„ì´ë”” ë˜ëŠ” ë¹„ë°€ë²ˆí˜¸ê°€ ì˜¬ë°”ë¥´ì§€ ì•ŠìŠµë‹ˆë‹¤.")
             if st.session_state.login_attempts >= 3:
-                st.warning("로그인을 3회 이상 실패했습니다. 계정 정보를 확인하세요.")
+                st.warning("ë¡œê·¸ì¸ì„ 3íšŒ ì´ìƒ ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ê³„ì • ì •ë³´ë¥¼ í™•ì¸í•˜ì„¸ìš”.")
             return False
 
     return False
 
-# 로그인 상태 확인 및 페이지 표시
+# ë¡œê·¸ì¸ ìƒíƒœ í™•ì¸ ë° íŽ˜ì´ì§€ í‘œì‹œ
 if not check_password():
-    # 로그인 실패 시 여기서 멈춤
+    # ë¡œê·¸ì¸ ì‹¤íŒ¨ ì‹œ ì—¬ê¸°ì„œ ë©ˆì¶¤
     st.stop()
 
-# 여기서부터 로그인 성공 후 표시되는 내용
-st.sidebar.success(f"{st.session_state.username}님 환영합니다!")
-st.sidebar.write(f"역할: {st.session_state.user_role}")
+# ì—¬ê¸°ì„œë¶€í„° ë¡œê·¸ì¸ ì„±ê³µ í›„ í‘œì‹œë˜ëŠ” ë‚´ìš©
+st.sidebar.success(f"{st.session_state.username}ë‹˜ í™˜ì˜í•©ë‹ˆë‹¤!")
+st.sidebar.write(f"ì—­í• : {st.session_state.user_role}")
 
-# 세션 유지를 위한 요소 추가
+# ì„¸ì…˜ ìœ ì§€ë¥¼ ìœ„í•œ ìš”ì†Œ ì¶”ê°€
 add_keep_alive_element()
 
-# 로그아웃 버튼
-if st.sidebar.button("로그아웃"):
+# ë¡œê·¸ì•„ì›ƒ ë²„íŠ¼
+if st.sidebar.button("ë¡œê·¸ì•„ì›ƒ"):
     st.session_state.logged_in = False
     st.session_state.username = ""
-    st.session_state.user_role = "일반"
+    st.session_state.user_role = "ì¼ë°˜"
     st.session_state.page = "login"
     st.rerun()
 
-# 언어 선택 (한국어/베트남어)
+# ì–¸ì–´ ì„ íƒ (í•œêµ­ì–´/ë² íŠ¸ë‚¨ì–´)
 TRANSLATIONS = {
     "ko": {
-        "title": "ALMUS TECH CNC 작업자 KPI 관리 시스템",
+        "title": "ALMUS TECH CNC ìž‘ì—…ìž KPI ê´€ë¦¬ ì‹œìŠ¤í…œ",
         "menu_groups": {
-            "admin": "관리자 메뉴",
-            "report": "리포트 메뉴"
+            "admin": "ê´€ë¦¬ìž ë©”ë‰´",
+            "report": "ë¦¬í¬íŠ¸ ë©”ë‰´"
         },
         "admin_menu": {
-            "manager_auth": "👥 관리자 및 사용자 관리",
-            "process_auth": "⚙️ 관리자 등록 및 관리",
-            "user_auth": "🔑 검사자 등록 및 관리",
-            "inspection_data": "📊 검사실적 관리",
-            "product_model": "📦 생산모델 관리"
+            "manager_auth": "ðŸ‘¥ ê´€ë¦¬ìž ë° ì‚¬ìš©ìž ê´€ë¦¬",
+            "process_auth": "âš™ï¸ ê´€ë¦¬ìž ë“±ë¡ ë° ê´€ë¦¬",
+            "user_auth": "ðŸ”‘ ê²€ì‚¬ìž ë“±ë¡ ë° ê´€ë¦¬",
+            "inspection_data": "ðŸ“Š ê²€ì‚¬ì‹¤ì  ê´€ë¦¬",
+            "product_model": "ðŸ“¦ ìƒì‚°ëª¨ë¸ ê´€ë¦¬"
         },
         "report_menu": {
-            "total_dashboard": "📈 종합 대시보드",
-            "daily_report": "📊 일간 리포트",
-            "weekly_report": "📅 주간 리포트",
-            "monthly_report": "📆 월간 리포트",
-            "quality_report": "⭐ 월간 품질 리포트"
+            "total_dashboard": "ðŸ“ˆ ì¢…í•© ëŒ€ì‹œë³´ë“œ",
+            "daily_report": "ðŸ“Š ì¼ê°„ ë¦¬í¬íŠ¸",
+            "weekly_report": "ðŸ“… ì£¼ê°„ ë¦¬í¬íŠ¸",
+            "monthly_report": "ðŸ“† ì›”ê°„ ë¦¬í¬íŠ¸",
+            "quality_report": "â­ ì›”ê°„ í’ˆì§ˆ ë¦¬í¬íŠ¸"
         }
     },
     "vi": {
-        "title": "Hệ thống quản lý KPI cho công nhân CNC ALMUS TECH",
+        "title": "Há»‡ thá»‘ng quáº£n lÃ½ KPI cho cÃ´ng nhÃ¢n CNC ALMUS TECH",
         "menu_groups": {
-            "admin": "Menu quản trị",
-            "report": "Menu báo cáo"
+            "admin": "Menu quáº£n trá»‹",
+            "report": "Menu bÃ¡o cÃ¡o"
         },
         "admin_menu": {
-            "manager_auth": "👥 Quản lý quản trị viên và người dùng",
-            "process_auth": "⚙️ Đăng ký và quản lý quản trị viên",
-            "user_auth": "🔑 Đăng ký và quản lý người dùng",
-            "inspection_data": "📊 Quản lý dữ liệu kiểm tra",
-            "product_model": "📦 Quản lý mô hình sản xuất"
+            "manager_auth": "ðŸ‘¥ Quáº£n lÃ½ quáº£n trá»‹ viÃªn vÃ  ngÆ°á»i dÃ¹ng",
+            "process_auth": "âš™ï¸ ÄÄƒng kÃ½ vÃ  quáº£n lÃ½ quáº£n trá»‹ viÃªn",
+            "user_auth": "ðŸ”‘ ÄÄƒng kÃ½ vÃ  quáº£n lÃ½ ngÆ°á»i dÃ¹ng",
+            "inspection_data": "ðŸ“Š Quáº£n lÃ½ dá»¯ liá»‡u kiá»ƒm tra",
+            "product_model": "ðŸ“¦ Quáº£n lÃ½ mÃ´ hÃ¬nh sáº£n xuáº¥t"
         },
         "report_menu": {
-            "total_dashboard": "📈 Bảng điều khiển tổng hợp",
-            "daily_report": "📊 Báo cáo hàng ngày",
-            "weekly_report": "📅 Báo cáo hàng tuần",
-            "monthly_report": "📆 Báo cáo hàng tháng",
-            "quality_report": "⭐ Báo cáo chất lượng hàng tháng"
+            "total_dashboard": "ðŸ“ˆ Báº£ng Ä‘iá»u khiá»ƒn tá»•ng há»£p",
+            "daily_report": "ðŸ“Š BÃ¡o cÃ¡o hÃ ng ngÃ y",
+            "weekly_report": "ðŸ“… BÃ¡o cÃ¡o hÃ ng tuáº§n",
+            "monthly_report": "ðŸ“† BÃ¡o cÃ¡o hÃ ng thÃ¡ng",
+            "quality_report": "â­ BÃ¡o cÃ¡o cháº¥t lÆ°á»£ng hÃ ng thÃ¡ng"
         }
     }
 }
 
-# 초기 언어 설정
+# ì´ˆê¸° ì–¸ì–´ ì„¤ì •
 if 'language' not in st.session_state:
     st.session_state.language = 'ko'
 
-# 사이드바에 언어 선택 추가
+# ì‚¬ì´ë“œë°”ì— ì–¸ì–´ ì„ íƒ ì¶”ê°€
 lang_col1, lang_col2 = st.sidebar.columns(2)
 with lang_col1:
-    if st.button("한국어", key="ko_btn"):
+    if st.button("í•œêµ­ì–´", key="ko_btn"):
         st.session_state.language = 'ko'
         st.rerun()
 with lang_col2:
-    if st.button("Tiếng Việt", key="vi_btn"):
+    if st.button("Tiáº¿ng Viá»‡t", key="vi_btn"):
         st.session_state.language = 'vi'
         st.rerun()
 
-# 현재 선택된 언어의 번역 가져오기
+# í˜„ìž¬ ì„ íƒëœ ì–¸ì–´ì˜ ë²ˆì—­ ê°€ì ¸ì˜¤ê¸°
 curr_lang = TRANSLATIONS[st.session_state.language]
 
-# 메뉴 페이지 정의
+# ë©”ë‰´ íŽ˜ì´ì§€ ì •ì˜
 if 'page' not in st.session_state:
     st.session_state.page = "total_dashboard"
 
-# 관리자 메뉴 섹션
+# ê´€ë¦¬ìž ë©”ë‰´ ì„¹ì…˜
 st.sidebar.markdown(f"### {curr_lang['menu_groups']['admin']}")
 admin_menu = curr_lang['admin_menu']
 selected_admin = st.sidebar.radio(
@@ -551,7 +551,7 @@ selected_admin = st.sidebar.radio(
     index=0
 )
 
-# 리포트 메뉴 섹션
+# ë¦¬í¬íŠ¸ ë©”ë‰´ ì„¹ì…˜
 st.sidebar.markdown(f"### {curr_lang['menu_groups']['report']}")
 report_menu = curr_lang['report_menu']
 selected_report = st.sidebar.radio(
@@ -562,56 +562,56 @@ selected_report = st.sidebar.radio(
     index=0
 )
 
-# 선택된 메뉴에 따라 페이지 상태 업데이트
+# ì„ íƒëœ ë©”ë‰´ì— ë”°ë¼ íŽ˜ì´ì§€ ìƒíƒœ ì—…ë°ì´íŠ¸
 if selected_admin in admin_menu:
     st.session_state.page = selected_admin
 elif selected_report in report_menu:
     st.session_state.page = selected_report
 
-# 검사원 정보 가져오기
+# ê²€ì‚¬ì› ì •ë³´ ê°€ì ¸ì˜¤ê¸°
 def load_inspectors():
     try:
         response = supabase.table('inspectors').select("*").execute()
         if response.data:
             return pd.DataFrame(response.data)
         else:
-            # 샘플 데이터 반환
+            # ìƒ˜í”Œ ë°ì´í„° ë°˜í™˜
             default_inspectors = [
-                {"id": "INS001", "name": "홍길동", "department": "CNC_1", "process": "선삭", "years_of_service": 5.5},
-                {"id": "INS002", "name": "김철수", "department": "CNC_2", "process": "밀링", "years_of_service": 3.2},
-                {"id": "INS003", "name": "이영희", "department": "PQC_LINE", "process": "검사", "years_of_service": 7.1}
+                {"id": "INS001", "name": "í™ê¸¸ë™", "department": "CNC_1", "process": "ì„ ì‚­", "years_of_service": 5.5},
+                {"id": "INS002", "name": "ê¹€ì² ìˆ˜", "department": "CNC_2", "process": "ë°€ë§", "years_of_service": 3.2},
+                {"id": "INS003", "name": "ì´ì˜í¬", "department": "PQC_LINE", "process": "ê²€ì‚¬", "years_of_service": 7.1}
             ]
             return pd.DataFrame(default_inspectors)
     except Exception as e:
-        # 오류 발생 시 기본 데이터 반환
-        st.error(f"검사원 정보 로딩 중 오류: {str(e)}")
+        # ì˜¤ë¥˜ ë°œìƒ ì‹œ ê¸°ë³¸ ë°ì´í„° ë°˜í™˜
+        st.error(f"ê²€ì‚¬ì› ì •ë³´ ë¡œë”© ì¤‘ ì˜¤ë¥˜: {str(e)}")
         default_inspectors = [
-            {"id": "INS001", "name": "홍길동", "department": "CNC_1"},
-            {"id": "INS002", "name": "김철수", "department": "CNC_2"},
-            {"id": "INS003", "name": "이영희", "department": "PQC_LINE"}
+            {"id": "INS001", "name": "í™ê¸¸ë™", "department": "CNC_1"},
+            {"id": "INS002", "name": "ê¹€ì² ìˆ˜", "department": "CNC_2"},
+            {"id": "INS003", "name": "ì´ì˜í¬", "department": "PQC_LINE"}
         ]
         return pd.DataFrame(default_inspectors)
 
-# 검사 데이터 저장
+# ê²€ì‚¬ ë°ì´í„° ì €ìž¥
 def save_inspection_data(data):
     try:
-        # 한글 필드명을 영문으로 변환
+        # í•œê¸€ í•„ë“œëª…ì„ ì˜ë¬¸ìœ¼ë¡œ ë³€í™˜
         field_mapping = {
-            "검사원": "inspector_name",
-            "공정": "process",
-            "모델명": "model_name",
-            "검사일자": "inspection_date",
-            "검사시간": "inspection_time",
-            "LOT번호": "lot_number",
-            "작업시간(분)": "work_time_minutes",
-            "계획수량": "planned_quantity",
-            "검사수량": "total_inspected",
-            "불량수량": "total_defects",
-            "불량률(%)": "defect_rate",
-            "비고": "remarks"
+            "ê²€ì‚¬ì›": "inspector_name",
+            "ê³µì •": "process",
+            "ëª¨ë¸ëª…": "model_name",
+            "ê²€ì‚¬ì¼ìž": "inspection_date",
+            "ê²€ì‚¬ì‹œê°„": "inspection_time",
+            "LOTë²ˆí˜¸": "lot_number",
+            "ìž‘ì—…ì‹œê°„(ë¶„)": "work_time_minutes",
+            "ê³„íšìˆ˜ëŸ‰": "planned_quantity",
+            "ê²€ì‚¬ìˆ˜ëŸ‰": "total_inspected",
+            "ë¶ˆëŸ‰ìˆ˜ëŸ‰": "total_defects",
+            "ë¶ˆëŸ‰ë¥ (%)": "defect_rate",
+            "ë¹„ê³ ": "remarks"
         }
         
-        # 데이터 변환
+        # ë°ì´í„° ë³€í™˜
         english_data = {}
         for k, v in data.items():
             if k in field_mapping:
@@ -619,32 +619,32 @@ def save_inspection_data(data):
             else:
                 english_data[k] = v
         
-        # 영문 필드명으로 저장
+        # ì˜ë¬¸ í•„ë“œëª…ìœ¼ë¡œ ì €ìž¥
         response = supabase.table('inspection_data').insert(english_data).execute()
         return response
     except Exception as e:
-        # Supabase 테이블이 없는 경우나 다른 오류 처리
-        st.error(f"데이터 저장 중 오류가 발생했습니다: {str(e)}")
-        # 세션에 데이터 저장(백업)
+        # Supabase í…Œì´ë¸”ì´ ì—†ëŠ” ê²½ìš°ë‚˜ ë‹¤ë¥¸ ì˜¤ë¥˜ ì²˜ë¦¬
+        st.error(f"ë°ì´í„° ì €ìž¥ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
+        # ì„¸ì…˜ì— ë°ì´í„° ì €ìž¥(ë°±ì—…)
         if 'saved_inspections' not in st.session_state:
             st.session_state.saved_inspections = []
         st.session_state.saved_inspections.append(data)
         raise e
 
-# 불량 데이터 저장
+# ë¶ˆëŸ‰ ë°ì´í„° ì €ìž¥
 def save_defect_data(data):
     try:
-        # 한글 필드명을 영문으로 변환
+        # í•œê¸€ í•„ë“œëª…ì„ ì˜ë¬¸ìœ¼ë¡œ ë³€í™˜
         field_mapping = {
-            "불량유형": "defect_type",
-            "수량": "quantity",
-            "검사ID": "inspection_id",
-            "등록일자": "registration_date",
-            "등록자": "registered_by",
-            "비고": "remarks"
+            "ë¶ˆëŸ‰ìœ í˜•": "defect_type",
+            "ìˆ˜ëŸ‰": "quantity",
+            "ê²€ì‚¬ID": "inspection_id",
+            "ë“±ë¡ì¼ìž": "registration_date",
+            "ë“±ë¡ìž": "registered_by",
+            "ë¹„ê³ ": "remarks"
         }
         
-        # 데이터 변환
+        # ë°ì´í„° ë³€í™˜
         english_data = {}
         for k, v in data.items():
             if k in field_mapping:
@@ -652,110 +652,110 @@ def save_defect_data(data):
             else:
                 english_data[k] = v
         
-        # 영문 필드명으로 저장
+        # ì˜ë¬¸ í•„ë“œëª…ìœ¼ë¡œ ì €ìž¥
         response = supabase.table('defect_data').insert(english_data).execute()
         return response
     except Exception as e:
-        # Supabase 테이블이 없는 경우나 다른 오류 처리
-        st.error(f"불량 데이터 저장 중 오류가 발생했습니다: {str(e)}")
-        # 세션에 데이터 저장(백업)
+        # Supabase í…Œì´ë¸”ì´ ì—†ëŠ” ê²½ìš°ë‚˜ ë‹¤ë¥¸ ì˜¤ë¥˜ ì²˜ë¦¬
+        st.error(f"ë¶ˆëŸ‰ ë°ì´í„° ì €ìž¥ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
+        # ì„¸ì…˜ì— ë°ì´í„° ì €ìž¥(ë°±ì—…)
         if 'saved_defects' not in st.session_state:
             st.session_state.saved_defects = []
         st.session_state.saved_defects.append(data)
         raise e
 
-# 세션 상태 초기화 (앱 최초 로드 시 한 번만 실행)
+# ì„¸ì…˜ ìƒíƒœ ì´ˆê¸°í™” (ì•± ìµœì´ˆ ë¡œë“œ ì‹œ í•œ ë²ˆë§Œ ì‹¤í–‰)
 if 'inspectors' not in st.session_state:
     st.session_state.inspectors = load_inspectors()
 
 if 'registered_defects' not in st.session_state:
     st.session_state.registered_defects = []
 
-# 현재 페이지에 따라 다른 내용 표시
+# í˜„ìž¬ íŽ˜ì´ì§€ì— ë”°ë¼ ë‹¤ë¥¸ ë‚´ìš© í‘œì‹œ
 if st.session_state.page == "total_dashboard":
-    # 상단 헤더 섹션
-    st.markdown("<div class='title-area'><h1>🏭 CNC 품질관리 시스템 - 대시보드</h1></div>", unsafe_allow_html=True)
+    # ìƒë‹¨ í—¤ë” ì„¹ì…˜
+    st.markdown("<div class='title-area'><h1>ðŸ­ CNC í’ˆì§ˆê´€ë¦¬ ì‹œìŠ¤í…œ - ëŒ€ì‹œë³´ë“œ</h1></div>", unsafe_allow_html=True)
     
-    # 상단 메트릭 섹션 (2x2 그리드)
+    # ìƒë‹¨ ë©”íŠ¸ë¦­ ì„¹ì…˜ (2x2 ê·¸ë¦¬ë“œ)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("📝 총 검사 건수", "152", "+12")
+        st.metric("ðŸ“ ì´ ê²€ì‚¬ ê±´ìˆ˜", "152", "+12")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.metric("⚠️ 평균 불량률", "0.8%", "-0.2%")
+        st.metric("âš ï¸ í‰ê·  ë¶ˆëŸ‰ë¥ ", "0.8%", "-0.2%")
         st.markdown("</div>", unsafe_allow_html=True)
     with col3:
         st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.metric("🔍 최다 불량 유형", "치수불량", "")
+        st.metric("ðŸ” ìµœë‹¤ ë¶ˆëŸ‰ ìœ í˜•", "ì¹˜ìˆ˜ë¶ˆëŸ‰", "")
         st.markdown("</div>", unsafe_allow_html=True)
     with col4:
         st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.metric("⚙️ 진행 중인 작업", "3", "+1")
+        st.metric("âš™ï¸ ì§„í–‰ ì¤‘ì¸ ìž‘ì—…", "3", "+1")
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 날짜 필터 (메트릭 카드 아래에 통합)
+    # ë‚ ì§œ í•„í„° (ë©”íŠ¸ë¦­ ì¹´ë“œ ì•„ëž˜ì— í†µí•©)
     col1, col2 = st.columns([1, 1])
     with col1:
-        start_date = st.date_input("📅 시작일", datetime.now() - timedelta(days=30))
+        start_date = st.date_input("ðŸ“… ì‹œìž‘ì¼", datetime.now() - timedelta(days=30))
     with col2:
-        end_date = st.date_input("📅 종료일", datetime.now())
+        end_date = st.date_input("ðŸ“… ì¢…ë£Œì¼", datetime.now())
     
-    # 차트 섹션 (2x1 그리드)
+    # ì°¨íŠ¸ ì„¹ì…˜ (2x1 ê·¸ë¦¬ë“œ)
     col1, col2 = st.columns(2)
     
     with col1:
-        # 일별 불량률 추이 차트
+        # ì¼ë³„ ë¶ˆëŸ‰ë¥  ì¶”ì´ ì°¨íŠ¸
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>📊 일별 불량률 추이 (최근 7일)</div>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>ðŸ“Š ì¼ë³„ ë¶ˆëŸ‰ë¥  ì¶”ì´ (ìµœê·¼ 7ì¼)</div>", unsafe_allow_html=True)
         
-        # 일주일 데이터 준비 (현재 날짜부터 7일 전까지)
+        # ì¼ì£¼ì¼ ë°ì´í„° ì¤€ë¹„ (í˜„ìž¬ ë‚ ì§œë¶€í„° 7ì¼ ì „ê¹Œì§€)
         last_week = pd.date_range(end=datetime.now(), periods=7)
-        weekdays = [d.strftime("%a") for d in last_week]  # 요일 약자 (월,화,수...)
-        dates_str = [d.strftime("%m/%d") for d in last_week]  # 날짜 형식 (월/일)
+        weekdays = [d.strftime("%a") for d in last_week]  # ìš”ì¼ ì•½ìž (ì›”,í™”,ìˆ˜...)
+        dates_str = [d.strftime("%m/%d") for d in last_week]  # ë‚ ì§œ í˜•ì‹ (ì›”/ì¼)
         
-        # 날짜와 요일 결합
+        # ë‚ ì§œì™€ ìš”ì¼ ê²°í•©
         x_labels = [f"{d} ({w})" for d, w in zip(dates_str, weekdays)]
         
-        # 밀링 데이터 (막대 그래프)
+        # ë°€ë§ ë°ì´í„° (ë§‰ëŒ€ ê·¸ëž˜í”„)
         milling_data = np.random.rand(7) * 1.5
-        # 선삭 데이터 (라인 차트)
+        # ì„ ì‚­ ë°ì´í„° (ë¼ì¸ ì°¨íŠ¸)
         turning_data = np.random.rand(7) * 2
         
-        # 복합 그래프 생성
+        # ë³µí•© ê·¸ëž˜í”„ ìƒì„±
         fig = go.Figure()
         
-        # 밀링 공정 (막대 그래프)
+        # ë°€ë§ ê³µì • (ë§‰ëŒ€ ê·¸ëž˜í”„)
         fig.add_trace(go.Bar(
             x=x_labels,
             y=milling_data,
-            name="밀링",
+            name="ë°€ë§",
             marker_color="#4361ee",
             opacity=0.7
         ))
         
-        # 선삭 공정 (선 그래프)
+        # ì„ ì‚­ ê³µì • (ì„  ê·¸ëž˜í”„)
         fig.add_trace(go.Scatter(
             x=x_labels,
             y=turning_data,
             mode='lines+markers',
-            name='선삭',
+            name='ì„ ì‚­',
             line=dict(color='#fb8c00', width=3),
             marker=dict(size=8)
         ))
         
-        # 평균 불량률 (점선)
+        # í‰ê·  ë¶ˆëŸ‰ë¥  (ì ì„ )
         avg_defect = np.mean(np.concatenate([milling_data, turning_data]))
         fig.add_trace(go.Scatter(
             x=x_labels,
             y=[avg_defect] * 7,
             mode='lines',
-            name='평균',
+            name='í‰ê· ',
             line=dict(color='#4cb782', width=2, dash='dash'),
         ))
         
-        # 레이아웃 업데이트
+        # ë ˆì´ì•„ì›ƒ ì—…ë°ì´íŠ¸
         fig.update_layout(
             title=None,
             margin=dict(l=20, r=20, t=10, b=20),
@@ -764,19 +764,19 @@ if st.session_state.page == "total_dashboard":
             paper_bgcolor="rgba(0,0,0,0)",
             xaxis=dict(
                 showgrid=False,
-                title="날짜 (요일)",
+                title="ë‚ ì§œ (ìš”ì¼)",
                 tickangle=-30,
             ),
             yaxis=dict(
                 showgrid=True, 
                 gridcolor="rgba(0,0,0,0.05)",
-                title="불량률 (%)"
+                title="ë¶ˆëŸ‰ë¥  (%)"
             ),
             hovermode="x unified",
             barmode='group'
         )
         
-        # 불량률 목표선 (예: 1%)
+        # ë¶ˆëŸ‰ë¥  ëª©í‘œì„  (ì˜ˆ: 1%)
         target_rate = 1.0
         fig.add_shape(
             type="line",
@@ -787,11 +787,11 @@ if st.session_state.page == "total_dashboard":
             line=dict(color="red", width=1, dash="dot"),
         )
         
-        # 목표선 주석 추가
+        # ëª©í‘œì„  ì£¼ì„ ì¶”ê°€
         fig.add_annotation(
             x=x_labels[1],
             y=target_rate,
-            text="목표선 (1%)",
+            text="ëª©í‘œì„  (1%)",
             showarrow=True,
             arrowhead=2,
             arrowcolor="red",
@@ -805,16 +805,16 @@ if st.session_state.page == "total_dashboard":
         st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
-        # 불량 유형 분포 차트
+        # ë¶ˆëŸ‰ ìœ í˜• ë¶„í¬ ì°¨íŠ¸
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>🍩 불량 유형 분포</div>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>ðŸ© ë¶ˆëŸ‰ ìœ í˜• ë¶„í¬</div>", unsafe_allow_html=True)
         
-        # 불량 유형 분포
-        defect_types = ["치수 불량", "표면 거칠기", "칩핑", "기타"]
+        # ë¶ˆëŸ‰ ìœ í˜• ë¶„í¬
+        defect_types = ["ì¹˜ìˆ˜ ë¶ˆëŸ‰", "í‘œë©´ ê±°ì¹ ê¸°", "ì¹©í•‘", "ê¸°íƒ€"]
         defect_counts = np.random.randint(5, 30, size=len(defect_types))
         
-        # 도넛 차트에 아이콘 지정 (이모티콘)
-        defect_icons = ["📏", "🔍", "🔨", "❓"]
+        # ë„ë„› ì°¨íŠ¸ì— ì•„ì´ì½˜ ì§€ì • (ì´ëª¨í‹°ì½˜)
+        defect_icons = ["ðŸ“", "ðŸ”", "ðŸ”¨", "â“"]
         custom_labels = [f"{icon} {label}" for icon, label in zip(defect_icons, defect_types)]
         
         fig = px.pie(
@@ -824,10 +824,10 @@ if st.session_state.page == "total_dashboard":
             color_discrete_sequence=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"]
         )
         
-        # 중앙에 총 불량 수 표시
+        # ì¤‘ì•™ì— ì´ ë¶ˆëŸ‰ ìˆ˜ í‘œì‹œ
         total_defects = sum(defect_counts)
         fig.add_annotation(
-            text=f"총 불량<br>{total_defects}건",
+            text=f"ì´ ë¶ˆëŸ‰<br>{total_defects}ê±´",
             x=0.5, y=0.5,
             font_size=15,
             font_family="Arial",
@@ -842,99 +842,99 @@ if st.session_state.page == "total_dashboard":
         fig.update_traces(
             textposition='outside', 
             textinfo='percent',
-            hovertemplate='%{label}<br>수량: %{value}<br>비율: %{percent}',
+            hovertemplate='%{label}<br>ìˆ˜ëŸ‰: %{value}<br>ë¹„ìœ¨: %{percent}',
         )
         st.plotly_chart(fig, use_container_width=True)
     
-    # 최근 검사 데이터 섹션 (전체 너비)
+    # ìµœê·¼ ê²€ì‚¬ ë°ì´í„° ì„¹ì…˜ (ì „ì²´ ë„ˆë¹„)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📋 최근 검사 데이터</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ“‹ ìµœê·¼ ê²€ì‚¬ ë°ì´í„°</div>", unsafe_allow_html=True)
     
-    # 최근 데이터를 위한 샘플 테이블
+    # ìµœê·¼ ë°ì´í„°ë¥¼ ìœ„í•œ ìƒ˜í”Œ í…Œì´ë¸”
     recent_data = {
-        "📅 검사일자": pd.date_range(end=datetime.now(), periods=5).strftime("%Y-%m-%d"),
-        "🔢 LOT번호": [f"LOT{i:04d}" for i in range(1, 6)],
-        "👨‍🔧 검사원": np.random.choice(["홍길동", "김철수", "이영희"], 5),
-        "⚙️ 공정": np.random.choice(["선삭", "밀링"], 5),
-        "📦 전체수량": np.random.randint(50, 200, 5),
-        "⚠️ 불량수량": np.random.randint(0, 10, 5),
+        "ðŸ“… ê²€ì‚¬ì¼ìž": pd.date_range(end=datetime.now(), periods=5).strftime("%Y-%m-%d"),
+        "ðŸ”¢ LOTë²ˆí˜¸": [f"LOT{i:04d}" for i in range(1, 6)],
+        "ðŸ‘¨â€ðŸ”§ ê²€ì‚¬ì›": np.random.choice(["í™ê¸¸ë™", "ê¹€ì² ìˆ˜", "ì´ì˜í¬"], 5),
+        "âš™ï¸ ê³µì •": np.random.choice(["ì„ ì‚­", "ë°€ë§"], 5),
+        "ðŸ“¦ ì „ì²´ìˆ˜ëŸ‰": np.random.randint(50, 200, 5),
+        "âš ï¸ ë¶ˆëŸ‰ìˆ˜ëŸ‰": np.random.randint(0, 10, 5),
     }
     
     df = pd.DataFrame(recent_data)
-    df["📊 불량률(%)"] = (df["⚠️ 불량수량"] / df["📦 전체수량"] * 100).apply(lambda x: round(x, 2))
+    df["ðŸ“Š ë¶ˆëŸ‰ë¥ (%)"] = (df["âš ï¸ ë¶ˆëŸ‰ìˆ˜ëŸ‰"] / df["ðŸ“¦ ì „ì²´ìˆ˜ëŸ‰"] * 100).apply(lambda x: round(x, 2))
     
-    # 데이터프레임에 스타일 적용
+    # ë°ì´í„°í”„ë ˆìž„ì— ìŠ¤íƒ€ì¼ ì ìš©
     st.dataframe(
         df, 
         use_container_width=True, 
         hide_index=True,
         column_config={
-            "📊 불량률(%)": st.column_config.ProgressColumn(
-                "📊 불량률(%)",
-                help="불량률 퍼센트",
+            "ðŸ“Š ë¶ˆëŸ‰ë¥ (%)": st.column_config.ProgressColumn(
+                "ðŸ“Š ë¶ˆëŸ‰ë¥ (%)",
+                help="ë¶ˆëŸ‰ë¥  í¼ì„¼íŠ¸",
                 format="%.1f%%",
                 min_value=0,
-                max_value=5,  # 대부분의 불량률은 5% 이하로 가정
+                max_value=5,  # ëŒ€ë¶€ë¶„ì˜ ë¶ˆëŸ‰ë¥ ì€ 5% ì´í•˜ë¡œ ê°€ì •
             ),
         }
     )
     
-    # 최근 검사 데이터 요약 지표
+    # ìµœê·¼ ê²€ì‚¬ ë°ì´í„° ìš”ì•½ ì§€í‘œ
     col1, col2, col3 = st.columns(3)
     with col1:
-        avg_defect_rate = df["📊 불량률(%)"].mean()
-        st.metric("⚠️ 평균 불량률", f"{avg_defect_rate:.2f}%")
+        avg_defect_rate = df["ðŸ“Š ë¶ˆëŸ‰ë¥ (%)"].mean()
+        st.metric("âš ï¸ í‰ê·  ë¶ˆëŸ‰ë¥ ", f"{avg_defect_rate:.2f}%")
     with col2:
-        min_defect_rate = df["📊 불량률(%)"].min()
-        st.metric("🟢 최소 불량률", f"{min_defect_rate:.2f}%")
+        min_defect_rate = df["ðŸ“Š ë¶ˆëŸ‰ë¥ (%)"].min()
+        st.metric("ðŸŸ¢ ìµœì†Œ ë¶ˆëŸ‰ë¥ ", f"{min_defect_rate:.2f}%")
     with col3:
-        max_defect_rate = df["📊 불량률(%)"].max()
-        st.metric("🔴 최대 불량률", f"{max_defect_rate:.2f}%")
+        max_defect_rate = df["ðŸ“Š ë¶ˆëŸ‰ë¥ (%)"].max()
+        st.metric("ðŸ”´ ìµœëŒ€ ë¶ˆëŸ‰ë¥ ", f"{max_defect_rate:.2f}%")
     
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "input_inspection":
-    st.title("📝 검사 데이터 입력")
+    st.title("ðŸ“ ê²€ì‚¬ ë°ì´í„° ìž…ë ¥")
     
-    # 기본 정보 입력
+    # ê¸°ë³¸ ì •ë³´ ìž…ë ¥
     with st.form("basic_info"):
-        st.subheader("📋 기본 정보 입력")
+        st.subheader("ðŸ“‹ ê¸°ë³¸ ì •ë³´ ìž…ë ¥")
         
         col1, col2 = st.columns(2)
         with col1:
-            inspector = st.selectbox("👤 검사원", options=st.session_state.inspectors['name'].tolist())
-            process = st.selectbox("⚙️ 공정", options=["선삭", "밀링"])
+            inspector = st.selectbox("ðŸ‘¤ ê²€ì‚¬ì›", options=st.session_state.inspectors['name'].tolist())
+            process = st.selectbox("âš™ï¸ ê³µì •", options=["ì„ ì‚­", "ë°€ë§"])
             
         with col2:
-            date = st.date_input("📅 검사일자")
-            time = st.time_input("⏰ 검사시간")
+            date = st.date_input("ðŸ“… ê²€ì‚¬ì¼ìž")
+            time = st.time_input("â° ê²€ì‚¬ì‹œê°„")
             
-        lot_number = st.text_input("🔢 LOT 번호")
-        total_quantity = st.number_input("📦 전체 수량", min_value=1, value=1)
+        lot_number = st.text_input("ðŸ”¢ LOT ë²ˆí˜¸")
+        total_quantity = st.number_input("ðŸ“¦ ì „ì²´ ìˆ˜ëŸ‰", min_value=1, value=1)
         
-        submit_basic = st.form_submit_button("✅ 기본 정보 등록")
+        submit_basic = st.form_submit_button("âœ… ê¸°ë³¸ ì •ë³´ ë“±ë¡")
         
     if submit_basic:
         st.session_state.basic_info_valid = True
-        st.success("✅ 기본 정보가 등록되었습니다.")
+        st.success("âœ… ê¸°ë³¸ ì •ë³´ê°€ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.")
     else:
         st.session_state.basic_info_valid = False
 
-    # 불량 정보 입력
+    # ë¶ˆëŸ‰ ì •ë³´ ìž…ë ¥
     if st.session_state.get('basic_info_valid', False):
         with st.form("defect_info"):
-            st.subheader("⚠️ 불량 정보 입력")
+            st.subheader("âš ï¸ ë¶ˆëŸ‰ ì •ë³´ ìž…ë ¥")
             
             col1, col2 = st.columns(2)
             with col1:
-                defect_type = st.selectbox("🔍 불량 유형", 
-                    options=["치수", "표면거칠기", "칩핑", "기타"])
+                defect_type = st.selectbox("ðŸ” ë¶ˆëŸ‰ ìœ í˜•", 
+                    options=["ì¹˜ìˆ˜", "í‘œë©´ê±°ì¹ ê¸°", "ì¹©í•‘", "ê¸°íƒ€"])
             
             with col2:
-                defect_quantity = st.number_input("📊 불량 수량", 
+                defect_quantity = st.number_input("ðŸ“Š ë¶ˆëŸ‰ ìˆ˜ëŸ‰", 
                     min_value=1, max_value=total_quantity, value=1)
                 
-            submit_defect = st.form_submit_button("➕ 불량 등록")
+            submit_defect = st.form_submit_button("âž• ë¶ˆëŸ‰ ë“±ë¡")
             
         if submit_defect:
             new_defect = {
@@ -942,11 +942,11 @@ elif st.session_state.page == "input_inspection":
                 "quantity": defect_quantity
             }
             st.session_state.registered_defects.append(new_defect)
-            st.success(f"✅ {defect_type} 불량이 {defect_quantity}개 등록되었습니다.")
+            st.success(f"âœ… {defect_type} ë¶ˆëŸ‰ì´ {defect_quantity}ê°œ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.")
             
-        # 등록된 불량 정보 표시
+        # ë“±ë¡ëœ ë¶ˆëŸ‰ ì •ë³´ í‘œì‹œ
         if st.session_state.registered_defects:
-            st.subheader("📋 등록된 불량 정보")
+            st.subheader("ðŸ“‹ ë“±ë¡ëœ ë¶ˆëŸ‰ ì •ë³´")
             defects_df = pd.DataFrame(st.session_state.registered_defects)
             st.dataframe(defects_df)
             
@@ -955,18 +955,18 @@ elif st.session_state.page == "input_inspection":
             
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("📊 총 불량 수량", f"{total_defects}개")
+                st.metric("ðŸ“Š ì´ ë¶ˆëŸ‰ ìˆ˜ëŸ‰", f"{total_defects}ê°œ")
             with col2:
-                st.metric("📈 불량률", f"{defect_rate}%")
+                st.metric("ðŸ“ˆ ë¶ˆëŸ‰ë¥ ", f"{defect_rate}%")
                 
-        # 불량 목록 초기화 버튼
-        if st.button("🔄 불량 목록 초기화"):
+        # ë¶ˆëŸ‰ ëª©ë¡ ì´ˆê¸°í™” ë²„íŠ¼
+        if st.button("ðŸ”„ ë¶ˆëŸ‰ ëª©ë¡ ì´ˆê¸°í™”"):
             st.session_state.registered_defects = []
-            st.success("✅ 불량 목록이 초기화되었습니다.")
+            st.success("âœ… ë¶ˆëŸ‰ ëª©ë¡ì´ ì´ˆê¸°í™”ë˜ì—ˆìŠµë‹ˆë‹¤.")
             st.stop()
             
-        # 검사 데이터 저장
-        if st.button("💾 검사 데이터 저장"):
+        # ê²€ì‚¬ ë°ì´í„° ì €ìž¥
+        if st.button("ðŸ’¾ ê²€ì‚¬ ë°ì´í„° ì €ìž¥"):
             if st.session_state.registered_defects:
                 inspection_datetime = datetime.combine(date, time)
                 inspector_data = st.session_state.inspectors[st.session_state.inspectors['name'] == inspector].iloc[0]
@@ -980,51 +980,51 @@ elif st.session_state.page == "input_inspection":
                 }
                 
                 try:
-                    # 검사 데이터 저장 (로컬 세션 상태에만 저장)
+                    # ê²€ì‚¬ ë°ì´í„° ì €ìž¥ (ë¡œì»¬ ì„¸ì…˜ ìƒíƒœì—ë§Œ ì €ìž¥)
                     st.session_state.last_inspection = inspection_data
                     
-                    # 불량 데이터 저장 (로컬 세션 상태에만 저장)
+                    # ë¶ˆëŸ‰ ë°ì´í„° ì €ìž¥ (ë¡œì»¬ ì„¸ì…˜ ìƒíƒœì—ë§Œ ì €ìž¥)
                     if 'saved_defects' not in st.session_state:
                         st.session_state.saved_defects = []
                         
                     for defect in st.session_state.registered_defects:
                         defect_data = {
-                            "inspection_id": lot_number,  # 임시 ID로 LOT 번호 사용
+                            "inspection_id": lot_number,  # ìž„ì‹œ IDë¡œ LOT ë²ˆí˜¸ ì‚¬ìš©
                             "defect_type": defect['type'],
                             "quantity": defect['quantity']
                         }
                         st.session_state.saved_defects.append(defect_data)
                     
-                    st.success("✅ 검사 데이터가 성공적으로 저장되었습니다.")
+                    st.success("âœ… ê²€ì‚¬ ë°ì´í„°ê°€ ì„±ê³µì ìœ¼ë¡œ ì €ìž¥ë˜ì—ˆìŠµë‹ˆë‹¤.")
                     st.session_state.registered_defects = []
                     st.stop()
                 except Exception as e:
-                    st.error(f"❌ 데이터 저장 중 오류가 발생했습니다: {str(e)}")
+                    st.error(f"âŒ ë°ì´í„° ì €ìž¥ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
             else:
-                st.warning("⚠️ 저장할 불량 데이터가 없습니다.")
+                st.warning("âš ï¸ ì €ìž¥í•  ë¶ˆëŸ‰ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.")
 
 elif st.session_state.page == "view_inspection":
-    st.title("검사 데이터 조회")
+    st.title("ê²€ì‚¬ ë°ì´í„° ì¡°íšŒ")
     
-    # 필터링 옵션
+    # í•„í„°ë§ ì˜µì…˜
     col1, col2, col3 = st.columns(3)
     with col1:
-        filter_process = st.selectbox("공정 필터", options=["전체", "선삭", "밀링"])
+        filter_process = st.selectbox("ê³µì • í•„í„°", options=["ì „ì²´", "ì„ ì‚­", "ë°€ë§"])
     with col2:
-        filter_start_date = st.date_input("시작일", datetime.now() - timedelta(days=30))
+        filter_start_date = st.date_input("ì‹œìž‘ì¼", datetime.now() - timedelta(days=30))
     with col3:
-        filter_end_date = st.date_input("종료일", datetime.now())
+        filter_end_date = st.date_input("ì¢…ë£Œì¼", datetime.now())
     
     try:
-        # 검사 데이터 조회
-        st.subheader("검사 데이터 목록")
+        # ê²€ì‚¬ ë°ì´í„° ì¡°íšŒ
+        st.subheader("ê²€ì‚¬ ë°ì´í„° ëª©ë¡")
         
-        # Supabase에서 데이터 가져오기 (실제 구현 필요)
-        # 샘플 데이터 표시
+        # Supabaseì—ì„œ ë°ì´í„° ê°€ì ¸ì˜¤ê¸° (ì‹¤ì œ êµ¬í˜„ í•„ìš”)
+        # ìƒ˜í”Œ ë°ì´í„° í‘œì‹œ
         sample_data = {
             "inspection_id": [f"INSP{i}" for i in range(1, 11)],
-            "inspector_name": np.random.choice(["홍길동", "김철수", "이영희"], 10),
-            "process": np.random.choice(["선삭", "밀링"], 10),
+            "inspector_name": np.random.choice(["í™ê¸¸ë™", "ê¹€ì² ìˆ˜", "ì´ì˜í¬"], 10),
+            "process": np.random.choice(["ì„ ì‚­", "ë°€ë§"], 10),
             "inspection_date": pd.date_range(start=filter_start_date, periods=10).strftime("%Y-%m-%d"),
             "lot_number": [f"LOT{i:04d}" for i in range(1, 11)],
             "total_quantity": np.random.randint(50, 200, 10),
@@ -1034,35 +1034,35 @@ elif st.session_state.page == "view_inspection":
         df = pd.DataFrame(sample_data)
         df["defect_rate"] = (df["defect_count"] / df["total_quantity"] * 100).apply(lambda x: round(x, 2))
         
-        # 공정 필터링
-        if filter_process != "전체":
+        # ê³µì • í•„í„°ë§
+        if filter_process != "ì „ì²´":
             df = df[df["process"] == filter_process]
             
         st.dataframe(df)
         
-        # 선택한 데이터 상세 보기 기능
-        inspection_id = st.selectbox("상세 정보를 볼 검사 ID 선택", options=df["inspection_id"].tolist())
+        # ì„ íƒí•œ ë°ì´í„° ìƒì„¸ ë³´ê¸° ê¸°ëŠ¥
+        inspection_id = st.selectbox("ìƒì„¸ ì •ë³´ë¥¼ ë³¼ ê²€ì‚¬ ID ì„ íƒ", options=df["inspection_id"].tolist())
         
         if inspection_id:
-            st.subheader(f"검사 상세 정보: {inspection_id}")
-            # 선택한 검사의 상세 정보 (샘플)
+            st.subheader(f"ê²€ì‚¬ ìƒì„¸ ì •ë³´: {inspection_id}")
+            # ì„ íƒí•œ ê²€ì‚¬ì˜ ìƒì„¸ ì •ë³´ (ìƒ˜í”Œ)
             selected_row = df[df["inspection_id"] == inspection_id].iloc[0]
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("검사원", selected_row["inspector_name"])
-                st.metric("총 수량", f"{selected_row['total_quantity']}개")
+                st.metric("ê²€ì‚¬ì›", selected_row["inspector_name"])
+                st.metric("ì´ ìˆ˜ëŸ‰", f"{selected_row['total_quantity']}ê°œ")
             with col2:
-                st.metric("공정", selected_row["process"])
-                st.metric("불량 수량", f"{selected_row['defect_count']}개")
+                st.metric("ê³µì •", selected_row["process"])
+                st.metric("ë¶ˆëŸ‰ ìˆ˜ëŸ‰", f"{selected_row['defect_count']}ê°œ")
             with col3:
-                st.metric("검사일", selected_row["inspection_date"])
-                st.metric("불량률", f"{selected_row['defect_rate']}%")
+                st.metric("ê²€ì‚¬ì¼", selected_row["inspection_date"])
+                st.metric("ë¶ˆëŸ‰ë¥ ", f"{selected_row['defect_rate']}%")
                 
-            # 불량 상세 정보 (샘플)
-            st.subheader("불량 상세 정보")
+            # ë¶ˆëŸ‰ ìƒì„¸ ì •ë³´ (ìƒ˜í”Œ)
+            st.subheader("ë¶ˆëŸ‰ ìƒì„¸ ì •ë³´")
             defect_detail = {
-                "defect_type": np.random.choice(["치수", "표면거칠기", "칩핑", "기타"], 
+                "defect_type": np.random.choice(["ì¹˜ìˆ˜", "í‘œë©´ê±°ì¹ ê¸°", "ì¹©í•‘", "ê¸°íƒ€"], 
                                            selected_row["defect_count"]),
                 "quantity": np.random.randint(1, 5, selected_row["defect_count"])
             }
@@ -1071,47 +1071,47 @@ elif st.session_state.page == "view_inspection":
                 defect_df = pd.DataFrame(defect_detail)
                 st.dataframe(defect_df)
                 
-                # 불량 유형 분포 차트
+                # ë¶ˆëŸ‰ ìœ í˜• ë¶„í¬ ì°¨íŠ¸
                 fig = px.pie(defect_df, names="defect_type", values="quantity", 
-                           title="불량 유형 분포")
+                           title="ë¶ˆëŸ‰ ìœ í˜• ë¶„í¬")
                 st.plotly_chart(fig)
             else:
-                st.info("이 검사에는 등록된 불량이 없습니다.")
+                st.info("ì´ ê²€ì‚¬ì—ëŠ” ë“±ë¡ëœ ë¶ˆëŸ‰ì´ ì—†ìŠµë‹ˆë‹¤.")
     except Exception as e:
-        st.error(f"데이터 조회 중 오류가 발생했습니다: {str(e)}")
+        st.error(f"ë°ì´í„° ì¡°íšŒ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
 
 elif st.session_state.page == "manage_inspectors":
-    if st.session_state.user_role != "관리자":
-        st.warning("관리자만 접근할 수 있는 페이지입니다.")
+    if st.session_state.user_role != "ê´€ë¦¬ìž":
+        st.warning("ê´€ë¦¬ìžë§Œ ì ‘ê·¼í•  ìˆ˜ ìžˆëŠ” íŽ˜ì´ì§€ìž…ë‹ˆë‹¤.")
         st.stop()
         
-    st.title("검사원 관리")
+    st.title("ê²€ì‚¬ì› ê´€ë¦¬")
     
-    # 검사원 목록 표시
-    st.subheader("등록된 검사원 목록")
+    # ê²€ì‚¬ì› ëª©ë¡ í‘œì‹œ
+    st.subheader("ë“±ë¡ëœ ê²€ì‚¬ì› ëª©ë¡")
     
     try:
         inspectors_df = load_inspectors()
         st.dataframe(inspectors_df)
         
-        # 새 검사원 등록 양식
-        st.subheader("새 검사원 등록")
+        # ìƒˆ ê²€ì‚¬ì› ë“±ë¡ ì–‘ì‹
+        st.subheader("ìƒˆ ê²€ì‚¬ì› ë“±ë¡")
         with st.form("new_inspector"):
             col1, col2 = st.columns(2)
             with col1:
-                inspector_id = st.text_input("검사원 ID")
-                name = st.text_input("이름")
+                inspector_id = st.text_input("ê²€ì‚¬ì› ID")
+                name = st.text_input("ì´ë¦„")
             with col2:
-                department = st.selectbox("부서", options=["CNC_1", "CNC_2", "PQC_LINE", "CDC"])
-                process = st.selectbox("담당 공정", options=["선삭", "밀링", "검사", "기타"])
+                department = st.selectbox("ë¶€ì„œ", options=["CNC_1", "CNC_2", "PQC_LINE", "CDC"])
+                process = st.selectbox("ë‹´ë‹¹ ê³µì •", options=["ì„ ì‚­", "ë°€ë§", "ê²€ì‚¬", "ê¸°íƒ€"])
             
-            years = st.number_input("근속년수", min_value=0.0, step=0.5)
+            years = st.number_input("ê·¼ì†ë…„ìˆ˜", min_value=0.0, step=0.5)
             
-            submit_inspector = st.form_submit_button("검사원 등록")
+            submit_inspector = st.form_submit_button("ê²€ì‚¬ì› ë“±ë¡")
             
         if submit_inspector:
             if not inspector_id or not name:
-                st.error("검사원 ID와 이름은 필수 입력 항목입니다.")
+                st.error("ê²€ì‚¬ì› IDì™€ ì´ë¦„ì€ í•„ìˆ˜ ìž…ë ¥ í•­ëª©ìž…ë‹ˆë‹¤.")
             else:
                 new_inspector = {
                     "id": inspector_id,
@@ -1122,112 +1122,112 @@ elif st.session_state.page == "manage_inspectors":
                 }
                 
                 try:
-                    # Supabase 데이터베이스 저장은 RLS 정책 설정을 먼저 확인 후 진행
-                    # 현재는 임시로 세션 상태에만 저장
+                    # Supabase ë°ì´í„°ë² ì´ìŠ¤ ì €ìž¥ì€ RLS ì •ì±… ì„¤ì •ì„ ë¨¼ì € í™•ì¸ í›„ ì§„í–‰
+                    # í˜„ìž¬ëŠ” ìž„ì‹œë¡œ ì„¸ì…˜ ìƒíƒœì—ë§Œ ì €ìž¥
                     temp_df = pd.DataFrame([new_inspector])
                     if 'inspectors_df' in st.session_state:
                         st.session_state.inspectors_df = pd.concat([st.session_state.inspectors_df, temp_df])
                     else:
                         st.session_state.inspectors_df = temp_df
                     
-                    # 기존 inspectors 업데이트
+                    # ê¸°ì¡´ inspectors ì—…ë°ì´íŠ¸
                     if 'inspectors' in st.session_state:
                         new_inspectors = st.session_state.inspectors.copy()
                         new_inspectors = pd.concat([new_inspectors, temp_df], ignore_index=True)
                         st.session_state.inspectors = new_inspectors
                     
-                    st.success(f"{name} 검사원이 성공적으로 등록되었습니다. (로컬 저장)")
-                    st.info("현재 Supabase RLS 정책으로 인해 데이터는 로컬 세션에만 저장됩니다.")
+                    st.success(f"{name} ê²€ì‚¬ì›ì´ ì„±ê³µì ìœ¼ë¡œ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤. (ë¡œì»¬ ì €ìž¥)")
+                    st.info("í˜„ìž¬ Supabase RLS ì •ì±…ìœ¼ë¡œ ì¸í•´ ë°ì´í„°ëŠ” ë¡œì»¬ ì„¸ì…˜ì—ë§Œ ì €ìž¥ë©ë‹ˆë‹¤.")
                     
                 except Exception as e:
-                    st.error(f"검사원 등록 중 오류가 발생했습니다: {str(e)}")
+                    st.error(f"ê²€ì‚¬ì› ë“±ë¡ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
     except Exception as e:
-        st.error(f"검사원 관리 중 오류가 발생했습니다: {str(e)}")
+        st.error(f"ê²€ì‚¬ì› ê´€ë¦¬ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
 
 elif st.session_state.page == "settings":
-    if st.session_state.user_role != "관리자":
-        st.warning("관리자만 접근할 수 있는 페이지입니다.")
+    if st.session_state.user_role != "ê´€ë¦¬ìž":
+        st.warning("ê´€ë¦¬ìžë§Œ ì ‘ê·¼í•  ìˆ˜ ìžˆëŠ” íŽ˜ì´ì§€ìž…ë‹ˆë‹¤.")
         st.stop()
         
-    st.title("시스템 설정")
+    st.title("ì‹œìŠ¤í…œ ì„¤ì •")
     
-    # 시스템 설정 양식
-    st.subheader("불량 유형 설정")
+    # ì‹œìŠ¤í…œ ì„¤ì • ì–‘ì‹
+    st.subheader("ë¶ˆëŸ‰ ìœ í˜• ì„¤ì •")
     current_defect_types = st.session_state.defect_types
     
-    defect_types_str = st.text_area("불량 유형 목록 (쉼표로 구분)", 
+    defect_types_str = st.text_area("ë¶ˆëŸ‰ ìœ í˜• ëª©ë¡ (ì‰¼í‘œë¡œ êµ¬ë¶„)", 
                                   value=", ".join(current_defect_types))
     
-    if st.button("불량 유형 저장"):
+    if st.button("ë¶ˆëŸ‰ ìœ í˜• ì €ìž¥"):
         new_defect_types = [dtype.strip() for dtype in defect_types_str.split(",")]
         st.session_state.defect_types = new_defect_types
-        st.success("불량 유형이 저장되었습니다.")
+        st.success("ë¶ˆëŸ‰ ìœ í˜•ì´ ì €ìž¥ë˜ì—ˆìŠµë‹ˆë‹¤.")
         
-    # 데이터베이스 설정 (관리자 전용)
-    st.subheader("데이터베이스 관리")
+    # ë°ì´í„°ë² ì´ìŠ¤ ì„¤ì • (ê´€ë¦¬ìž ì „ìš©)
+    st.subheader("ë°ì´í„°ë² ì´ìŠ¤ ê´€ë¦¬")
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("데이터베이스 백업"):
-            st.info("데이터베이스 백업 기능은 준비 중입니다.")
+        if st.button("ë°ì´í„°ë² ì´ìŠ¤ ë°±ì—…"):
+            st.info("ë°ì´í„°ë² ì´ìŠ¤ ë°±ì—… ê¸°ëŠ¥ì€ ì¤€ë¹„ ì¤‘ìž…ë‹ˆë‹¤.")
     with col2:
-        if st.button("테스트 데이터 생성"):
-            st.info("테스트 데이터 생성 기능은 준비 중입니다.")
+        if st.button("í…ŒìŠ¤íŠ¸ ë°ì´í„° ìƒì„±"):
+            st.info("í…ŒìŠ¤íŠ¸ ë°ì´í„° ìƒì„± ê¸°ëŠ¥ì€ ì¤€ë¹„ ì¤‘ìž…ë‹ˆë‹¤.")
 
 elif st.session_state.page == "daily_report":
-    # 일간 리포트 페이지
-    st.markdown("<div class='title-area'><h1>📊 일간 리포트</h1></div>", unsafe_allow_html=True)
+    # ì¼ê°„ ë¦¬í¬íŠ¸ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>ðŸ“Š ì¼ê°„ ë¦¬í¬íŠ¸</h1></div>", unsafe_allow_html=True)
     
-    # 날짜 선택
-    selected_date = st.date_input("📅 조회할 날짜 선택", datetime.now())
+    # ë‚ ì§œ ì„ íƒ
+    selected_date = st.date_input("ðŸ“… ì¡°íšŒí•  ë‚ ì§œ ì„ íƒ", datetime.now())
     
-    # 데이터 로딩 표시
-    with st.spinner("데이터 불러오는 중..."):
-        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+    # ë°ì´í„° ë¡œë”© í‘œì‹œ
+    with st.spinner("ë°ì´í„° ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘..."):
+        time.sleep(0.5)  # ë°ì´í„° ë¡œë”© ì‹œë®¬ë ˆì´ì…˜
         
-    # 일간 요약 지표
-    st.subheader("일간 품질 요약")
+    # ì¼ê°„ ìš”ì•½ ì§€í‘œ
+    st.subheader("ì¼ê°„ í’ˆì§ˆ ìš”ì•½")
     
-    # 4개의 주요 지표 카드
+    # 4ê°œì˜ ì£¼ìš” ì§€í‘œ ì¹´ë“œ
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("당일 검사 건수", "28", "+3")
+        st.metric("ë‹¹ì¼ ê²€ì‚¬ ê±´ìˆ˜", "28", "+3")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.metric("당일 불량률", "0.65%", "-0.1%")
+        st.metric("ë‹¹ì¼ ë¶ˆëŸ‰ë¥ ", "0.65%", "-0.1%")
         st.markdown("</div>", unsafe_allow_html=True)
     with col3:
         st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.metric("주요 불량 유형", "표면거칠기", "")
+        st.metric("ì£¼ìš” ë¶ˆëŸ‰ ìœ í˜•", "í‘œë©´ê±°ì¹ ê¸°", "")
         st.markdown("</div>", unsafe_allow_html=True)
     with col4:
         st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.metric("평균 검사 시간", "8.2분", "-0.5분")
+        st.metric("í‰ê·  ê²€ì‚¬ ì‹œê°„", "8.2ë¶„", "-0.5ë¶„")
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 시간대별 검사 추이
+    # ì‹œê°„ëŒ€ë³„ ê²€ì‚¬ ì¶”ì´
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>⏰ 시간대별 검사 건수</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>â° ì‹œê°„ëŒ€ë³„ ê²€ì‚¬ ê±´ìˆ˜</div>", unsafe_allow_html=True)
     
-    # 시간대별 데이터 준비
-    hours = list(range(9, 18))  # 9시부터 17시까지
+    # ì‹œê°„ëŒ€ë³„ ë°ì´í„° ì¤€ë¹„
+    hours = list(range(9, 18))  # 9ì‹œë¶€í„° 17ì‹œê¹Œì§€
     hourly_inspections = np.random.randint(3, 15, size=len(hours))
     
-    # 시간대별 검사 건수 차트
+    # ì‹œê°„ëŒ€ë³„ ê²€ì‚¬ ê±´ìˆ˜ ì°¨íŠ¸
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=[f"{h}:00" for h in hours],
         y=hourly_inspections,
         marker_color="#4361ee",
-        hovertemplate='시간: %{x}<br>검사 건수: %{y}건<extra></extra>'
+        hovertemplate='ì‹œê°„: %{x}<br>ê²€ì‚¬ ê±´ìˆ˜: %{y}ê±´<extra></extra>'
     ))
     
     fig.update_layout(
         title=None,
-        xaxis_title="시간",
-        yaxis_title="검사 건수",
+        xaxis_title="ì‹œê°„",
+        yaxis_title="ê²€ì‚¬ ê±´ìˆ˜",
         margin=dict(l=20, r=20, t=10, b=20),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -1238,31 +1238,31 @@ elif st.session_state.page == "daily_report":
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # 불량 발생 현황
+    # ë¶ˆëŸ‰ ë°œìƒ í˜„í™©
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>🔍 불량 발생 현황</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ” ë¶ˆëŸ‰ ë°œìƒ í˜„í™©</div>", unsafe_allow_html=True)
     
-    # 불량 타입별 데이터
-    defect_types = ["치수 불량", "표면 거칠기", "칩핑", "기타"]
+    # ë¶ˆëŸ‰ íƒ€ìž…ë³„ ë°ì´í„°
+    defect_types = ["ì¹˜ìˆ˜ ë¶ˆëŸ‰", "í‘œë©´ ê±°ì¹ ê¸°", "ì¹©í•‘", "ê¸°íƒ€"]
     defect_counts = np.random.randint(1, 8, size=len(defect_types))
     
-    # 차트
+    # ì°¨íŠ¸
     col1, col2 = st.columns([3, 2])
     
     with col1:
-        # 막대 그래프
+        # ë§‰ëŒ€ ê·¸ëž˜í”„
         fig = go.Figure()
         fig.add_trace(go.Bar(
             x=defect_types,
             y=defect_counts,
             orientation='h',
             marker_color=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"],
-            hovertemplate='유형: %{y}<br>건수: %{x}건<extra></extra>'
+            hovertemplate='ìœ í˜•: %{y}<br>ê±´ìˆ˜: %{x}ê±´<extra></extra>'
         ))
         
         fig.update_layout(
             title=None,
-            xaxis_title="발생 건수",
+            xaxis_title="ë°œìƒ ê±´ìˆ˜",
             margin=dict(l=20, r=20, t=10, b=20),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
@@ -1273,23 +1273,23 @@ elif st.session_state.page == "daily_report":
         st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
-        # 불량 요약 통계
+        # ë¶ˆëŸ‰ ìš”ì•½ í†µê³„
         total_defects = sum(defect_counts)
         total_inspected = sum(hourly_inspections)
         defect_rate = (total_defects / total_inspected) * 100
         
         st.markdown("<div style='text-align: center; padding: 20px;'>", unsafe_allow_html=True)
-        st.markdown(f"<h1 style='font-size: 24px;'>총 불량 건수</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='font-size: 36px; color: #4361ee;'>{total_defects}건</h2>", unsafe_allow_html=True)
-        st.markdown(f"<h3 style='font-size: 18px;'>불량률: {defect_rate:.2f}%</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='font-size: 24px;'>ì´ ë¶ˆëŸ‰ ê±´ìˆ˜</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='font-size: 36px; color: #4361ee;'>{total_defects}ê±´</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='font-size: 18px;'>ë¶ˆëŸ‰ë¥ : {defect_rate:.2f}%</h3>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 불량 세부 테이블
+    # ë¶ˆëŸ‰ ì„¸ë¶€ í…Œì´ë¸”
     defect_details = {
-        "시간": [f"{np.random.choice(hours)}:00" for _ in range(total_defects)],
-        "LOT번호": [f"LOT{i:04d}" for i in range(1, total_defects + 1)],
-        "불량유형": np.random.choice(defect_types, total_defects),
-        "불량수량": np.random.randint(1, 5, total_defects)
+        "ì‹œê°„": [f"{np.random.choice(hours)}:00" for _ in range(total_defects)],
+        "LOTë²ˆí˜¸": [f"LOT{i:04d}" for i in range(1, total_defects + 1)],
+        "ë¶ˆëŸ‰ìœ í˜•": np.random.choice(defect_types, total_defects),
+        "ë¶ˆëŸ‰ìˆ˜ëŸ‰": np.random.randint(1, 5, total_defects)
     }
     
     defect_df = pd.DataFrame(defect_details)
@@ -1298,108 +1298,108 @@ elif st.session_state.page == "daily_report":
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "weekly_report":
-    # 주간 리포트 페이지
-    st.markdown("<div class='title-area'><h1>📅 주간 리포트</h1></div>", unsafe_allow_html=True)
+    # ì£¼ê°„ ë¦¬í¬íŠ¸ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>ðŸ“… ì£¼ê°„ ë¦¬í¬íŠ¸</h1></div>", unsafe_allow_html=True)
     
-    # 주간 선택기
+    # ì£¼ê°„ ì„ íƒê¸°
     today = datetime.now()
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
     
     col1, col2 = st.columns(2)
     with col1:
-        week_start = st.date_input("📅 주간 시작일", start_of_week)
+        week_start = st.date_input("ðŸ“… ì£¼ê°„ ì‹œìž‘ì¼", start_of_week)
     with col2:
-        week_end = st.date_input("📅 주간 종료일", end_of_week)
+        week_end = st.date_input("ðŸ“… ì£¼ê°„ ì¢…ë£Œì¼", end_of_week)
     
-    # 데이터 로딩 표시
-    with st.spinner("주간 데이터 불러오는 중..."):
-        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+    # ë°ì´í„° ë¡œë”© í‘œì‹œ
+    with st.spinner("ì£¼ê°„ ë°ì´í„° ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘..."):
+        time.sleep(0.5)  # ë°ì´í„° ë¡œë”© ì‹œë®¬ë ˆì´ì…˜
     
-    # 주간 요약 지표
-    st.subheader("주간 품질 요약")
+    # ì£¼ê°„ ìš”ì•½ ì§€í‘œ
+    st.subheader("ì£¼ê°„ í’ˆì§ˆ ìš”ì•½")
     
-    # 주요 지표 카드
+    # ì£¼ìš” ì§€í‘œ ì¹´ë“œ
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("주간 검사 건수", "143", "+12")
+        st.metric("ì£¼ê°„ ê²€ì‚¬ ê±´ìˆ˜", "143", "+12")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.metric("주간 불량률", "0.72%", "-0.08%")
+        st.metric("ì£¼ê°„ ë¶ˆëŸ‰ë¥ ", "0.72%", "-0.08%")
         st.markdown("</div>", unsafe_allow_html=True)
     with col3:
         st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.metric("주요 불량 유형", "치수불량", "")
+        st.metric("ì£¼ìš” ë¶ˆëŸ‰ ìœ í˜•", "ì¹˜ìˆ˜ë¶ˆëŸ‰", "")
         st.markdown("</div>", unsafe_allow_html=True)
     with col4:
         st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.metric("주간 목표 달성", "95.2%", "+2.1%")
+        st.metric("ì£¼ê°„ ëª©í‘œ ë‹¬ì„±", "95.2%", "+2.1%")
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 일별 추이 차트
+    # ì¼ë³„ ì¶”ì´ ì°¨íŠ¸
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 일별 검사 및 불량 추이</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ“ˆ ì¼ë³„ ê²€ì‚¬ ë° ë¶ˆëŸ‰ ì¶”ì´</div>", unsafe_allow_html=True)
     
-    # 요일 데이터
-    weekdays = ["월", "화", "수", "목", "금", "토", "일"]
+    # ìš”ì¼ ë°ì´í„°
+    weekdays = ["ì›”", "í™”", "ìˆ˜", "ëª©", "ê¸ˆ", "í† ", "ì¼"]
     inspections = np.random.randint(15, 35, size=7)
-    defect_rates = np.random.rand(7) * 1.5  # 0~1.5% 사이의 불량률
+    defect_rates = np.random.rand(7) * 1.5  # 0~1.5% ì‚¬ì´ì˜ ë¶ˆëŸ‰ë¥ 
     
-    # 이중 Y축 차트
+    # ì´ì¤‘ Yì¶• ì°¨íŠ¸
     fig = go.Figure()
     
-    # 첫 번째 Y축: 검사 건수 (막대)
+    # ì²« ë²ˆì§¸ Yì¶•: ê²€ì‚¬ ê±´ìˆ˜ (ë§‰ëŒ€)
     fig.add_trace(go.Bar(
         x=weekdays,
         y=inspections,
-        name="검사 건수",
+        name="ê²€ì‚¬ ê±´ìˆ˜",
         marker_color="#4361ee",
         yaxis="y",
-        hovertemplate='%{x}요일<br>검사 건수: %{y}건<extra></extra>',
+        hovertemplate='%{x}ìš”ì¼<br>ê²€ì‚¬ ê±´ìˆ˜: %{y}ê±´<extra></extra>',
         opacity=0.8
     ))
     
-    # 두 번째 Y축: 불량률 (선)
+    # ë‘ ë²ˆì§¸ Yì¶•: ë¶ˆëŸ‰ë¥  (ì„ )
     fig.add_trace(go.Scatter(
         x=weekdays,
         y=defect_rates,
-        name="불량률",
+        name="ë¶ˆëŸ‰ë¥ ",
         marker=dict(size=8),
         line=dict(color="#fb8c00", width=3),
         mode="lines+markers",
         yaxis="y2",
-        hovertemplate='%{x}요일<br>불량률: %{y:.2f}%<extra></extra>'
+        hovertemplate='%{x}ìš”ì¼<br>ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
     ))
     
-    # 목표 불량률 라인
+    # ëª©í‘œ ë¶ˆëŸ‰ë¥  ë¼ì¸
     target_rate = 1.0
     fig.add_trace(go.Scatter(
         x=weekdays,
         y=[target_rate] * 7,
-        name="목표 불량률",
+        name="ëª©í‘œ ë¶ˆëŸ‰ë¥ ",
         line=dict(color="red", width=2, dash="dash"),
         mode="lines",
         yaxis="y2",
-        hovertemplate='목표 불량률: %{y}%<extra></extra>'
+        hovertemplate='ëª©í‘œ ë¶ˆëŸ‰ë¥ : %{y}%<extra></extra>'
     ))
     
-    # 레이아웃 설정
+    # ë ˆì´ì•„ì›ƒ ì„¤ì •
     fig.update_layout(
         title=None,
-        xaxis=dict(title="요일"),
+        xaxis=dict(title="ìš”ì¼"),
         yaxis=dict(
-            title="검사 건수",
+            title="ê²€ì‚¬ ê±´ìˆ˜",
             side="left",
             showgrid=False
         ),
         yaxis2=dict(
-            title="불량률 (%)",
+            title="ë¶ˆëŸ‰ë¥  (%)",
             side="right",
             overlaying="y",
             showgrid=False,
-            range=[0, max(defect_rates) * 1.2]  # Y축 범위 설정
+            range=[0, max(defect_rates) * 1.2]  # Yì¶• ë²”ìœ„ ì„¤ì •
         ),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=20, r=60, t=10, b=20),
@@ -1411,31 +1411,31 @@ elif st.session_state.page == "weekly_report":
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # 불량 유형 및 공정별 분석
+    # ë¶ˆëŸ‰ ìœ í˜• ë° ê³µì •ë³„ ë¶„ì„
     col1, col2 = st.columns(2)
     
     with col1:
-        # 불량 유형 분석
+        # ë¶ˆëŸ‰ ìœ í˜• ë¶„ì„
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>🔍 불량 유형 분석</div>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>ðŸ” ë¶ˆëŸ‰ ìœ í˜• ë¶„ì„</div>", unsafe_allow_html=True)
         
-        # 불량 유형별 데이터
-        defect_types = ["치수 불량", "표면 거칠기", "칩핑", "기타"]
+        # ë¶ˆëŸ‰ ìœ í˜•ë³„ ë°ì´í„°
+        defect_types = ["ì¹˜ìˆ˜ ë¶ˆëŸ‰", "í‘œë©´ ê±°ì¹ ê¸°", "ì¹©í•‘", "ê¸°íƒ€"]
         defect_counts = np.random.randint(5, 20, size=len(defect_types))
         
-        # 수평 막대 그래프
+        # ìˆ˜í‰ ë§‰ëŒ€ ê·¸ëž˜í”„
         fig = go.Figure()
         fig.add_trace(go.Bar(
             y=defect_types,
             x=defect_counts,
             orientation='h',
             marker_color=["#4361ee", "#4cb782", "#fb8c00", "#7c3aed"],
-            hovertemplate='유형: %{y}<br>건수: %{x}건<extra></extra>'
+            hovertemplate='ìœ í˜•: %{y}<br>ê±´ìˆ˜: %{x}ê±´<extra></extra>'
         ))
         
         fig.update_layout(
             title=None,
-            xaxis_title="발생 건수",
+            xaxis_title="ë°œìƒ ê±´ìˆ˜",
             margin=dict(l=20, r=20, t=10, b=20),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
@@ -1446,38 +1446,38 @@ elif st.session_state.page == "weekly_report":
         st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
-        # 공정별 불량률
+        # ê³µì •ë³„ ë¶ˆëŸ‰ë¥ 
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>⚙️ 공정별 불량률</div>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>âš™ï¸ ê³µì •ë³„ ë¶ˆëŸ‰ë¥ </div>", unsafe_allow_html=True)
         
-        # 공정별 데이터
-        processes = ["선삭", "밀링", "연삭", "조립"]
-        process_rates = np.random.rand(len(processes)) * 1.8  # 0~1.8% 불량률
+        # ê³µì •ë³„ ë°ì´í„°
+        processes = ["ì„ ì‚­", "ë°€ë§", "ì—°ì‚­", "ì¡°ë¦½"]
+        process_rates = np.random.rand(len(processes)) * 1.8  # 0~1.8% ë¶ˆëŸ‰ë¥ 
         
-        # 공정별 불량률 차트
+        # ê³µì •ë³„ ë¶ˆëŸ‰ë¥  ì°¨íŠ¸
         fig = go.Figure()
         fig.add_trace(go.Bar(
             x=processes,
             y=process_rates,
             marker_color="#4cb782",
-            hovertemplate='공정: %{x}<br>불량률: %{y:.2f}%<extra></extra>'
+            hovertemplate='ê³µì •: %{x}<br>ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
         ))
         
-        # 평균 불량률 라인
+        # í‰ê·  ë¶ˆëŸ‰ë¥  ë¼ì¸
         avg_rate = np.mean(process_rates)
         fig.add_trace(go.Scatter(
             x=processes,
             y=[avg_rate] * len(processes),
             mode="lines",
-            name="평균",
+            name="í‰ê· ",
             line=dict(color="#fb8c00", width=2, dash="dash"),
-            hovertemplate='평균 불량률: %{y:.2f}%<extra></extra>'
+            hovertemplate='í‰ê·  ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
         ))
         
         fig.update_layout(
             title=None,
-            xaxis_title="공정",
-            yaxis_title="불량률 (%)",
+            xaxis_title="ê³µì •",
+            yaxis_title="ë¶ˆëŸ‰ë¥  (%)",
             margin=dict(l=20, r=20, t=10, b=20),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
@@ -1488,141 +1488,141 @@ elif st.session_state.page == "weekly_report":
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 주간 검사 데이터 테이블
+    # ì£¼ê°„ ê²€ì‚¬ ë°ì´í„° í…Œì´ë¸”
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📋 주간 검사 데이터 요약</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ“‹ ì£¼ê°„ ê²€ì‚¬ ë°ì´í„° ìš”ì•½</div>", unsafe_allow_html=True)
     
-    # 샘플 데이터
+    # ìƒ˜í”Œ ë°ì´í„°
     weekly_data = {
-        "요일": weekdays,
-        "검사 건수": inspections,
-        "불량 건수": [int(rate * inspection / 100) for rate, inspection in zip(defect_rates, inspections)],
-        "불량률 (%)": defect_rates.round(2),
-        "주요 불량 유형": np.random.choice(defect_types, size=7)
+        "ìš”ì¼": weekdays,
+        "ê²€ì‚¬ ê±´ìˆ˜": inspections,
+        "ë¶ˆëŸ‰ ê±´ìˆ˜": [int(rate * inspection / 100) for rate, inspection in zip(defect_rates, inspections)],
+        "ë¶ˆëŸ‰ë¥  (%)": defect_rates.round(2),
+        "ì£¼ìš” ë¶ˆëŸ‰ ìœ í˜•": np.random.choice(defect_types, size=7)
     }
     
     weekly_df = pd.DataFrame(weekly_data)
     st.dataframe(weekly_df, use_container_width=True, hide_index=True)
     
-    # 주간 요약 통계
+    # ì£¼ê°„ ìš”ì•½ í†µê³„
     col1, col2, col3 = st.columns(3)
     with col1:
         avg_inspection = int(np.mean(inspections))
-        st.metric("📊 평균 일일 검사 건수", f"{avg_inspection}건")
+        st.metric("ðŸ“Š í‰ê·  ì¼ì¼ ê²€ì‚¬ ê±´ìˆ˜", f"{avg_inspection}ê±´")
     with col2:
         avg_defect_rate = np.mean(defect_rates)
-        st.metric("⚠️ 평균 불량률", f"{avg_defect_rate:.2f}%")
+        st.metric("âš ï¸ í‰ê·  ë¶ˆëŸ‰ë¥ ", f"{avg_defect_rate:.2f}%")
     with col3:
         total_inspections = sum(inspections)
-        st.metric("📈 총 검사 건수", f"{total_inspections}건")
+        st.metric("ðŸ“ˆ ì´ ê²€ì‚¬ ê±´ìˆ˜", f"{total_inspections}ê±´")
     
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "monthly_report":
-    # 월간 리포트 페이지
-    st.markdown("<div class='title-area'><h1>📆 월간 리포트</h1></div>", unsafe_allow_html=True)
+    # ì›”ê°„ ë¦¬í¬íŠ¸ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>ðŸ“† ì›”ê°„ ë¦¬í¬íŠ¸</h1></div>", unsafe_allow_html=True)
     
-    # 월 선택
+    # ì›” ì„ íƒ
     current_month = datetime.now().month
     current_year = datetime.now().year
     
     col1, col2 = st.columns(2)
     with col1:
-        selected_year = st.selectbox("연도 선택", options=list(range(current_year-2, current_year+1)), index=2)
+        selected_year = st.selectbox("ì—°ë„ ì„ íƒ", options=list(range(current_year-2, current_year+1)), index=2)
     with col2:
-        selected_month = st.selectbox("월 선택", options=list(range(1, 13)), index=current_month-1)
+        selected_month = st.selectbox("ì›” ì„ íƒ", options=list(range(1, 13)), index=current_month-1)
     
-    # 선택된 월의 문자열 표현
-    month_names = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+    # ì„ íƒëœ ì›”ì˜ ë¬¸ìžì—´ í‘œí˜„
+    month_names = ["1ì›”", "2ì›”", "3ì›”", "4ì›”", "5ì›”", "6ì›”", "7ì›”", "8ì›”", "9ì›”", "10ì›”", "11ì›”", "12ì›”"]
     selected_month_name = month_names[selected_month-1]
     
-    # 데이터 로딩 표시
-    with st.spinner(f"{selected_year}년 {selected_month_name} 데이터 불러오는 중..."):
-        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+    # ë°ì´í„° ë¡œë”© í‘œì‹œ
+    with st.spinner(f"{selected_year}ë…„ {selected_month_name} ë°ì´í„° ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘..."):
+        time.sleep(0.5)  # ë°ì´í„° ë¡œë”© ì‹œë®¬ë ˆì´ì…˜
     
-    # 월간 요약 지표
-    st.subheader(f"{selected_year}년 {selected_month_name} 품질 요약")
+    # ì›”ê°„ ìš”ì•½ ì§€í‘œ
+    st.subheader(f"{selected_year}ë…„ {selected_month_name} í’ˆì§ˆ ìš”ì•½")
     
-    # 주요 지표 카드
+    # ì£¼ìš” ì§€í‘œ ì¹´ë“œ
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("월간 검사 건수", "587", "+23")
+        st.metric("ì›”ê°„ ê²€ì‚¬ ê±´ìˆ˜", "587", "+23")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.metric("월간 불량률", "0.68%", "-0.12%")
+        st.metric("ì›”ê°„ ë¶ˆëŸ‰ë¥ ", "0.68%", "-0.12%")
         st.markdown("</div>", unsafe_allow_html=True)
     with col3:
         st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.metric("주요 불량 유형", "표면거칠기", "")
+        st.metric("ì£¼ìš” ë¶ˆëŸ‰ ìœ í˜•", "í‘œë©´ê±°ì¹ ê¸°", "")
         st.markdown("</div>", unsafe_allow_html=True)
     with col4:
         st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.metric("월간 목표 달성", "97.8%", "+1.5%")
+        st.metric("ì›”ê°„ ëª©í‘œ ë‹¬ì„±", "97.8%", "+1.5%")
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 월간 추이 차트
+    # ì›”ê°„ ì¶”ì´ ì°¨íŠ¸
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 일별 불량률 추이</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ“ˆ ì¼ë³„ ë¶ˆëŸ‰ë¥  ì¶”ì´</div>", unsafe_allow_html=True)
     
-    # 선택된 월의 일수 계산
+    # ì„ íƒëœ ì›”ì˜ ì¼ìˆ˜ ê³„ì‚°
     import calendar
     days_in_month = calendar.monthrange(selected_year, selected_month)[1]
     
-    # 일자 데이터
+    # ì¼ìž ë°ì´í„°
     days = list(range(1, days_in_month + 1))
-    # 불량률 데이터 (평균 0.7% 주변에서 랜덤 변동)
+    # ë¶ˆëŸ‰ë¥  ë°ì´í„° (í‰ê·  0.7% ì£¼ë³€ì—ì„œ ëžœë¤ ë³€ë™)
     daily_defect_rates = [0.7 + (np.random.rand() - 0.5) / 2 for _ in range(days_in_month)]
     
-    # 차트 생성
+    # ì°¨íŠ¸ ìƒì„±
     fig = go.Figure()
     
-    # 불량률 라인
+    # ë¶ˆëŸ‰ë¥  ë¼ì¸
     fig.add_trace(go.Scatter(
         x=days,
         y=daily_defect_rates,
         mode="lines+markers",
-        name="일별 불량률",
+        name="ì¼ë³„ ë¶ˆëŸ‰ë¥ ",
         line=dict(color="#4361ee", width=2),
         marker=dict(size=6),
-        hovertemplate='%{x}일<br>불량률: %{y:.2f}%<extra></extra>'
+        hovertemplate='%{x}ì¼<br>ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
     ))
     
-    # 평균 불량률 라인
+    # í‰ê·  ë¶ˆëŸ‰ë¥  ë¼ì¸
     avg_rate = np.mean(daily_defect_rates)
     fig.add_trace(go.Scatter(
         x=[days[0], days[-1]],
         y=[avg_rate, avg_rate],
         mode="lines",
-        name="평균 불량률",
+        name="í‰ê·  ë¶ˆëŸ‰ë¥ ",
         line=dict(color="#4cb782", width=2, dash="dash"),
-        hovertemplate='평균 불량률: %{y:.2f}%<extra></extra>'
+        hovertemplate='í‰ê·  ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
     ))
     
-    # 목표 불량률 라인
+    # ëª©í‘œ ë¶ˆëŸ‰ë¥  ë¼ì¸
     target_rate = 1.0
     fig.add_trace(go.Scatter(
         x=[days[0], days[-1]],
         y=[target_rate, target_rate],
         mode="lines",
-        name="목표 불량률",
+        name="ëª©í‘œ ë¶ˆëŸ‰ë¥ ",
         line=dict(color="red", width=2, dash="dot"),
-        hovertemplate='목표 불량률: %{y:.2f}%<extra></extra>'
+        hovertemplate='ëª©í‘œ ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
     ))
     
-    # 레이아웃 설정
+    # ë ˆì´ì•„ì›ƒ ì„¤ì •
     fig.update_layout(
         title=None,
         xaxis=dict(
-            title="일자",
+            title="ì¼ìž",
             tickmode='linear',
             tick0=1,
-            dtick=3,  # 3일 간격으로 표시
+            dtick=3,  # 3ì¼ ê°„ê²©ìœ¼ë¡œ í‘œì‹œ
         ),
         yaxis=dict(
-            title="불량률 (%)",
-            range=[0, max(daily_defect_rates) * 1.5]  # Y축 범위 설정
+            title="ë¶ˆëŸ‰ë¥  (%)",
+            range=[0, max(daily_defect_rates) * 1.5]  # Yì¶• ë²”ìœ„ ì„¤ì •
         ),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=20, r=20, t=10, b=20),
@@ -1634,43 +1634,43 @@ elif st.session_state.page == "monthly_report":
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # 공정 및 불량 분석
+    # ê³µì • ë° ë¶ˆëŸ‰ ë¶„ì„
     col1, col2 = st.columns(2)
     
     with col1:
-        # 공정별 불량률 비교
+        # ê³µì •ë³„ ë¶ˆëŸ‰ë¥  ë¹„êµ
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>⚙️ 공정별 불량률 비교</div>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>âš™ï¸ ê³µì •ë³„ ë¶ˆëŸ‰ë¥  ë¹„êµ</div>", unsafe_allow_html=True)
         
-        # 공정별 데이터
-        processes = ["선삭", "밀링", "연삭", "드릴링", "조립"]
+        # ê³µì •ë³„ ë°ì´í„°
+        processes = ["ì„ ì‚­", "ë°€ë§", "ì—°ì‚­", "ë“œë¦´ë§", "ì¡°ë¦½"]
         process_inspections = np.random.randint(80, 150, size=len(processes))
-        process_defect_rates = np.random.rand(len(processes)) * 1.5  # 0~1.5% 불량률
+        process_defect_rates = np.random.rand(len(processes)) * 1.5  # 0~1.5% ë¶ˆëŸ‰ë¥ 
         
-        # 공정별 불량률 및 검사 건수를 함께 표시하는 차트
+        # ê³µì •ë³„ ë¶ˆëŸ‰ë¥  ë° ê²€ì‚¬ ê±´ìˆ˜ë¥¼ í•¨ê»˜ í‘œì‹œí•˜ëŠ” ì°¨íŠ¸
         process_df = pd.DataFrame({
-            "공정": processes,
-            "검사건수": process_inspections,
-            "불량률": process_defect_rates
+            "ê³µì •": processes,
+            "ê²€ì‚¬ê±´ìˆ˜": process_inspections,
+            "ë¶ˆëŸ‰ë¥ ": process_defect_rates
         })
         
-        # 검사건수에 비례한 버블 크기로 표시
+        # ê²€ì‚¬ê±´ìˆ˜ì— ë¹„ë¡€í•œ ë²„ë¸” í¬ê¸°ë¡œ í‘œì‹œ
         fig = px.scatter(
             process_df,
-            x="공정",
-            y="불량률",
-            size="검사건수",
-            color="공정",
+            x="ê³µì •",
+            y="ë¶ˆëŸ‰ë¥ ",
+            size="ê²€ì‚¬ê±´ìˆ˜",
+            color="ê³µì •",
             size_max=50,
-            hover_name="공정",
-            hover_data={"공정": False, "검사건수": True, "불량률": ":.2f%"},
+            hover_name="ê³µì •",
+            hover_data={"ê³µì •": False, "ê²€ì‚¬ê±´ìˆ˜": True, "ë¶ˆëŸ‰ë¥ ": ":.2f%"},
             color_discrete_sequence=px.colors.qualitative.Set2
         )
         
         fig.update_layout(
             title=None,
             xaxis_title=None,
-            yaxis_title="불량률 (%)",
+            yaxis_title="ë¶ˆëŸ‰ë¥  (%)",
             showlegend=False,
             margin=dict(l=20, r=20, t=10, b=20),
             plot_bgcolor="rgba(0,0,0,0)",
@@ -1678,7 +1678,7 @@ elif st.session_state.page == "monthly_report":
             height=320
         )
         
-        # 불량률의 평균선 추가
+        # ë¶ˆëŸ‰ë¥ ì˜ í‰ê· ì„  ì¶”ê°€
         avg_process_rate = np.mean(process_defect_rates)
         fig.add_shape(
             type="line",
@@ -1690,7 +1690,7 @@ elif st.session_state.page == "monthly_report":
         fig.add_annotation(
             x=processes[1],
             y=avg_process_rate,
-            text=f"평균: {avg_process_rate:.2f}%",
+            text=f"í‰ê· : {avg_process_rate:.2f}%",
             showarrow=False,
             yshift=10,
             font=dict(size=12, color="#4cb782")
@@ -1700,16 +1700,16 @@ elif st.session_state.page == "monthly_report":
         st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
-        # 불량 유형 분포
+        # ë¶ˆëŸ‰ ìœ í˜• ë¶„í¬
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<div class='emoji-title'>🔍 불량 유형 분포</div>", unsafe_allow_html=True)
+        st.markdown("<div class='emoji-title'>ðŸ” ë¶ˆëŸ‰ ìœ í˜• ë¶„í¬</div>", unsafe_allow_html=True)
         
-        # 불량 유형별 데이터
-        defect_types = ["치수 불량", "표면 거칠기", "칩핑", "소재 결함", "조립 불량", "기타"]
+        # ë¶ˆëŸ‰ ìœ í˜•ë³„ ë°ì´í„°
+        defect_types = ["ì¹˜ìˆ˜ ë¶ˆëŸ‰", "í‘œë©´ ê±°ì¹ ê¸°", "ì¹©í•‘", "ì†Œìž¬ ê²°í•¨", "ì¡°ë¦½ ë¶ˆëŸ‰", "ê¸°íƒ€"]
         defect_percents = np.random.rand(len(defect_types))
-        defect_percents = (defect_percents / defect_percents.sum()) * 100  # 백분율로 변환
+        defect_percents = (defect_percents / defect_percents.sum()) * 100  # ë°±ë¶„ìœ¨ë¡œ ë³€í™˜
         
-        # 불량 유형 파이 차트
+        # ë¶ˆëŸ‰ ìœ í˜• íŒŒì´ ì°¨íŠ¸
         fig = go.Figure(data=[go.Pie(
             labels=defect_types,
             values=defect_percents,
@@ -1717,7 +1717,7 @@ elif st.session_state.page == "monthly_report":
             textinfo="percent+label",
             insidetextorientation="radial",
             marker=dict(colors=px.colors.qualitative.Bold),
-            hovertemplate='%{label}<br>비율: %{percent}<extra></extra>'
+            hovertemplate='%{label}<br>ë¹„ìœ¨: %{percent}<extra></extra>'
         )])
         
         fig.update_layout(
@@ -1732,61 +1732,61 @@ elif st.session_state.page == "monthly_report":
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 주별 성능 추이
+    # ì£¼ë³„ ì„±ëŠ¥ ì¶”ì´
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📊 주별 성능 추이</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ“Š ì£¼ë³„ ì„±ëŠ¥ ì¶”ì´</div>", unsafe_allow_html=True)
     
-    # 주차 데이터 (보통 한 달에 4-5주)
-    weeks = [f"{selected_month}월 1주차", f"{selected_month}월 2주차", 
-            f"{selected_month}월 3주차", f"{selected_month}월 4주차"]
+    # ì£¼ì°¨ ë°ì´í„° (ë³´í†µ í•œ ë‹¬ì— 4-5ì£¼)
+    weeks = [f"{selected_month}ì›” 1ì£¼ì°¨", f"{selected_month}ì›” 2ì£¼ì°¨", 
+            f"{selected_month}ì›” 3ì£¼ì°¨", f"{selected_month}ì›” 4ì£¼ì°¨"]
     if days_in_month > 28:
-        weeks.append(f"{selected_month}월 5주차")
+        weeks.append(f"{selected_month}ì›” 5ì£¼ì°¨")
     
-    # 주별 검사 건수 및 불량률
+    # ì£¼ë³„ ê²€ì‚¬ ê±´ìˆ˜ ë° ë¶ˆëŸ‰ë¥ 
     weekly_inspections = np.random.randint(120, 180, size=len(weeks))
-    weekly_defect_rates = np.random.rand(len(weeks)) * 1.2  # 0~1.2% 불량률
+    weekly_defect_rates = np.random.rand(len(weeks)) * 1.2  # 0~1.2% ë¶ˆëŸ‰ë¥ 
     
-    # 복합 차트 (막대 + 선)
+    # ë³µí•© ì°¨íŠ¸ (ë§‰ëŒ€ + ì„ )
     fig = go.Figure()
     
-    # 검사 건수 (막대)
+    # ê²€ì‚¬ ê±´ìˆ˜ (ë§‰ëŒ€)
     fig.add_trace(go.Bar(
         x=weeks,
         y=weekly_inspections,
-        name="검사 건수",
+        name="ê²€ì‚¬ ê±´ìˆ˜",
         marker_color="#4361ee",
         yaxis="y",
-        hovertemplate='%{x}<br>검사 건수: %{y}건<extra></extra>',
+        hovertemplate='%{x}<br>ê²€ì‚¬ ê±´ìˆ˜: %{y}ê±´<extra></extra>',
         opacity=0.8
     ))
     
-    # 불량률 (선)
+    # ë¶ˆëŸ‰ë¥  (ì„ )
     fig.add_trace(go.Scatter(
         x=weeks,
         y=weekly_defect_rates,
-        name="불량률",
+        name="ë¶ˆëŸ‰ë¥ ",
         yaxis="y2",
         line=dict(color="#fb8c00", width=3),
         mode="lines+markers",
         marker=dict(size=8),
-        hovertemplate='%{x}<br>불량률: %{y:.2f}%<extra></extra>'
+        hovertemplate='%{x}<br>ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
     ))
     
-    # 레이아웃 설정
+    # ë ˆì´ì•„ì›ƒ ì„¤ì •
     fig.update_layout(
         title=None,
-        xaxis=dict(title="주차"),
+        xaxis=dict(title="ì£¼ì°¨"),
         yaxis=dict(
-            title="검사 건수",
+            title="ê²€ì‚¬ ê±´ìˆ˜",
             side="left",
             showgrid=False
         ),
         yaxis2=dict(
-            title="불량률 (%)",
+            title="ë¶ˆëŸ‰ë¥  (%)",
             side="right",
             overlaying="y",
             showgrid=False,
-            range=[0, max(weekly_defect_rates) * 1.3]  # Y축 범위 설정
+            range=[0, max(weekly_defect_rates) * 1.3]  # Yì¶• ë²”ìœ„ ì„¤ì •
         ),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=20, r=60, t=10, b=20),
@@ -1797,31 +1797,31 @@ elif st.session_state.page == "monthly_report":
     
     st.plotly_chart(fig, use_container_width=True)
     
-    # 주별 요약 테이블
+    # ì£¼ë³„ ìš”ì•½ í…Œì´ë¸”
     weekly_summary = pd.DataFrame({
-        "주차": weeks,
-        "검사 건수": weekly_inspections,
-        "불량 건수": [int(rate * inspection / 100) for rate, inspection in zip(weekly_defect_rates, weekly_inspections)],
-        "불량률 (%)": weekly_defect_rates.round(2),
-        "목표 달성 여부": [rate < 1.0 for rate in weekly_defect_rates]
+        "ì£¼ì°¨": weeks,
+        "ê²€ì‚¬ ê±´ìˆ˜": weekly_inspections,
+        "ë¶ˆëŸ‰ ê±´ìˆ˜": [int(rate * inspection / 100) for rate, inspection in zip(weekly_defect_rates, weekly_inspections)],
+        "ë¶ˆëŸ‰ë¥  (%)": weekly_defect_rates.round(2),
+        "ëª©í‘œ ë‹¬ì„± ì—¬ë¶€": [rate < 1.0 for rate in weekly_defect_rates]
     })
     
-    # 테이블 형식 조정
+    # í…Œì´ë¸” í˜•ì‹ ì¡°ì •
     st.dataframe(
         weekly_summary,
         use_container_width=True,
         hide_index=True,
         column_config={
-            "불량률 (%)": st.column_config.ProgressColumn(
-                "불량률 (%)",
-                help="주별 불량률 퍼센트",
+            "ë¶ˆëŸ‰ë¥  (%)": st.column_config.ProgressColumn(
+                "ë¶ˆëŸ‰ë¥  (%)",
+                help="ì£¼ë³„ ë¶ˆëŸ‰ë¥  í¼ì„¼íŠ¸",
                 format="%.2f%%",
                 min_value=0,
                 max_value=2,
             ),
-            "목표 달성 여부": st.column_config.CheckboxColumn(
-                "목표 달성 여부",
-                help="불량률 1% 이하 목표 달성 여부"
+            "ëª©í‘œ ë‹¬ì„± ì—¬ë¶€": st.column_config.CheckboxColumn(
+                "ëª©í‘œ ë‹¬ì„± ì—¬ë¶€",
+                help="ë¶ˆëŸ‰ë¥  1% ì´í•˜ ëª©í‘œ ë‹¬ì„± ì—¬ë¶€"
             )
         }
     )
@@ -1829,128 +1829,128 @@ elif st.session_state.page == "monthly_report":
     st.markdown("</div>", unsafe_allow_html=True)
 
 elif st.session_state.page == "manager_auth":
-    # 관리자 및 사용자 관리 페이지
-    st.markdown("<div class='title-area'><h1>👥 관리자 및 사용자 관리</h1></div>", unsafe_allow_html=True)
+    # ê´€ë¦¬ìž ë° ì‚¬ìš©ìž ê´€ë¦¬ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>ðŸ‘¥ ê´€ë¦¬ìž ë° ì‚¬ìš©ìž ê´€ë¦¬</h1></div>", unsafe_allow_html=True)
     
-    # 관리자 권한 확인
-    if st.session_state.user_role != "관리자":
-        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+    # ê´€ë¦¬ìž ê¶Œí•œ í™•ì¸
+    if st.session_state.user_role != "ê´€ë¦¬ìž":
+        st.warning("ì´ íŽ˜ì´ì§€ëŠ” ê´€ë¦¬ìžë§Œ ì ‘ê·¼í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.")
         st.stop()
     
-    # 탭 구성
-    tab1, tab2 = st.tabs(["👤 사용자 관리", "🔑 권한 설정"])
+    # íƒ­ êµ¬ì„±
+    tab1, tab2 = st.tabs(["ðŸ‘¤ ì‚¬ìš©ìž ê´€ë¦¬", "ðŸ”‘ ê¶Œí•œ ì„¤ì •"])
     
     with tab1:
-        # 사용자 관리 섹션
-        st.subheader("관리자 등록 현황")
+        # ì‚¬ìš©ìž ê´€ë¦¬ ì„¹ì…˜
+        st.subheader("ê´€ë¦¬ìž ë“±ë¡ í˜„í™©")
         
-        # 세션 상태에 관리자 목록 초기화 (처음 접속 시에만)
+        # ì„¸ì…˜ ìƒíƒœì— ê´€ë¦¬ìž ëª©ë¡ ì´ˆê¸°í™” (ì²˜ìŒ ì ‘ì† ì‹œì—ë§Œ)
         if 'admin_users' not in st.session_state:
-            # JSON 파일에서 관리자 데이터 로드
+            # JSON íŒŒì¼ì—ì„œ ê´€ë¦¬ìž ë°ì´í„° ë¡œë“œ
             st.session_state.admin_users = load_admin_data()
             
-            # 데이터가 비어있는지 확인하고, 비어있으면 기본 관리자 데이터 추가
-            if len(st.session_state.admin_users.get("아이디", [])) == 0:
+            # ë°ì´í„°ê°€ ë¹„ì–´ìžˆëŠ”ì§€ í™•ì¸í•˜ê³ , ë¹„ì–´ìžˆìœ¼ë©´ ê¸°ë³¸ ê´€ë¦¬ìž ë°ì´í„° ì¶”ê°€
+            if len(st.session_state.admin_users.get("ì•„ì´ë””", [])) == 0:
                 st.session_state.admin_users = {
-                    "아이디": ["admin"],
-                    "이름": ["관리자"],
-                    "권한": ["관리자"],
-                    "부서": ["관리부"],
-                    "최근접속일": [datetime.now().strftime("%Y-%m-%d %H:%M")],
-                    "상태": ["활성"]
+                    "ì•„ì´ë””": ["admin"],
+                    "ì´ë¦„": ["ê´€ë¦¬ìž"],
+                    "ê¶Œí•œ": ["ê´€ë¦¬ìž"],
+                    "ë¶€ì„œ": ["ê´€ë¦¬ë¶€"],
+                    "ìµœê·¼ì ‘ì†ì¼": [datetime.now().strftime("%Y-%m-%d %H:%M")],
+                    "ìƒíƒœ": ["í™œì„±"]
                 }
-                # 기본 관리자 데이터 저장
+                # ê¸°ë³¸ ê´€ë¦¬ìž ë°ì´í„° ì €ìž¥
                 save_admin_data(st.session_state.admin_users)
-                st.info("기본 관리자 계정이 생성되었습니다.")
+                st.info("ê¸°ë³¸ ê´€ë¦¬ìž ê³„ì •ì´ ìƒì„±ë˜ì—ˆìŠµë‹ˆë‹¤.")
         
-        # 데이터프레임 변환 시 에러 처리
+        # ë°ì´í„°í”„ë ˆìž„ ë³€í™˜ ì‹œ ì—ëŸ¬ ì²˜ë¦¬
         try:
-            # 사용자 데이터프레임 생성 (manager_auth 페이지와 동일한 데이터 사용)
+            # ì‚¬ìš©ìž ë°ì´í„°í”„ë ˆìž„ ìƒì„± (manager_auth íŽ˜ì´ì§€ì™€ ë™ì¼í•œ ë°ì´í„° ì‚¬ìš©)
             admin_df = pd.DataFrame(st.session_state.admin_users)
         except Exception as e:
-            st.error(f"관리자 데이터 로드 중 오류가 발생했습니다: {str(e)}")
-            # 데이터 구조 오류 시 재설정
+            st.error(f"ê´€ë¦¬ìž ë°ì´í„° ë¡œë“œ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
+            # ë°ì´í„° êµ¬ì¡° ì˜¤ë¥˜ ì‹œ ìž¬ì„¤ì •
             st.session_state.admin_users = {
-                "아이디": ["admin"],
-                "이름": ["관리자"],
-                "권한": ["관리자"],
-                "부서": ["관리부"],
-                "최근접속일": [datetime.now().strftime("%Y-%m-%d %H:%M")],
-                "상태": ["활성"]
+                "ì•„ì´ë””": ["admin"],
+                "ì´ë¦„": ["ê´€ë¦¬ìž"],
+                "ê¶Œí•œ": ["ê´€ë¦¬ìž"],
+                "ë¶€ì„œ": ["ê´€ë¦¬ë¶€"],
+                "ìµœê·¼ì ‘ì†ì¼": [datetime.now().strftime("%Y-%m-%d %H:%M")],
+                "ìƒíƒœ": ["í™œì„±"]
             }
             admin_df = pd.DataFrame(st.session_state.admin_users)
             save_admin_data(st.session_state.admin_users)
-            st.warning("관리자 데이터가 재설정되었습니다.")
+            st.warning("ê´€ë¦¬ìž ë°ì´í„°ê°€ ìž¬ì„¤ì •ë˜ì—ˆìŠµë‹ˆë‹¤.")
         
-        # 관리자 목록 필터링
+        # ê´€ë¦¬ìž ëª©ë¡ í•„í„°ë§
         col1, col2 = st.columns(2)
         with col1:
-            dept_filter = st.selectbox("부서 필터", options=["전체", "관리부", "생산부", "품질부", "기술부"])
+            dept_filter = st.selectbox("ë¶€ì„œ í•„í„°", options=["ì „ì²´", "ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"])
         with col2:
-            status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성"])
+            status_filter = st.selectbox("ìƒíƒœ í•„í„°", options=["ì „ì²´", "í™œì„±", "ë¹„í™œì„±"])
         
-        # 필터 적용
+        # í•„í„° ì ìš©
         filtered_df = admin_df.copy()
-        if dept_filter != "전체" and not filtered_df.empty and "부서" in filtered_df.columns:
-            filtered_df = filtered_df[filtered_df["부서"] == dept_filter]
-        if status_filter != "전체" and not filtered_df.empty and "상태" in filtered_df.columns:
-            filtered_df = filtered_df[filtered_df["상태"] == status_filter]
+        if dept_filter != "ì „ì²´" and not filtered_df.empty and "ë¶€ì„œ" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["ë¶€ì„œ"] == dept_filter]
+        if status_filter != "ì „ì²´" and not filtered_df.empty and "ìƒíƒœ" in filtered_df.columns:
+            filtered_df = filtered_df[filtered_df["ìƒíƒœ"] == status_filter]
         
-        # 필터링된 관리자 목록 표시
+        # í•„í„°ë§ëœ ê´€ë¦¬ìž ëª©ë¡ í‘œì‹œ
         st.dataframe(filtered_df, use_container_width=True, hide_index=True)
         
-        # 관리자 삭제 섹션 (관리자가 있을 경우에만 표시)
+        # ê´€ë¦¬ìž ì‚­ì œ ì„¹ì…˜ (ê´€ë¦¬ìžê°€ ìžˆì„ ê²½ìš°ì—ë§Œ í‘œì‹œ)
         if not filtered_df.empty:
-            st.subheader("관리자 삭제")
+            st.subheader("ê´€ë¦¬ìž ì‚­ì œ")
             delete_cols = st.columns([3, 2])
             with delete_cols[0]:
                 admin_to_delete = st.selectbox(
-                    "삭제할 관리자 선택",
-                    options=filtered_df["아이디"].tolist(),
-                    format_func=lambda x: f"{x} ({filtered_df[filtered_df['아이디'] == x]['이름'].values[0]})"
+                    "ì‚­ì œí•  ê´€ë¦¬ìž ì„ íƒ",
+                    options=filtered_df["ì•„ì´ë””"].tolist(),
+                    format_func=lambda x: f"{x} ({filtered_df[filtered_df['ì•„ì´ë””'] == x]['ì´ë¦„'].values[0]})"
                 )
             with delete_cols[1]:
-                delete_confirm = st.checkbox("삭제를 확인합니다")
+                delete_confirm = st.checkbox("ì‚­ì œë¥¼ í™•ì¸í•©ë‹ˆë‹¤")
                 
-            if st.button("관리자 삭제", type="primary", disabled=not delete_confirm):
+            if st.button("ê´€ë¦¬ìž ì‚­ì œ", type="primary", disabled=not delete_confirm):
                 if delete_confirm:
-                    # 세션 상태에서 관리자 삭제
-                    idx = st.session_state.admin_users["아이디"].index(admin_to_delete)
-                    deleted_name = st.session_state.admin_users["이름"][idx]
+                    # ì„¸ì…˜ ìƒíƒœì—ì„œ ê´€ë¦¬ìž ì‚­ì œ
+                    idx = st.session_state.admin_users["ì•„ì´ë””"].index(admin_to_delete)
+                    deleted_name = st.session_state.admin_users["ì´ë¦„"][idx]
                     
-                    # 관리자 삭제
+                    # ê´€ë¦¬ìž ì‚­ì œ
                     for key in st.session_state.admin_users:
                         st.session_state.admin_users[key].pop(idx)
                     
-                    # 파일에 저장
+                    # íŒŒì¼ì— ì €ìž¥
                     save_admin_data(st.session_state.admin_users)
                     
-                    # 성공 메시지 및 시각적 효과 - 페이지 리로드 전에 표시
-                    st.warning(f"관리자 '{admin_to_delete}'가 시스템에서 삭제되었습니다.")
-                    time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
-                    st.toast(f"🗑️ {deleted_name} 관리자가 삭제되었습니다", icon="🔴")
+                    # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼ - íŽ˜ì´ì§€ ë¦¬ë¡œë“œ ì „ì— í‘œì‹œ
+                    st.warning(f"ê´€ë¦¬ìž '{admin_to_delete}'ê°€ ì‹œìŠ¤í…œì—ì„œ ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤.")
+                    time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
+                    st.toast(f"ðŸ—‘ï¸ {deleted_name} ê´€ë¦¬ìžê°€ ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤", icon="ðŸ”´")
                     
-                    # 삭제 효과를 위한 플래그 설정
+                    # ì‚­ì œ íš¨ê³¼ë¥¼ ìœ„í•œ í”Œëž˜ê·¸ ì„¤ì •
                     if 'deleted_admin' not in st.session_state:
                         st.session_state.deleted_admin = True
                     
-                    # 페이지 리로드
+                    # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                     st.experimental_rerun()
                 else:
-                    st.error("삭제를 확인해주세요.")
+                    st.error("ì‚­ì œë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”.")
         
-        # 삭제 효과 표시
+        # ì‚­ì œ íš¨ê³¼ í‘œì‹œ
         if 'deleted_admin' in st.session_state and st.session_state.deleted_admin:
             st.session_state.deleted_admin = False
-            st.snow()  # 삭제 임팩트 효과
+            st.snow()  # ì‚­ì œ ìž„íŒ©íŠ¸ íš¨ê³¼
         
-        # 구분선
+        # êµ¬ë¶„ì„ 
         st.markdown("---")
         
-        # 새 사용자 등록 폼
-        st.subheader("신규 관리자 추가")
+        # ìƒˆ ì‚¬ìš©ìž ë“±ë¡ í¼
+        st.subheader("ì‹ ê·œ ê´€ë¦¬ìž ì¶”ê°€")
         
-        # 폼 입력값 초기화를 위한 세션 상태 초기화
+        # í¼ ìž…ë ¥ê°’ ì´ˆê¸°í™”ë¥¼ ìœ„í•œ ì„¸ì…˜ ìƒíƒœ ì´ˆê¸°í™”
         if 'new_user_id' not in st.session_state:
             st.session_state.new_user_id = ""
         if 'new_user_name' not in st.session_state:
@@ -1960,293 +1960,293 @@ elif st.session_state.page == "manager_auth":
         if 'new_user_password_confirm' not in st.session_state:
             st.session_state.new_user_password_confirm = ""
         if 'new_user_dept' not in st.session_state:
-            st.session_state.new_user_dept = "관리부"
+            st.session_state.new_user_dept = "ê´€ë¦¬ë¶€"
         if 'new_user_role' not in st.session_state:
-            st.session_state.new_user_role = "일반"
+            st.session_state.new_user_role = "ì¼ë°˜"
             
         with st.form("new_user_form"):
             col1, col2 = st.columns(2)
             with col1:
-                new_user_id = st.text_input("아이디", value=st.session_state.new_user_id, key="input_user_id")
-                new_user_name = st.text_input("이름", value=st.session_state.new_user_name, key="input_user_name")
-                new_user_dept = st.selectbox("부서", options=["관리부", "생산부", "품질부", "기술부"], index=["관리부", "생산부", "품질부", "기술부"].index(st.session_state.new_user_dept) if st.session_state.new_user_dept in ["관리부", "생산부", "품질부", "기술부"] else 0, key="input_user_dept")
+                new_user_id = st.text_input("ì•„ì´ë””", value=st.session_state.new_user_id, key="input_user_id")
+                new_user_name = st.text_input("ì´ë¦„", value=st.session_state.new_user_name, key="input_user_name")
+                new_user_dept = st.selectbox("ë¶€ì„œ", options=["ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"], index=["ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"].index(st.session_state.new_user_dept) if st.session_state.new_user_dept in ["ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"] else 0, key="input_user_dept")
             with col2:
-                new_user_password = st.text_input("비밀번호", type="password", value=st.session_state.new_user_password, key="input_user_pwd")
-                new_user_password_confirm = st.text_input("비밀번호 확인", type="password", value=st.session_state.new_user_password_confirm, key="input_user_pwd_confirm")
-                new_user_role = st.selectbox("권한", options=["일반", "관리자"], index=["일반", "관리자"].index(st.session_state.new_user_role) if st.session_state.new_user_role in ["일반", "관리자"] else 0, key="input_user_role")
+                new_user_password = st.text_input("ë¹„ë°€ë²ˆí˜¸", type="password", value=st.session_state.new_user_password, key="input_user_pwd")
+                new_user_password_confirm = st.text_input("ë¹„ë°€ë²ˆí˜¸ í™•ì¸", type="password", value=st.session_state.new_user_password_confirm, key="input_user_pwd_confirm")
+                new_user_role = st.selectbox("ê¶Œí•œ", options=["ì¼ë°˜", "ê´€ë¦¬ìž"], index=["ì¼ë°˜", "ê´€ë¦¬ìž"].index(st.session_state.new_user_role) if st.session_state.new_user_role in ["ì¼ë°˜", "ê´€ë¦¬ìž"] else 0, key="input_user_role")
             
-            submit_user = st.form_submit_button("관리자 추가")
+            submit_user = st.form_submit_button("ê´€ë¦¬ìž ì¶”ê°€")
         
         if submit_user:
             if not new_user_id or not new_user_name or not new_user_password:
-                st.error("필수 항목을 모두 입력하세요.")
+                st.error("í•„ìˆ˜ í•­ëª©ì„ ëª¨ë‘ ìž…ë ¥í•˜ì„¸ìš”.")
             elif new_user_password != new_user_password_confirm:
-                st.error("비밀번호가 일치하지 않습니다.")
-            elif new_user_id in st.session_state.admin_users["아이디"]:
-                st.error("이미 존재하는 아이디입니다.")
+                st.error("ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.")
+            elif new_user_id in st.session_state.admin_users["ì•„ì´ë””"]:
+                st.error("ì´ë¯¸ ì¡´ìž¬í•˜ëŠ” ì•„ì´ë””ìž…ë‹ˆë‹¤.")
             else:
-                # 세션 상태에 새 관리자 추가
-                st.session_state.admin_users["아이디"].append(new_user_id)
-                st.session_state.admin_users["이름"].append(new_user_name)
-                st.session_state.admin_users["권한"].append(new_user_role)
-                st.session_state.admin_users["부서"].append(new_user_dept)
-                st.session_state.admin_users["최근접속일"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
-                st.session_state.admin_users["상태"].append("활성")
+                # ì„¸ì…˜ ìƒíƒœì— ìƒˆ ê´€ë¦¬ìž ì¶”ê°€
+                st.session_state.admin_users["ì•„ì´ë””"].append(new_user_id)
+                st.session_state.admin_users["ì´ë¦„"].append(new_user_name)
+                st.session_state.admin_users["ê¶Œí•œ"].append(new_user_role)
+                st.session_state.admin_users["ë¶€ì„œ"].append(new_user_dept)
+                st.session_state.admin_users["ìµœê·¼ì ‘ì†ì¼"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                st.session_state.admin_users["ìƒíƒœ"].append("í™œì„±")
                 
-                # 파일에 저장
+                # íŒŒì¼ì— ì €ìž¥
                 save_admin_data(st.session_state.admin_users)
                 
-                # 성공 메시지 및 시각적 효과
-                st.success(f"관리자 '{new_user_name}'이(가) 성공적으로 등록되었습니다.")
-                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼
+                st.success(f"ê´€ë¦¬ìž '{new_user_name}'ì´(ê°€) ì„±ê³µì ìœ¼ë¡œ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                 
-                # 추가 효과를 위한 플래그 설정
+                # ì¶”ê°€ íš¨ê³¼ë¥¼ ìœ„í•œ í”Œëž˜ê·¸ ì„¤ì •
                 if 'added_admin' not in st.session_state:
                     st.session_state.added_admin = True
                 
-                # 폼 입력값 리셋을 위한 세션 상태 설정
+                # í¼ ìž…ë ¥ê°’ ë¦¬ì…‹ì„ ìœ„í•œ ì„¸ì…˜ ìƒíƒœ ì„¤ì •
                 st.session_state.new_user_id = ""
                 st.session_state.new_user_name = ""
                 st.session_state.new_user_password = ""
                 st.session_state.new_user_password_confirm = ""
                 
-                # 페이지 리로드
+                # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                 st.experimental_rerun()
         
-        # 추가 효과 표시
+        # ì¶”ê°€ íš¨ê³¼ í‘œì‹œ
         if 'added_admin' in st.session_state and st.session_state.added_admin:
             st.session_state.added_admin = False
-            st.balloons()  # 풍선 효과 추가
+            st.balloons()  # í’ì„  íš¨ê³¼ ì¶”ê°€
 
     with tab2:
-        # 권한 설정 섹션
-        st.subheader("사용자 권한 설정")
+        # ê¶Œí•œ ì„¤ì • ì„¹ì…˜
+        st.subheader("ì‚¬ìš©ìž ê¶Œí•œ ì„¤ì •")
         
         if users_df.empty:
-            st.info("등록된 관리자가 없습니다. 먼저 관리자를 등록해주세요.")
+            st.info("ë“±ë¡ëœ ê´€ë¦¬ìžê°€ ì—†ìŠµë‹ˆë‹¤. ë¨¼ì € ê´€ë¦¬ìžë¥¼ ë“±ë¡í•´ì£¼ì„¸ìš”.")
         else:
-            # 권한 설정할 사용자 선택
+            # ê¶Œí•œ ì„¤ì •í•  ì‚¬ìš©ìž ì„ íƒ
             selected_user = st.selectbox(
-                "권한을 설정할 사용자 선택",
-                options=users_df["아이디"].tolist(),
-                format_func=lambda x: f"{x} ({users_df[users_df['아이디'] == x]['이름'].values[0]})"
+                "ê¶Œí•œì„ ì„¤ì •í•  ì‚¬ìš©ìž ì„ íƒ",
+                options=users_df["ì•„ì´ë””"].tolist(),
+                format_func=lambda x: f"{x} ({users_df[users_df['ì•„ì´ë””'] == x]['ì´ë¦„'].values[0]})"
             )
             
-            # 선택된 사용자의 정보 표시
-            user_info = users_df[users_df["아이디"] == selected_user].iloc[0]
+            # ì„ íƒëœ ì‚¬ìš©ìžì˜ ì •ë³´ í‘œì‹œ
+            user_info = users_df[users_df["ì•„ì´ë””"] == selected_user].iloc[0]
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("현재 권한", user_info["권한"])
+                st.metric("í˜„ìž¬ ê¶Œí•œ", user_info["ê¶Œí•œ"])
             with col2:
-                st.metric("소속 부서", user_info["부서"])
+                st.metric("ì†Œì† ë¶€ì„œ", user_info["ë¶€ì„œ"])
             with col3:
-                st.metric("계정 상태", user_info["상태"])
+                st.metric("ê³„ì • ìƒíƒœ", user_info["ìƒíƒœ"])
             
-            # 권한 설정 옵션
-            st.subheader("권한 설정")
+            # ê¶Œí•œ ì„¤ì • ì˜µì…˜
+            st.subheader("ê¶Œí•œ ì„¤ì •")
             
             col1, col2 = st.columns(2)
             with col1:
-                new_role = st.radio("권한", options=["일반", "관리자"], index=0 if user_info["권한"] == "일반" else 1)
+                new_role = st.radio("ê¶Œí•œ", options=["ì¼ë°˜", "ê´€ë¦¬ìž"], index=0 if user_info["ê¶Œí•œ"] == "ì¼ë°˜" else 1)
             with col2:
-                new_status = st.radio("상태", options=["활성", "비활성"], index=0 if user_info["상태"] == "활성" else 1)
+                new_status = st.radio("ìƒíƒœ", options=["í™œì„±", "ë¹„í™œì„±"], index=0 if user_info["ìƒíƒœ"] == "í™œì„±" else 1)
             
-            # 메뉴별 접근 권한
-            st.subheader("메뉴별 접근 권한")
+            # ë©”ë‰´ë³„ ì ‘ê·¼ ê¶Œí•œ
+            st.subheader("ë©”ë‰´ë³„ ì ‘ê·¼ ê¶Œí•œ")
             
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("**관리자 메뉴**")
+                st.markdown("**ê´€ë¦¬ìž ë©”ë‰´**")
                 admin_auth = {
-                    "사용자 관리": st.checkbox("사용자 관리", value=user_info["권한"] == "관리자"),
-                    "공정 관리": st.checkbox("공정 관리", value=user_info["권한"] == "관리자"),
-                    "검사 관리": st.checkbox("검사 관리", value=True),
-                    "시스템 설정": st.checkbox("시스템 설정", value=user_info["권한"] == "관리자")
+                    "ì‚¬ìš©ìž ê´€ë¦¬": st.checkbox("ì‚¬ìš©ìž ê´€ë¦¬", value=user_info["ê¶Œí•œ"] == "ê´€ë¦¬ìž"),
+                    "ê³µì • ê´€ë¦¬": st.checkbox("ê³µì • ê´€ë¦¬", value=user_info["ê¶Œí•œ"] == "ê´€ë¦¬ìž"),
+                    "ê²€ì‚¬ ê´€ë¦¬": st.checkbox("ê²€ì‚¬ ê´€ë¦¬", value=True),
+                    "ì‹œìŠ¤í…œ ì„¤ì •": st.checkbox("ì‹œìŠ¤í…œ ì„¤ì •", value=user_info["ê¶Œí•œ"] == "ê´€ë¦¬ìž")
                 }
             
             with col2:
-                st.markdown("**리포트 메뉴**")
+                st.markdown("**ë¦¬í¬íŠ¸ ë©”ë‰´**")
                 report_auth = {
-                    "종합 대시보드": st.checkbox("종합 대시보드", value=True),
-                    "일간 리포트": st.checkbox("일간 리포트", value=True),
-                    "주간 리포트": st.checkbox("주간 리포트", value=True),
-                    "월간 리포트": st.checkbox("월간 리포트", value=user_info["권한"] == "관리자")
+                    "ì¢…í•© ëŒ€ì‹œë³´ë“œ": st.checkbox("ì¢…í•© ëŒ€ì‹œë³´ë“œ", value=True),
+                    "ì¼ê°„ ë¦¬í¬íŠ¸": st.checkbox("ì¼ê°„ ë¦¬í¬íŠ¸", value=True),
+                    "ì£¼ê°„ ë¦¬í¬íŠ¸": st.checkbox("ì£¼ê°„ ë¦¬í¬íŠ¸", value=True),
+                    "ì›”ê°„ ë¦¬í¬íŠ¸": st.checkbox("ì›”ê°„ ë¦¬í¬íŠ¸", value=user_info["ê¶Œí•œ"] == "ê´€ë¦¬ìž")
                 }
             
-            # 권한 저장 버튼
-            if st.button("권한 설정 저장"):
-                # 세션 상태에서 해당 사용자의 권한과 상태 업데이트
-                idx = st.session_state.admin_users["아이디"].index(selected_user)
-                user_name = st.session_state.admin_users["이름"][idx]
-                old_role = st.session_state.admin_users["권한"][idx]  # 이전 권한 저장
+            # ê¶Œí•œ ì €ìž¥ ë²„íŠ¼
+            if st.button("ê¶Œí•œ ì„¤ì • ì €ìž¥"):
+                # ì„¸ì…˜ ìƒíƒœì—ì„œ í•´ë‹¹ ì‚¬ìš©ìžì˜ ê¶Œí•œê³¼ ìƒíƒœ ì—…ë°ì´íŠ¸
+                idx = st.session_state.admin_users["ì•„ì´ë””"].index(selected_user)
+                user_name = st.session_state.admin_users["ì´ë¦„"][idx]
+                old_role = st.session_state.admin_users["ê¶Œí•œ"][idx]  # ì´ì „ ê¶Œí•œ ì €ìž¥
                 
-                # 권한과 상태 업데이트
-                st.session_state.admin_users["권한"][idx] = new_role
-                st.session_state.admin_users["상태"][idx] = new_status
+                # ê¶Œí•œê³¼ ìƒíƒœ ì—…ë°ì´íŠ¸
+                st.session_state.admin_users["ê¶Œí•œ"][idx] = new_role
+                st.session_state.admin_users["ìƒíƒœ"][idx] = new_status
                 
-                # 파일에 저장
+                # íŒŒì¼ì— ì €ìž¥
                 save_admin_data(st.session_state.admin_users)
                 
-                # 성공 메시지 및 시각적 효과
-                st.success(f"사용자 '{selected_user}'의 권한이 성공적으로 업데이트되었습니다.")
-                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼
+                st.success(f"ì‚¬ìš©ìž '{selected_user}'ì˜ ê¶Œí•œì´ ì„±ê³µì ìœ¼ë¡œ ì—…ë°ì´íŠ¸ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                 
-                # 업데이트에 따른 메시지 커스터마이징
-                message = f"✅ {user_name}님의 "
+                # ì—…ë°ì´íŠ¸ì— ë”°ë¥¸ ë©”ì‹œì§€ ì»¤ìŠ¤í„°ë§ˆì´ì§•
+                message = f"âœ… {user_name}ë‹˜ì˜ "
                 if old_role != new_role:
-                    message += f"권한이 {old_role}에서 {new_role}로 변경되었습니다"
+                    message += f"ê¶Œí•œì´ {old_role}ì—ì„œ {new_role}ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤"
                 else:
-                    message += f"상태가 업데이트되었습니다"
+                    message += f"ìƒíƒœê°€ ì—…ë°ì´íŠ¸ë˜ì—ˆìŠµë‹ˆë‹¤"
                 
-                st.toast(message, icon="🔵")
+                st.toast(message, icon="ðŸ”µ")
                 
-                # 권한 설정 효과를 위한 플래그 설정
+                # ê¶Œí•œ ì„¤ì • íš¨ê³¼ë¥¼ ìœ„í•œ í”Œëž˜ê·¸ ì„¤ì •
                 if 'updated_admin' not in st.session_state:
                     st.session_state.updated_admin = True
                 
-                # 페이지 리로드
+                # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                 st.experimental_rerun()
                 
-        # 권한 설정 효과 표시
+        # ê¶Œí•œ ì„¤ì • íš¨ê³¼ í‘œì‹œ
         if 'updated_admin' in st.session_state and st.session_state.updated_admin:
             st.session_state.updated_admin = False
-            st.success("✨ 권한 설정이 성공적으로 적용되었습니다!")
+            st.success("âœ¨ ê¶Œí•œ ì„¤ì •ì´ ì„±ê³µì ìœ¼ë¡œ ì ìš©ë˜ì—ˆìŠµë‹ˆë‹¤!")
 
 elif st.session_state.page == "process_auth":
-    # 관리자 등록 및 관리 페이지
-    st.markdown("<div class='title-area'><h1>⚙️ 관리자 등록 및 관리</h1></div>", unsafe_allow_html=True)
+    # ê´€ë¦¬ìž ë“±ë¡ ë° ê´€ë¦¬ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>âš™ï¸ ê´€ë¦¬ìž ë“±ë¡ ë° ê´€ë¦¬</h1></div>", unsafe_allow_html=True)
     
-    # 관리자 권한 확인
-    if st.session_state.user_role != "관리자":
-        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+    # ê´€ë¦¬ìž ê¶Œí•œ í™•ì¸
+    if st.session_state.user_role != "ê´€ë¦¬ìž":
+        st.warning("ì´ íŽ˜ì´ì§€ëŠ” ê´€ë¦¬ìžë§Œ ì ‘ê·¼í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.")
         st.stop()
     
-    # 탭 구성
-    tab1, tab2 = st.tabs(["📋 관리자 목록", "➕ 관리자 등록"])
+    # íƒ­ êµ¬ì„±
+    tab1, tab2 = st.tabs(["ðŸ“‹ ê´€ë¦¬ìž ëª©ë¡", "âž• ê´€ë¦¬ìž ë“±ë¡"])
     
     with tab1:
-        # 관리자 목록 섹션
-        st.subheader("등록된 관리자 목록")
+        # ê´€ë¦¬ìž ëª©ë¡ ì„¹ì…˜
+        st.subheader("ë“±ë¡ëœ ê´€ë¦¬ìž ëª©ë¡")
         
-        # 세션 상태에 관리자 목록 초기화 (처음 접속 시에만)
+        # ì„¸ì…˜ ìƒíƒœì— ê´€ë¦¬ìž ëª©ë¡ ì´ˆê¸°í™” (ì²˜ìŒ ì ‘ì† ì‹œì—ë§Œ)
         if 'admin_users' not in st.session_state:
-            # JSON 파일에서 관리자 데이터 로드
+            # JSON íŒŒì¼ì—ì„œ ê´€ë¦¬ìž ë°ì´í„° ë¡œë“œ
             st.session_state.admin_users = load_admin_data()
         
-        # 사용자 데이터프레임 생성 (manager_auth 페이지와 동일한 데이터 사용)
+        # ì‚¬ìš©ìž ë°ì´í„°í”„ë ˆìž„ ìƒì„± (manager_auth íŽ˜ì´ì§€ì™€ ë™ì¼í•œ ë°ì´í„° ì‚¬ìš©)
         admin_df = pd.DataFrame(st.session_state.admin_users)
         
-        # 관리자 목록 필터링
+        # ê´€ë¦¬ìž ëª©ë¡ í•„í„°ë§
         col1, col2 = st.columns(2)
         with col1:
-            dept_filter = st.selectbox("부서 필터", options=["전체", "관리부", "생산부", "품질부", "기술부"])
+            dept_filter = st.selectbox("ë¶€ì„œ í•„í„°", options=["ì „ì²´", "ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"])
         with col2:
-            status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성"])
+            status_filter = st.selectbox("ìƒíƒœ í•„í„°", options=["ì „ì²´", "í™œì„±", "ë¹„í™œì„±"])
         
-        # 필터 적용
+        # í•„í„° ì ìš©
         filtered_df = admin_df.copy()
-        if dept_filter != "전체" and not filtered_df.empty:
-            filtered_df = filtered_df[filtered_df["부서"] == dept_filter]
-        if status_filter != "전체" and not filtered_df.empty:
-            filtered_df = filtered_df[filtered_df["상태"] == status_filter]
+        if dept_filter != "ì „ì²´" and not filtered_df.empty:
+            filtered_df = filtered_df[filtered_df["ë¶€ì„œ"] == dept_filter]
+        if status_filter != "ì „ì²´" and not filtered_df.empty:
+            filtered_df = filtered_df[filtered_df["ìƒíƒœ"] == status_filter]
         
-        # 필터링된 관리자 목록 표시
+        # í•„í„°ë§ëœ ê´€ë¦¬ìž ëª©ë¡ í‘œì‹œ
         st.dataframe(filtered_df, use_container_width=True, hide_index=True)
         
-        # 선택한 관리자 상세 정보 및 권한 관리
+        # ì„ íƒí•œ ê´€ë¦¬ìž ìƒì„¸ ì •ë³´ ë° ê¶Œí•œ ê´€ë¦¬
         selected_admin = st.selectbox(
-            "상세 정보를 볼 관리자 선택",
-            options=filtered_df["아이디"].tolist(),
-            format_func=lambda x: f"{x} ({filtered_df[filtered_df['아이디'] == x]['이름'].values[0]})"
+            "ìƒì„¸ ì •ë³´ë¥¼ ë³¼ ê´€ë¦¬ìž ì„ íƒ",
+            options=filtered_df["ì•„ì´ë””"].tolist(),
+            format_func=lambda x: f"{x} ({filtered_df[filtered_df['ì•„ì´ë””'] == x]['ì´ë¦„'].values[0]})"
         )
         
         if selected_admin:
-            st.subheader(f"관리자 상세 정보: {selected_admin}")
+            st.subheader(f"ê´€ë¦¬ìž ìƒì„¸ ì •ë³´: {selected_admin}")
             
-            # 선택된 관리자 정보
-            admin_info = filtered_df[filtered_df["아이디"] == selected_admin].iloc[0]
+            # ì„ íƒëœ ê´€ë¦¬ìž ì •ë³´
+            admin_info = filtered_df[filtered_df["ì•„ì´ë””"] == selected_admin].iloc[0]
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("이름", admin_info["이름"])
-                st.metric("권한", admin_info["권한"])
+                st.metric("ì´ë¦„", admin_info["ì´ë¦„"])
+                st.metric("ê¶Œí•œ", admin_info["ê¶Œí•œ"])
             with col2:
-                st.metric("부서", admin_info["부서"])
-                st.metric("상태", admin_info["상태"])
+                st.metric("ë¶€ì„œ", admin_info["ë¶€ì„œ"])
+                st.metric("ìƒíƒœ", admin_info["ìƒíƒœ"])
             with col3:
-                st.metric("최근접속일", admin_info["최근접속일"])
+                st.metric("ìµœê·¼ì ‘ì†ì¼", admin_info["ìµœê·¼ì ‘ì†ì¼"])
             
-            # 계정 활성화/비활성화 버튼
+            # ê³„ì • í™œì„±í™”/ë¹„í™œì„±í™” ë²„íŠ¼
             col1, col2 = st.columns(2)
             with col1:
-                if admin_info["상태"] == "활성":
-                    if st.button(f"'{admin_info['이름']}' 계정 비활성화", key="deactivate_admin"):
-                        # 세션 상태에서 해당 관리자의 상태 업데이트
-                        idx = st.session_state.admin_users["아이디"].index(selected_admin)
-                        st.session_state.admin_users["상태"][idx] = "비활성"
+                if admin_info["ìƒíƒœ"] == "í™œì„±":
+                    if st.button(f"'{admin_info['ì´ë¦„']}' ê³„ì • ë¹„í™œì„±í™”", key="deactivate_admin"):
+                        # ì„¸ì…˜ ìƒíƒœì—ì„œ í•´ë‹¹ ê´€ë¦¬ìžì˜ ìƒíƒœ ì—…ë°ì´íŠ¸
+                        idx = st.session_state.admin_users["ì•„ì´ë””"].index(selected_admin)
+                        st.session_state.admin_users["ìƒíƒœ"][idx] = "ë¹„í™œì„±"
                         
-                        # 파일에 저장
+                        # íŒŒì¼ì— ì €ìž¥
                         save_admin_data(st.session_state.admin_users)
                         
-                        st.warning(f"'{admin_info['이름']}' 계정이 비활성화되었습니다.")
-                        time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                        st.warning(f"'{admin_info['ì´ë¦„']}' ê³„ì •ì´ ë¹„í™œì„±í™”ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                        time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                         st.experimental_rerun()
                 else:
-                    if st.button(f"'{admin_info['이름']}' 계정 활성화", key="activate_admin"):
-                        # 세션 상태에서 해당 관리자의 상태 업데이트
-                        idx = st.session_state.admin_users["아이디"].index(selected_admin)
-                        st.session_state.admin_users["상태"][idx] = "활성"
+                    if st.button(f"'{admin_info['ì´ë¦„']}' ê³„ì • í™œì„±í™”", key="activate_admin"):
+                        # ì„¸ì…˜ ìƒíƒœì—ì„œ í•´ë‹¹ ê´€ë¦¬ìžì˜ ìƒíƒœ ì—…ë°ì´íŠ¸
+                        idx = st.session_state.admin_users["ì•„ì´ë””"].index(selected_admin)
+                        st.session_state.admin_users["ìƒíƒœ"][idx] = "í™œì„±"
                         
-                        # 파일에 저장
+                        # íŒŒì¼ì— ì €ìž¥
                         save_admin_data(st.session_state.admin_users)
                         
-                        st.success(f"'{admin_info['이름']}' 계정이 활성화되었습니다.")
-                        time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                        st.success(f"'{admin_info['ì´ë¦„']}' ê³„ì •ì´ í™œì„±í™”ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                        time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                         st.experimental_rerun()
             
             with col2:
-                if st.button(f"'{admin_info['이름']}' 비밀번호 초기화", key="reset_admin_pwd"):
-                    st.success(f"'{admin_info['이름']}' 계정의 비밀번호가 초기화되었습니다.")
-                    st.code("임시 비밀번호: Admin@1234")
+                if st.button(f"'{admin_info['ì´ë¦„']}' ë¹„ë°€ë²ˆí˜¸ ì´ˆê¸°í™”", key="reset_admin_pwd"):
+                    st.success(f"'{admin_info['ì´ë¦„']}' ê³„ì •ì˜ ë¹„ë°€ë²ˆí˜¸ê°€ ì´ˆê¸°í™”ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                    st.code("ìž„ì‹œ ë¹„ë°€ë²ˆí˜¸: Admin@1234")
             
-            # 권한 변경
-            st.subheader("권한 변경")
+            # ê¶Œí•œ ë³€ê²½
+            st.subheader("ê¶Œí•œ ë³€ê²½")
             new_role = st.radio(
-                "권한 선택",
-                options=["일반", "관리자"],
-                index=0 if admin_info["권한"] == "일반" else 1
+                "ê¶Œí•œ ì„ íƒ",
+                options=["ì¼ë°˜", "ê´€ë¦¬ìž"],
+                index=0 if admin_info["ê¶Œí•œ"] == "ì¼ë°˜" else 1
             )
             
-            if st.button("권한 변경 저장"):
-                # 세션 상태에서 해당 관리자의 권한 업데이트
-                idx = st.session_state.admin_users["아이디"].index(selected_admin)
-                user_name = st.session_state.admin_users["이름"][idx]
-                old_role = st.session_state.admin_users["권한"][idx]  # 이전 권한 저장
+            if st.button("ê¶Œí•œ ë³€ê²½ ì €ìž¥"):
+                # ì„¸ì…˜ ìƒíƒœì—ì„œ í•´ë‹¹ ê´€ë¦¬ìžì˜ ê¶Œí•œ ì—…ë°ì´íŠ¸
+                idx = st.session_state.admin_users["ì•„ì´ë””"].index(selected_admin)
+                user_name = st.session_state.admin_users["ì´ë¦„"][idx]
+                old_role = st.session_state.admin_users["ê¶Œí•œ"][idx]  # ì´ì „ ê¶Œí•œ ì €ìž¥
                 
-                # 권한 업데이트
-                st.session_state.admin_users["권한"][idx] = new_role
+                # ê¶Œí•œ ì—…ë°ì´íŠ¸
+                st.session_state.admin_users["ê¶Œí•œ"][idx] = new_role
                 
-                # 파일에 저장
+                # íŒŒì¼ì— ì €ìž¥
                 save_admin_data(st.session_state.admin_users)
                 
-                # 성공 메시지 및 시각적 효과
-                st.success(f"관리자 '{selected_admin}'의 권한이 성공적으로 변경되었습니다.")
-                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼
+                st.success(f"ê´€ë¦¬ìž '{selected_admin}'ì˜ ê¶Œí•œì´ ì„±ê³µì ìœ¼ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                 
-                # 업데이트에 따른 메시지 커스터마이징
+                # ì—…ë°ì´íŠ¸ì— ë”°ë¥¸ ë©”ì‹œì§€ ì»¤ìŠ¤í„°ë§ˆì´ì§•
                 if old_role != new_role:
-                    message = f"✅ {user_name}님의 권한이 {old_role}에서 {new_role}로 변경되었습니다"
-                    st.toast(message, icon="🔵")
+                    message = f"âœ… {user_name}ë‹˜ì˜ ê¶Œí•œì´ {old_role}ì—ì„œ {new_role}ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤"
+                    st.toast(message, icon="ðŸ”µ")
                 
-                # 페이지 리로드
+                # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                 st.experimental_rerun()
     
     with tab2:
-        # 관리자 등록 섹션
-        st.subheader("새 관리자 등록")
+        # ê´€ë¦¬ìž ë“±ë¡ ì„¹ì…˜
+        st.subheader("ìƒˆ ê´€ë¦¬ìž ë“±ë¡")
         
-        # 폼 입력값 초기화를 위한 세션 상태 초기화
+        # í¼ ìž…ë ¥ê°’ ì´ˆê¸°í™”ë¥¼ ìœ„í•œ ì„¸ì…˜ ìƒíƒœ ì´ˆê¸°í™”
         if 'new_admin_id' not in st.session_state:
             st.session_state.new_admin_id = ""
         if 'new_admin_name' not in st.session_state:
@@ -2256,291 +2256,291 @@ elif st.session_state.page == "process_auth":
         if 'new_admin_password_confirm' not in st.session_state:
             st.session_state.new_admin_password_confirm = ""
         if 'new_admin_dept' not in st.session_state:
-            st.session_state.new_admin_dept = "관리부"
+            st.session_state.new_admin_dept = "ê´€ë¦¬ë¶€"
         
         with st.form("new_admin_form"):
             col1, col2 = st.columns(2)
             with col1:
-                new_admin_id = st.text_input("아이디", value=st.session_state.new_admin_id)
-                new_admin_name = st.text_input("이름", value=st.session_state.new_admin_name)
-                new_admin_dept = st.selectbox("부서", options=["관리부", "생산부", "품질부", "기술부"], index=["관리부", "생산부", "품질부", "기술부"].index(st.session_state.new_admin_dept) if st.session_state.new_admin_dept in ["관리부", "생산부", "품질부", "기술부"] else 0)
+                new_admin_id = st.text_input("ì•„ì´ë””", value=st.session_state.new_admin_id)
+                new_admin_name = st.text_input("ì´ë¦„", value=st.session_state.new_admin_name)
+                new_admin_dept = st.selectbox("ë¶€ì„œ", options=["ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"], index=["ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"].index(st.session_state.new_admin_dept) if st.session_state.new_admin_dept in ["ê´€ë¦¬ë¶€", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€"] else 0)
             with col2:
-                new_admin_pwd = st.text_input("비밀번호", type="password", value=st.session_state.new_admin_password)
-                new_admin_pwd_confirm = st.text_input("비밀번호 확인", type="password", value=st.session_state.new_admin_password_confirm)
-                new_admin_role = st.selectbox("권한", options=["일반", "관리자"], index=0)
+                new_admin_pwd = st.text_input("ë¹„ë°€ë²ˆí˜¸", type="password", value=st.session_state.new_admin_password)
+                new_admin_pwd_confirm = st.text_input("ë¹„ë°€ë²ˆí˜¸ í™•ì¸", type="password", value=st.session_state.new_admin_password_confirm)
+                new_admin_role = st.selectbox("ê¶Œí•œ", options=["ì¼ë°˜", "ê´€ë¦¬ìž"], index=0)
             
-            submit_admin = st.form_submit_button("관리자 등록")
+            submit_admin = st.form_submit_button("ê´€ë¦¬ìž ë“±ë¡")
         
         if submit_admin:
             if not new_admin_id or not new_admin_name or not new_admin_pwd:
-                st.error("필수 항목을 모두 입력하세요.")
+                st.error("í•„ìˆ˜ í•­ëª©ì„ ëª¨ë‘ ìž…ë ¥í•˜ì„¸ìš”.")
             elif new_admin_pwd != new_admin_pwd_confirm:
-                st.error("비밀번호가 일치하지 않습니다.")
-            elif new_admin_id in st.session_state.admin_users["아이디"]:
-                st.error("이미 존재하는 아이디입니다.")
+                st.error("ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.")
+            elif new_admin_id in st.session_state.admin_users["ì•„ì´ë””"]:
+                st.error("ì´ë¯¸ ì¡´ìž¬í•˜ëŠ” ì•„ì´ë””ìž…ë‹ˆë‹¤.")
             else:
-                # 세션 상태에 새 관리자 추가
-                st.session_state.admin_users["아이디"].append(new_admin_id)
-                st.session_state.admin_users["이름"].append(new_admin_name)
-                st.session_state.admin_users["권한"].append(new_admin_role)
-                st.session_state.admin_users["부서"].append(new_admin_dept)
-                st.session_state.admin_users["최근접속일"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
-                st.session_state.admin_users["상태"].append("활성")
+                # ì„¸ì…˜ ìƒíƒœì— ìƒˆ ê´€ë¦¬ìž ì¶”ê°€
+                st.session_state.admin_users["ì•„ì´ë””"].append(new_admin_id)
+                st.session_state.admin_users["ì´ë¦„"].append(new_admin_name)
+                st.session_state.admin_users["ê¶Œí•œ"].append(new_admin_role)
+                st.session_state.admin_users["ë¶€ì„œ"].append(new_admin_dept)
+                st.session_state.admin_users["ìµœê·¼ì ‘ì†ì¼"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                st.session_state.admin_users["ìƒíƒœ"].append("í™œì„±")
                 
-                # 파일에 저장
+                # íŒŒì¼ì— ì €ìž¥
                 save_admin_data(st.session_state.admin_users)
                 
-                # 성공 메시지 및 시각적 효과
-                st.success(f"관리자 '{new_admin_name}'이(가) 성공적으로 등록되었습니다.")
-                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼
+                st.success(f"ê´€ë¦¬ìž '{new_admin_name}'ì´(ê°€) ì„±ê³µì ìœ¼ë¡œ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                 
-                # 추가 효과를 위한 플래그 설정
+                # ì¶”ê°€ íš¨ê³¼ë¥¼ ìœ„í•œ í”Œëž˜ê·¸ ì„¤ì •
                 if 'added_admin' not in st.session_state:
                     st.session_state.added_admin = True
                 
-                # 폼 입력값 리셋을 위한 세션 상태 설정
+                # í¼ ìž…ë ¥ê°’ ë¦¬ì…‹ì„ ìœ„í•œ ì„¸ì…˜ ìƒíƒœ ì„¤ì •
                 st.session_state.new_admin_id = ""
                 st.session_state.new_admin_name = ""
                 st.session_state.new_admin_password = ""
                 st.session_state.new_admin_password_confirm = ""
                 
-                # 페이지 리로드
+                # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                 st.experimental_rerun()
         
-        # 추가 효과 표시
+        # ì¶”ê°€ íš¨ê³¼ í‘œì‹œ
         if 'added_admin' in st.session_state and st.session_state.added_admin:
             st.session_state.added_admin = False
-            st.balloons()  # 풍선 효과 추가
+            st.balloons()  # í’ì„  íš¨ê³¼ ì¶”ê°€
 
 elif st.session_state.page == "user_auth":
-    # 검사자 등록 및 관리 페이지
-    st.markdown("<div class='title-area'><h1>🔑 검사자 등록 및 관리</h1></div>", unsafe_allow_html=True)
+    # ê²€ì‚¬ìž ë“±ë¡ ë° ê´€ë¦¬ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>ðŸ”‘ ê²€ì‚¬ìž ë“±ë¡ ë° ê´€ë¦¬</h1></div>", unsafe_allow_html=True)
     
-    # 관리자 권한 확인
-    if st.session_state.user_role != "관리자":
-        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+    # ê´€ë¦¬ìž ê¶Œí•œ í™•ì¸
+    if st.session_state.user_role != "ê´€ë¦¬ìž":
+        st.warning("ì´ íŽ˜ì´ì§€ëŠ” ê´€ë¦¬ìžë§Œ ì ‘ê·¼í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.")
         st.stop()
     
-    # 탭 구성
-    tab1, tab2, tab3 = st.tabs(["👥 검사자 목록", "➕ 신규 검사자 등록", "📊 검사자 통계"])
+    # íƒ­ êµ¬ì„±
+    tab1, tab2, tab3 = st.tabs(["ðŸ‘¥ ê²€ì‚¬ìž ëª©ë¡", "âž• ì‹ ê·œ ê²€ì‚¬ìž ë“±ë¡", "ðŸ“Š ê²€ì‚¬ìž í†µê³„"])
     
     with tab1:
-        # 사용자 목록 섹션
-        st.subheader("등록된 검사자 목록")
+        # ì‚¬ìš©ìž ëª©ë¡ ì„¹ì…˜
+        st.subheader("ë“±ë¡ëœ ê²€ì‚¬ìž ëª©ë¡")
         
         try:
-            # 세션 상태에 사용자 목록 초기화 (처음 접속 시에만)
+            # ì„¸ì…˜ ìƒíƒœì— ì‚¬ìš©ìž ëª©ë¡ ì´ˆê¸°í™” (ì²˜ìŒ ì ‘ì† ì‹œì—ë§Œ)
             if 'user_data' not in st.session_state:
-                # JSON 파일에서 사용자 데이터 로드
+                # JSON íŒŒì¼ì—ì„œ ì‚¬ìš©ìž ë°ì´í„° ë¡œë“œ
                 st.session_state.user_data = load_user_data()
             
-            # 사용자 데이터가 올바른 형식인지 확인
-            if not isinstance(st.session_state.user_data, dict) or "아이디" not in st.session_state.user_data:
-                # 잘못된 형식의 데이터인 경우 초기화
+            # ì‚¬ìš©ìž ë°ì´í„°ê°€ ì˜¬ë°”ë¥¸ í˜•ì‹ì¸ì§€ í™•ì¸
+            if not isinstance(st.session_state.user_data, dict) or "ì•„ì´ë””" not in st.session_state.user_data:
+                # ìž˜ëª»ëœ í˜•ì‹ì˜ ë°ì´í„°ì¸ ê²½ìš° ì´ˆê¸°í™”
                 st.session_state.user_data = load_user_data()
-                st.warning("사용자 데이터가 올바른 형식이 아닙니다. 데이터를 재설정했습니다.")
+                st.warning("ì‚¬ìš©ìž ë°ì´í„°ê°€ ì˜¬ë°”ë¥¸ í˜•ì‹ì´ ì•„ë‹™ë‹ˆë‹¤. ë°ì´í„°ë¥¼ ìž¬ì„¤ì •í–ˆìŠµë‹ˆë‹¤.")
             
-            # 사용자 데이터프레임 생성
+            # ì‚¬ìš©ìž ë°ì´í„°í”„ë ˆìž„ ìƒì„±
             user_df = pd.DataFrame(st.session_state.user_data)
             
-            # DataFrame이 비어있는 경우 빈 DataFrame을 만들어주기
+            # DataFrameì´ ë¹„ì–´ìžˆëŠ” ê²½ìš° ë¹ˆ DataFrameì„ ë§Œë“¤ì–´ì£¼ê¸°
             if user_df.empty:
                 user_df = pd.DataFrame({
-                    "아이디": [],
-                    "이름": [],
-                    "부서": [],
-                    "직급": [],
-                    "공정": [],
-                    "계정생성일": [],
-                    "최근접속일": [],
-                    "상태": []
+                    "ì•„ì´ë””": [],
+                    "ì´ë¦„": [],
+                    "ë¶€ì„œ": [],
+                    "ì§ê¸‰": [],
+                    "ê³µì •": [],
+                    "ê³„ì •ìƒì„±ì¼": [],
+                    "ìµœê·¼ì ‘ì†ì¼": [],
+                    "ìƒíƒœ": []
                 })
         
         except Exception as e:
-            st.error(f"사용자 데이터를 불러오는데 실패했습니다: {str(e)}")
+            st.error(f"ì‚¬ìš©ìž ë°ì´í„°ë¥¼ ë¶ˆëŸ¬ì˜¤ëŠ”ë° ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤: {str(e)}")
         
-        # 필터링 옵션
+        # í•„í„°ë§ ì˜µì…˜
         col1, col2, col3 = st.columns(3)
         with col1:
-            dept_filter = st.selectbox("부서 필터", options=["전체", "생산부", "품질부", "기술부", "관리부"], key="user_dept_filter")
+            dept_filter = st.selectbox("ë¶€ì„œ í•„í„°", options=["ì „ì²´", "ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€", "ê´€ë¦¬ë¶€"], key="user_dept_filter")
         with col2:
-            process_filter = st.selectbox("공정 필터", options=["전체", "선삭", "밀링", "검사", "설계", "관리"], key="user_process_filter")
+            process_filter = st.selectbox("ê³µì • í•„í„°", options=["ì „ì²´", "ì„ ì‚­", "ë°€ë§", "ê²€ì‚¬", "ì„¤ê³„", "ê´€ë¦¬"], key="user_process_filter")
         with col3:
-            status_filter = st.selectbox("상태 필터", options=["전체", "활성", "비활성", "휴면"], key="user_status_filter")
+            status_filter = st.selectbox("ìƒíƒœ í•„í„°", options=["ì „ì²´", "í™œì„±", "ë¹„í™œì„±", "íœ´ë©´"], key="user_status_filter")
         
-        # 필터 적용
+        # í•„í„° ì ìš©
         filtered_user_df = user_df.copy()
-        if dept_filter != "전체" and not filtered_user_df.empty and "부서" in filtered_user_df.columns:
-            filtered_user_df = filtered_user_df[filtered_user_df["부서"] == dept_filter]
-        if process_filter != "전체" and not filtered_user_df.empty and "공정" in filtered_user_df.columns:
-            filtered_user_df = filtered_user_df[filtered_user_df["공정"] == process_filter]
-        if status_filter != "전체" and not filtered_user_df.empty and "상태" in filtered_user_df.columns:
-            filtered_user_df = filtered_user_df[filtered_user_df["상태"] == status_filter]
+        if dept_filter != "ì „ì²´" and not filtered_user_df.empty and "ë¶€ì„œ" in filtered_user_df.columns:
+            filtered_user_df = filtered_user_df[filtered_user_df["ë¶€ì„œ"] == dept_filter]
+        if process_filter != "ì „ì²´" and not filtered_user_df.empty and "ê³µì •" in filtered_user_df.columns:
+            filtered_user_df = filtered_user_df[filtered_user_df["ê³µì •"] == process_filter]
+        if status_filter != "ì „ì²´" and not filtered_user_df.empty and "ìƒíƒœ" in filtered_user_df.columns:
+            filtered_user_df = filtered_user_df[filtered_user_df["ìƒíƒœ"] == status_filter]
         
-        # 필터링된 사용자 목록 표시
+        # í•„í„°ë§ëœ ì‚¬ìš©ìž ëª©ë¡ í‘œì‹œ
         if filtered_user_df.empty:
-            st.info("등록된 검사자가 없습니다. 먼저 검사자를 등록해주세요.")
+            st.info("ë“±ë¡ëœ ê²€ì‚¬ìžê°€ ì—†ìŠµë‹ˆë‹¤. ë¨¼ì € ê²€ì‚¬ìžë¥¼ ë“±ë¡í•´ì£¼ì„¸ìš”.")
         else:
             st.dataframe(filtered_user_df, use_container_width=True, hide_index=True)
         
-        # 사용자 검색
-        search_query = st.text_input("검사자 검색 (이름 또는 아이디)", key="user_search")
+        # ì‚¬ìš©ìž ê²€ìƒ‰
+        search_query = st.text_input("ê²€ì‚¬ìž ê²€ìƒ‰ (ì´ë¦„ ë˜ëŠ” ì•„ì´ë””)", key="user_search")
         if search_query and not user_df.empty:
             try:
-                if "이름" in user_df.columns and "아이디" in user_df.columns:
+                if "ì´ë¦„" in user_df.columns and "ì•„ì´ë””" in user_df.columns:
                     search_results = user_df[
-                        user_df["이름"].str.contains(search_query) | 
-                        user_df["아이디"].str.contains(search_query)
+                        user_df["ì´ë¦„"].str.contains(search_query) | 
+                        user_df["ì•„ì´ë””"].str.contains(search_query)
                     ]
                     if not search_results.empty:
-                        st.subheader("검색 결과")
+                        st.subheader("ê²€ìƒ‰ ê²°ê³¼")
                         st.dataframe(search_results, use_container_width=True, hide_index=True)
                     else:
-                        st.info("검색 결과가 없습니다.")
+                        st.info("ê²€ìƒ‰ ê²°ê³¼ê°€ ì—†ìŠµë‹ˆë‹¤.")
                 else:
-                    st.warning("사용자 데이터에 필요한 열이 없습니다.")
+                    st.warning("ì‚¬ìš©ìž ë°ì´í„°ì— í•„ìš”í•œ ì—´ì´ ì—†ìŠµë‹ˆë‹¤.")
             except Exception as e:
-                st.error(f"검색 중 오류가 발생했습니다: {str(e)}")
+                st.error(f"ê²€ìƒ‰ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
         
-        # 선택한 사용자 상세 정보 및 관리
+        # ì„ íƒí•œ ì‚¬ìš©ìž ìƒì„¸ ì •ë³´ ë° ê´€ë¦¬
         if not user_df.empty:
             try:
-                if "아이디" in user_df.columns:
+                if "ì•„ì´ë””" in user_df.columns:
                     selected_user_id = st.selectbox(
-                        "상세 정보를 볼 검사자 선택",
-                        options=user_df["아이디"].tolist(),
-                        format_func=lambda x: f"{x} ({user_df[user_df['아이디'] == x]['이름'].values[0] if not user_df[user_df['아이디'] == x].empty and '이름' in user_df.columns else '알 수 없음'})"
+                        "ìƒì„¸ ì •ë³´ë¥¼ ë³¼ ê²€ì‚¬ìž ì„ íƒ",
+                        options=user_df["ì•„ì´ë””"].tolist(),
+                        format_func=lambda x: f"{x} ({user_df[user_df['ì•„ì´ë””'] == x]['ì´ë¦„'].values[0] if not user_df[user_df['ì•„ì´ë””'] == x].empty and 'ì´ë¦„' in user_df.columns else 'ì•Œ ìˆ˜ ì—†ìŒ'})"
                     )
                     
                     if selected_user_id:
-                        st.subheader(f"검사자 상세 정보: {selected_user_id}")
+                        st.subheader(f"ê²€ì‚¬ìž ìƒì„¸ ì •ë³´: {selected_user_id}")
                         
-                        # 선택된 사용자 정보
-                        user_info_df = user_df[user_df["아이디"] == selected_user_id]
+                        # ì„ íƒëœ ì‚¬ìš©ìž ì •ë³´
+                        user_info_df = user_df[user_df["ì•„ì´ë””"] == selected_user_id]
                         if not user_info_df.empty:
                             user_info = user_info_df.iloc[0]
                             
                             col1, col2, col3 = st.columns(3)
                             with col1:
-                                st.metric("이름", user_info["이름"] if "이름" in user_info and pd.notna(user_info["이름"]) else "정보 없음")
-                                st.metric("부서", user_info["부서"] if "부서" in user_info and pd.notna(user_info["부서"]) else "정보 없음")
+                                st.metric("ì´ë¦„", user_info["ì´ë¦„"] if "ì´ë¦„" in user_info and pd.notna(user_info["ì´ë¦„"]) else "ì •ë³´ ì—†ìŒ")
+                                st.metric("ë¶€ì„œ", user_info["ë¶€ì„œ"] if "ë¶€ì„œ" in user_info and pd.notna(user_info["ë¶€ì„œ"]) else "ì •ë³´ ì—†ìŒ")
                             with col2:
-                                st.metric("직급", user_info["직급"] if "직급" in user_info and pd.notna(user_info["직급"]) else "정보 없음")
-                                st.metric("공정", user_info["공정"] if "공정" in user_info and pd.notna(user_info["공정"]) else "정보 없음")
+                                st.metric("ì§ê¸‰", user_info["ì§ê¸‰"] if "ì§ê¸‰" in user_info and pd.notna(user_info["ì§ê¸‰"]) else "ì •ë³´ ì—†ìŒ")
+                                st.metric("ê³µì •", user_info["ê³µì •"] if "ê³µì •" in user_info and pd.notna(user_info["ê³µì •"]) else "ì •ë³´ ì—†ìŒ")
                             with col3:
-                                st.metric("계정생성일", user_info["계정생성일"] if "계정생성일" in user_info and pd.notna(user_info["계정생성일"]) else "정보 없음")
-                                st.metric("최근접속일", user_info["최근접속일"] if "최근접속일" in user_info and pd.notna(user_info["최근접속일"]) else "정보 없음")
+                                st.metric("ê³„ì •ìƒì„±ì¼", user_info["ê³„ì •ìƒì„±ì¼"] if "ê³„ì •ìƒì„±ì¼" in user_info and pd.notna(user_info["ê³„ì •ìƒì„±ì¼"]) else "ì •ë³´ ì—†ìŒ")
+                                st.metric("ìµœê·¼ì ‘ì†ì¼", user_info["ìµœê·¼ì ‘ì†ì¼"] if "ìµœê·¼ì ‘ì†ì¼" in user_info and pd.notna(user_info["ìµœê·¼ì ‘ì†ì¼"]) else "ì •ë³´ ì—†ìŒ")
                             
-                            # 계정 상태 관리
-                            st.subheader("계정 상태 관리")
+                            # ê³„ì • ìƒíƒœ ê´€ë¦¬
+                            st.subheader("ê³„ì • ìƒíƒœ ê´€ë¦¬")
                             
                             col1, col2 = st.columns(2)
                             with col1:
-                                current_status = user_info["상태"] if "상태" in user_info and pd.notna(user_info["상태"]) else "활성"
+                                current_status = user_info["ìƒíƒœ"] if "ìƒíƒœ" in user_info and pd.notna(user_info["ìƒíƒœ"]) else "í™œì„±"
                                 new_status = st.radio(
-                                    "계정 상태",
-                                    options=["활성", "비활성", "휴면"],
-                                    index=0 if current_status == "활성" else 
-                                        1 if current_status == "비활성" else 2,
+                                    "ê³„ì • ìƒíƒœ",
+                                    options=["í™œì„±", "ë¹„í™œì„±", "íœ´ë©´"],
+                                    index=0 if current_status == "í™œì„±" else 
+                                        1 if current_status == "ë¹„í™œì„±" else 2,
                                     key="user_status_change"
                                 )
                             
                             with col2:
-                                if st.button("비밀번호 초기화", key="user_reset_pwd"):
-                                    user_name = user_info["이름"] if "이름" in user_info and pd.notna(user_info["이름"]) else selected_user_id
-                                    st.success(f"'{user_name}' 계정의 비밀번호가 초기화되었습니다.")
-                                    st.code("임시 비밀번호: User@1234")
+                                if st.button("ë¹„ë°€ë²ˆí˜¸ ì´ˆê¸°í™”", key="user_reset_pwd"):
+                                    user_name = user_info["ì´ë¦„"] if "ì´ë¦„" in user_info and pd.notna(user_info["ì´ë¦„"]) else selected_user_id
+                                    st.success(f"'{user_name}' ê³„ì •ì˜ ë¹„ë°€ë²ˆí˜¸ê°€ ì´ˆê¸°í™”ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                                    st.code("ìž„ì‹œ ë¹„ë°€ë²ˆí˜¸: User@1234")
                                 
-                                if st.button("상태 변경 저장", key="save_user_status"):
+                                if st.button("ìƒíƒœ ë³€ê²½ ì €ìž¥", key="save_user_status"):
                                     try:
-                                        # 세션 상태에서 해당 사용자의 상태 업데이트
-                                        if "아이디" in st.session_state.user_data and selected_user_id in st.session_state.user_data["아이디"]:
-                                            idx = st.session_state.user_data["아이디"].index(selected_user_id)
-                                            user_name = st.session_state.user_data["이름"][idx] if "이름" in st.session_state.user_data and idx < len(st.session_state.user_data["이름"]) else selected_user_id
-                                            old_status = st.session_state.user_data["상태"][idx] if "상태" in st.session_state.user_data and idx < len(st.session_state.user_data["상태"]) else "알 수 없음"
+                                        # ì„¸ì…˜ ìƒíƒœì—ì„œ í•´ë‹¹ ì‚¬ìš©ìžì˜ ìƒíƒœ ì—…ë°ì´íŠ¸
+                                        if "ì•„ì´ë””" in st.session_state.user_data and selected_user_id in st.session_state.user_data["ì•„ì´ë””"]:
+                                            idx = st.session_state.user_data["ì•„ì´ë””"].index(selected_user_id)
+                                            user_name = st.session_state.user_data["ì´ë¦„"][idx] if "ì´ë¦„" in st.session_state.user_data and idx < len(st.session_state.user_data["ì´ë¦„"]) else selected_user_id
+                                            old_status = st.session_state.user_data["ìƒíƒœ"][idx] if "ìƒíƒœ" in st.session_state.user_data and idx < len(st.session_state.user_data["ìƒíƒœ"]) else "ì•Œ ìˆ˜ ì—†ìŒ"
                                             
-                                            # 상태 업데이트
-                                            if "상태" in st.session_state.user_data:
-                                                if idx < len(st.session_state.user_data["상태"]):
-                                                    st.session_state.user_data["상태"][idx] = new_status
+                                            # ìƒíƒœ ì—…ë°ì´íŠ¸
+                                            if "ìƒíƒœ" in st.session_state.user_data:
+                                                if idx < len(st.session_state.user_data["ìƒíƒœ"]):
+                                                    st.session_state.user_data["ìƒíƒœ"][idx] = new_status
                                                 else:
-                                                    # 인덱스가 범위를 벗어나면 필요한 만큼 확장
-                                                    st.session_state.user_data["상태"].extend([None] * (idx - len(st.session_state.user_data["상태"]) + 1))
-                                                    st.session_state.user_data["상태"][idx] = new_status
+                                                    # ì¸ë±ìŠ¤ê°€ ë²”ìœ„ë¥¼ ë²—ì–´ë‚˜ë©´ í•„ìš”í•œ ë§Œí¼ í™•ìž¥
+                                                    st.session_state.user_data["ìƒíƒœ"].extend([None] * (idx - len(st.session_state.user_data["ìƒíƒœ"]) + 1))
+                                                    st.session_state.user_data["ìƒíƒœ"][idx] = new_status
                                             else:
-                                                # "상태" 키가 없으면 생성
-                                                st.session_state.user_data["상태"] = ["활성"] * len(st.session_state.user_data["아이디"])
-                                                st.session_state.user_data["상태"][idx] = new_status
+                                                # "ìƒíƒœ" í‚¤ê°€ ì—†ìœ¼ë©´ ìƒì„±
+                                                st.session_state.user_data["ìƒíƒœ"] = ["í™œì„±"] * len(st.session_state.user_data["ì•„ì´ë””"])
+                                                st.session_state.user_data["ìƒíƒœ"][idx] = new_status
                                             
-                                            # 파일에 저장
+                                            # íŒŒì¼ì— ì €ìž¥
                                             save_user_data(st.session_state.user_data)
                                             
-                                            # 성공 메시지 및 시각적 효과
-                                            st.success(f"사용자 '{user_name}'의 상태가 '{new_status}'로 성공적으로 변경되었습니다.")
-                                            time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                                            # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼
+                                            st.success(f"ì‚¬ìš©ìž '{user_name}'ì˜ ìƒíƒœê°€ '{new_status}'ë¡œ ì„±ê³µì ìœ¼ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                                            time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                                             
-                                            # 업데이트에 따른 메시지 커스터마이징
+                                            # ì—…ë°ì´íŠ¸ì— ë”°ë¥¸ ë©”ì‹œì§€ ì»¤ìŠ¤í„°ë§ˆì´ì§•
                                             if old_status != new_status:
-                                                message = f"✅ {user_name}님의 상태가 {old_status}에서 {new_status}로 변경되었습니다"
-                                                st.toast(message, icon="🔵")
+                                                message = f"âœ… {user_name}ë‹˜ì˜ ìƒíƒœê°€ {old_status}ì—ì„œ {new_status}ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤"
+                                                st.toast(message, icon="ðŸ”µ")
                                             
-                                            # 페이지 리로드
+                                            # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                                             st.experimental_rerun()
                                         else:
-                                            st.error("사용자 데이터에서 선택한 사용자를 찾을 수 없습니다.")
+                                            st.error("ì‚¬ìš©ìž ë°ì´í„°ì—ì„œ ì„ íƒí•œ ì‚¬ìš©ìžë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.")
                                     except Exception as e:
-                                        st.error(f"상태 변경 중 오류가 발생했습니다: {str(e)}")
+                                        st.error(f"ìƒíƒœ ë³€ê²½ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
                         
-                        # 사용자 삭제 섹션
-                        st.subheader("검사자 삭제")
-                        delete_confirm = st.checkbox("삭제를 확인합니다", key="delete_user_confirm")
+                        # ì‚¬ìš©ìž ì‚­ì œ ì„¹ì…˜
+                        st.subheader("ê²€ì‚¬ìž ì‚­ì œ")
+                        delete_confirm = st.checkbox("ì‚­ì œë¥¼ í™•ì¸í•©ë‹ˆë‹¤", key="delete_user_confirm")
                         
-                        if st.button("검사자 삭제", type="primary", disabled=not delete_confirm):
+                        if st.button("ê²€ì‚¬ìž ì‚­ì œ", type="primary", disabled=not delete_confirm):
                             if delete_confirm:
                                 try:
-                                    # 세션 상태에서 사용자 삭제
-                                    idx = st.session_state.user_data["아이디"].index(selected_user_id)
-                                    deleted_name = st.session_state.user_data["이름"][idx] if "이름" in st.session_state.user_data and idx < len(st.session_state.user_data["이름"]) else selected_user_id
+                                    # ì„¸ì…˜ ìƒíƒœì—ì„œ ì‚¬ìš©ìž ì‚­ì œ
+                                    idx = st.session_state.user_data["ì•„ì´ë””"].index(selected_user_id)
+                                    deleted_name = st.session_state.user_data["ì´ë¦„"][idx] if "ì´ë¦„" in st.session_state.user_data and idx < len(st.session_state.user_data["ì´ë¦„"]) else selected_user_id
                                     
-                                    # 사용자 삭제
+                                    # ì‚¬ìš©ìž ì‚­ì œ
                                     for key in st.session_state.user_data:
                                         if idx < len(st.session_state.user_data[key]):
                                             st.session_state.user_data[key].pop(idx)
                                     
-                                    # 파일에 저장
+                                    # íŒŒì¼ì— ì €ìž¥
                                     save_user_data(st.session_state.user_data)
                                     
-                                    # 성공 메시지 및 시각적 효과 - 페이지 리로드 전에 표시
-                                    st.warning(f"검사자 '{selected_user_id}'가 시스템에서 삭제되었습니다.")
-                                    time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
-                                    st.toast(f"🗑️ {deleted_name} 검사자가 삭제되었습니다", icon="🔴")
+                                    # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼ - íŽ˜ì´ì§€ ë¦¬ë¡œë“œ ì „ì— í‘œì‹œ
+                                    st.warning(f"ê²€ì‚¬ìž '{selected_user_id}'ê°€ ì‹œìŠ¤í…œì—ì„œ ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤.")
+                                    time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
+                                    st.toast(f"ðŸ—‘ï¸ {deleted_name} ê²€ì‚¬ìžê°€ ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤", icon="ðŸ”´")
                                     
-                                    # 삭제 효과를 위한 플래그 설정
+                                    # ì‚­ì œ íš¨ê³¼ë¥¼ ìœ„í•œ í”Œëž˜ê·¸ ì„¤ì •
                                     if 'deleted_user' not in st.session_state:
                                         st.session_state.deleted_user = True
                                     
-                                    # 페이지 리로드
+                                    # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                                     st.experimental_rerun()
                                 except Exception as e:
-                                    st.error(f"검사자 삭제 중 오류가 발생했습니다: {str(e)}")
+                                    st.error(f"ê²€ì‚¬ìž ì‚­ì œ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
                             else:
-                                st.error("삭제를 확인해주세요.")
+                                st.error("ì‚­ì œë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”.")
                 else:
-                    st.warning("선택한 검사자의 정보를 찾을 수 없습니다.")
+                    st.warning("ì„ íƒí•œ ê²€ì‚¬ìžì˜ ì •ë³´ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.")
             except Exception as e:
-                st.error(f"검사자 정보 표시 중 오류가 발생했습니다: {str(e)}")
-                st.info("검사자 데이터에 문제가 있을 수 있습니다. 데이터를 확인해주세요.")
+                st.error(f"ê²€ì‚¬ìž ì •ë³´ í‘œì‹œ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
+                st.info("ê²€ì‚¬ìž ë°ì´í„°ì— ë¬¸ì œê°€ ìžˆì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ë°ì´í„°ë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”.")
             
-            # 삭제 효과 표시
+            # ì‚­ì œ íš¨ê³¼ í‘œì‹œ
             if 'deleted_user' in st.session_state and st.session_state.deleted_user:
                 st.session_state.deleted_user = False
-                st.snow()  # 삭제 임팩트 효과
+                st.snow()  # ì‚­ì œ ìž„íŒ©íŠ¸ íš¨ê³¼
 
     with tab2:
-        # 사용자 등록 섹션
-        st.subheader("신규 검사자 등록")
+        # ì‚¬ìš©ìž ë“±ë¡ ì„¹ì…˜
+        st.subheader("ì‹ ê·œ ê²€ì‚¬ìž ë“±ë¡")
         
-        # 폼 입력값 초기화를 위한 세션 상태 초기화
+        # í¼ ìž…ë ¥ê°’ ì´ˆê¸°í™”ë¥¼ ìœ„í•œ ì„¸ì…˜ ìƒíƒœ ì´ˆê¸°í™”
         if 'new_user_id' not in st.session_state:
             st.session_state.new_user_id = ""
         if 'new_user_name' not in st.session_state:
@@ -2550,119 +2550,119 @@ elif st.session_state.page == "user_auth":
         if 'new_user_pwd_confirm' not in st.session_state:
             st.session_state.new_user_pwd_confirm = ""
         if 'new_user_dept' not in st.session_state:
-            st.session_state.new_user_dept = "생산부"
+            st.session_state.new_user_dept = "ìƒì‚°ë¶€"
         if 'new_user_position' not in st.session_state:
-            st.session_state.new_user_position = "사원"
+            st.session_state.new_user_position = "ì‚¬ì›"
         if 'new_user_process' not in st.session_state:
-            st.session_state.new_user_process = "선삭"
+            st.session_state.new_user_process = "ì„ ì‚­"
         
         with st.form("new_user_form_2"):
             col1, col2 = st.columns(2)
             with col1:
-                new_user_id = st.text_input("아이디", value=st.session_state.new_user_id, key="new_user_id_2")
-                new_user_name = st.text_input("이름", value=st.session_state.new_user_name, key="new_user_name_2")
-                new_user_dept = st.selectbox("부서", options=["생산부", "품질부", "기술부", "관리부"], index=["생산부", "품질부", "기술부", "관리부"].index(st.session_state.new_user_dept) if st.session_state.new_user_dept in ["생산부", "품질부", "기술부", "관리부"] else 0, key="new_user_dept_2")
+                new_user_id = st.text_input("ì•„ì´ë””", value=st.session_state.new_user_id, key="new_user_id_2")
+                new_user_name = st.text_input("ì´ë¦„", value=st.session_state.new_user_name, key="new_user_name_2")
+                new_user_dept = st.selectbox("ë¶€ì„œ", options=["ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€", "ê´€ë¦¬ë¶€"], index=["ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€", "ê´€ë¦¬ë¶€"].index(st.session_state.new_user_dept) if st.session_state.new_user_dept in ["ìƒì‚°ë¶€", "í’ˆì§ˆë¶€", "ê¸°ìˆ ë¶€", "ê´€ë¦¬ë¶€"] else 0, key="new_user_dept_2")
             with col2:
-                new_user_pwd = st.text_input("비밀번호", type="password", value=st.session_state.new_user_pwd, key="new_user_pwd_2")
-                new_user_pwd_confirm = st.text_input("비밀번호 확인", type="password", value=st.session_state.new_user_pwd_confirm, key="new_user_pwd_confirm_2")
-                new_user_position = st.selectbox("직급", options=["사원", "주임", "대리", "과장", "부장"], index=["사원", "주임", "대리", "과장", "부장"].index(st.session_state.new_user_position) if st.session_state.new_user_position in ["사원", "주임", "대리", "과장", "부장"] else 0, key="new_user_position_2")
+                new_user_pwd = st.text_input("ë¹„ë°€ë²ˆí˜¸", type="password", value=st.session_state.new_user_pwd, key="new_user_pwd_2")
+                new_user_pwd_confirm = st.text_input("ë¹„ë°€ë²ˆí˜¸ í™•ì¸", type="password", value=st.session_state.new_user_pwd_confirm, key="new_user_pwd_confirm_2")
+                new_user_position = st.selectbox("ì§ê¸‰", options=["ì‚¬ì›", "ì£¼ìž„", "ëŒ€ë¦¬", "ê³¼ìž¥", "ë¶€ìž¥"], index=["ì‚¬ì›", "ì£¼ìž„", "ëŒ€ë¦¬", "ê³¼ìž¥", "ë¶€ìž¥"].index(st.session_state.new_user_position) if st.session_state.new_user_position in ["ì‚¬ì›", "ì£¼ìž„", "ëŒ€ë¦¬", "ê³¼ìž¥", "ë¶€ìž¥"] else 0, key="new_user_position_2")
             
-            new_user_process = st.selectbox("담당 공정", options=["선삭", "밀링", "검사", "설계", "관리"], index=["선삭", "밀링", "검사", "설계", "관리"].index(st.session_state.new_user_process) if st.session_state.new_user_process in ["선삭", "밀링", "검사", "설계", "관리"] else 0, key="new_user_process_2")
-            new_user_memo = st.text_area("메모 (선택사항)", max_chars=200, key="new_user_memo_2")
+            new_user_process = st.selectbox("ë‹´ë‹¹ ê³µì •", options=["ì„ ì‚­", "ë°€ë§", "ê²€ì‚¬", "ì„¤ê³„", "ê´€ë¦¬"], index=["ì„ ì‚­", "ë°€ë§", "ê²€ì‚¬", "ì„¤ê³„", "ê´€ë¦¬"].index(st.session_state.new_user_process) if st.session_state.new_user_process in ["ì„ ì‚­", "ë°€ë§", "ê²€ì‚¬", "ì„¤ê³„", "ê´€ë¦¬"] else 0, key="new_user_process_2")
+            new_user_memo = st.text_area("ë©”ëª¨ (ì„ íƒì‚¬í•­)", max_chars=200, key="new_user_memo_2")
             
-            submit_user = st.form_submit_button("검사자 등록")
+            submit_user = st.form_submit_button("ê²€ì‚¬ìž ë“±ë¡")
         
         if submit_user:
             if not new_user_id or not new_user_name or not new_user_pwd:
-                st.error("필수 항목을 모두 입력하세요.")
+                st.error("í•„ìˆ˜ í•­ëª©ì„ ëª¨ë‘ ìž…ë ¥í•˜ì„¸ìš”.")
             elif new_user_pwd != new_user_pwd_confirm:
-                st.error("비밀번호가 일치하지 않습니다.")
-            elif 'user_data' in st.session_state and "아이디" in st.session_state.user_data and new_user_id in st.session_state.user_data["아이디"]:
-                st.error("이미 존재하는 아이디입니다.")
+                st.error("ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.")
+            elif 'user_data' in st.session_state and "ì•„ì´ë””" in st.session_state.user_data and new_user_id in st.session_state.user_data["ì•„ì´ë””"]:
+                st.error("ì´ë¯¸ ì¡´ìž¬í•˜ëŠ” ì•„ì´ë””ìž…ë‹ˆë‹¤.")
             else:
-                # 세션 상태에 새 사용자 추가
+                # ì„¸ì…˜ ìƒíƒœì— ìƒˆ ì‚¬ìš©ìž ì¶”ê°€
                 if 'user_data' not in st.session_state:
                     st.session_state.user_data = load_user_data()
                 
-                # 필수 키 확인
-                required_keys = ["아이디", "이름", "부서", "직급", "공정", "계정생성일", "최근접속일", "상태"]
+                # í•„ìˆ˜ í‚¤ í™•ì¸
+                required_keys = ["ì•„ì´ë””", "ì´ë¦„", "ë¶€ì„œ", "ì§ê¸‰", "ê³µì •", "ê³„ì •ìƒì„±ì¼", "ìµœê·¼ì ‘ì†ì¼", "ìƒíƒœ"]
                 for key in required_keys:
                     if key not in st.session_state.user_data:
                         st.session_state.user_data[key] = []
                 
-                st.session_state.user_data["아이디"].append(new_user_id)
-                st.session_state.user_data["이름"].append(new_user_name)
-                st.session_state.user_data["부서"].append(new_user_dept)
-                st.session_state.user_data["직급"].append(new_user_position)
-                st.session_state.user_data["공정"].append(new_user_process)
-                st.session_state.user_data["계정생성일"].append(datetime.now().strftime("%Y-%m-%d"))
-                st.session_state.user_data["최근접속일"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
-                st.session_state.user_data["상태"].append("활성")
+                st.session_state.user_data["ì•„ì´ë””"].append(new_user_id)
+                st.session_state.user_data["ì´ë¦„"].append(new_user_name)
+                st.session_state.user_data["ë¶€ì„œ"].append(new_user_dept)
+                st.session_state.user_data["ì§ê¸‰"].append(new_user_position)
+                st.session_state.user_data["ê³µì •"].append(new_user_process)
+                st.session_state.user_data["ê³„ì •ìƒì„±ì¼"].append(datetime.now().strftime("%Y-%m-%d"))
+                st.session_state.user_data["ìµœê·¼ì ‘ì†ì¼"].append(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                st.session_state.user_data["ìƒíƒœ"].append("í™œì„±")
                 
-                # 파일에 저장
+                # íŒŒì¼ì— ì €ìž¥
                 save_user_data(st.session_state.user_data)
                 
-                # 성공 메시지 및 시각적 효과
-                st.success(f"사용자 '{new_user_name}'이(가) 성공적으로 등록되었습니다.")
-                time.sleep(0.5)  # 효과를 볼 수 있도록 짧은 대기시간 추가
+                # ì„±ê³µ ë©”ì‹œì§€ ë° ì‹œê°ì  íš¨ê³¼
+                st.success(f"ì‚¬ìš©ìž '{new_user_name}'ì´(ê°€) ì„±ê³µì ìœ¼ë¡œ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                time.sleep(0.5)  # íš¨ê³¼ë¥¼ ë³¼ ìˆ˜ ìžˆë„ë¡ ì§§ì€ ëŒ€ê¸°ì‹œê°„ ì¶”ê°€
                 
-                # 추가 효과를 위한 플래그 설정
+                # ì¶”ê°€ íš¨ê³¼ë¥¼ ìœ„í•œ í”Œëž˜ê·¸ ì„¤ì •
                 if 'added_user' not in st.session_state:
                     st.session_state.added_user = True
                 
-                # 폼 입력값 리셋을 위한 세션 상태 설정
+                # í¼ ìž…ë ¥ê°’ ë¦¬ì…‹ì„ ìœ„í•œ ì„¸ì…˜ ìƒíƒœ ì„¤ì •
                 st.session_state.new_user_id = ""
                 st.session_state.new_user_name = ""
                 st.session_state.new_user_pwd = ""
                 st.session_state.new_user_pwd_confirm = ""
                 
-                # 페이지 리로드
+                # íŽ˜ì´ì§€ ë¦¬ë¡œë“œ
                 st.experimental_rerun()
         
-        # 추가 효과 표시
+        # ì¶”ê°€ íš¨ê³¼ í‘œì‹œ
         if 'added_user' in st.session_state and st.session_state.added_user:
             st.session_state.added_user = False
-            st.balloons()  # 풍선 효과 추가
+            st.balloons()  # í’ì„  íš¨ê³¼ ì¶”ê°€
     
     with tab3:
-        # 사용 통계 섹션
-        st.subheader("검사자 통계")
+        # ì‚¬ìš© í†µê³„ ì„¹ì…˜
+        st.subheader("ê²€ì‚¬ìž í†µê³„")
         
-        if 'user_data' not in st.session_state or not isinstance(st.session_state.user_data, dict) or "아이디" not in st.session_state.user_data or len(st.session_state.user_data["아이디"]) == 0:
-            st.info("등록된 사용자가 없습니다. 통계를 표시하려면 사용자를 등록해주세요.")
+        if 'user_data' not in st.session_state or not isinstance(st.session_state.user_data, dict) or "ì•„ì´ë””" not in st.session_state.user_data or len(st.session_state.user_data["ì•„ì´ë””"]) == 0:
+            st.info("ë“±ë¡ëœ ì‚¬ìš©ìžê°€ ì—†ìŠµë‹ˆë‹¤. í†µê³„ë¥¼ í‘œì‹œí•˜ë ¤ë©´ ì‚¬ìš©ìžë¥¼ ë“±ë¡í•´ì£¼ì„¸ìš”.")
         else:
             user_df = pd.DataFrame(st.session_state.user_data)
             
             try:
-                # 부서별 사용자 분포
-                if "부서" in user_df.columns and not user_df["부서"].empty:
-                    dept_counts = user_df["부서"].value_counts().reset_index()
-                    dept_counts.columns = ["부서", "검사자 수"]
+                # ë¶€ì„œë³„ ì‚¬ìš©ìž ë¶„í¬
+                if "ë¶€ì„œ" in user_df.columns and not user_df["ë¶€ì„œ"].empty:
+                    dept_counts = user_df["ë¶€ì„œ"].value_counts().reset_index()
+                    dept_counts.columns = ["ë¶€ì„œ", "ê²€ì‚¬ìž ìˆ˜"]
                     
-                    # 공정별 사용자 분포
+                    # ê³µì •ë³„ ì‚¬ìš©ìž ë¶„í¬
                     process_counts = None
-                    if "공정" in user_df.columns and not user_df["공정"].empty:
-                        process_counts = user_df["공정"].value_counts().reset_index()
-                        process_counts.columns = ["공정", "검사자 수"]
+                    if "ê³µì •" in user_df.columns and not user_df["ê³µì •"].empty:
+                        process_counts = user_df["ê³µì •"].value_counts().reset_index()
+                        process_counts.columns = ["ê³µì •", "ê²€ì‚¬ìž ìˆ˜"]
                     
-                    # 상태별 사용자 분포
+                    # ìƒíƒœë³„ ì‚¬ìš©ìž ë¶„í¬
                     status_counts = None
-                    if "상태" in user_df.columns and not user_df["상태"].empty:
-                        status_counts = user_df["상태"].value_counts().reset_index()
-                        status_counts.columns = ["상태", "검사자 수"]
+                    if "ìƒíƒœ" in user_df.columns and not user_df["ìƒíƒœ"].empty:
+                        status_counts = user_df["ìƒíƒœ"].value_counts().reset_index()
+                        status_counts.columns = ["ìƒíƒœ", "ê²€ì‚¬ìž ìˆ˜"]
                     
-                    # 차트 표시
+                    # ì°¨íŠ¸ í‘œì‹œ
                     col1, col2 = st.columns(2)
                     
                     with col1:
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
-                        st.markdown("<div class='emoji-title'>👥 부서별 검사자 분포</div>", unsafe_allow_html=True)
+                        st.markdown("<div class='emoji-title'>ðŸ‘¥ ë¶€ì„œë³„ ê²€ì‚¬ìž ë¶„í¬</div>", unsafe_allow_html=True)
                         
                         fig = px.bar(
                             dept_counts, 
-                            x="부서", 
-                            y="검사자 수",
-                            color="부서",
+                            x="ë¶€ì„œ", 
+                            y="ê²€ì‚¬ìž ìˆ˜",
+                            color="ë¶€ì„œ",
                             color_discrete_sequence=px.colors.qualitative.Bold
                         )
                         
@@ -2676,13 +2676,13 @@ elif st.session_state.page == "user_auth":
                     with col2:
                         if process_counts is not None:
                             st.markdown("<div class='card'>", unsafe_allow_html=True)
-                            st.markdown("<div class='emoji-title'>🔧 공정별 검사자 분포</div>", unsafe_allow_html=True)
+                            st.markdown("<div class='emoji-title'>ðŸ”§ ê³µì •ë³„ ê²€ì‚¬ìž ë¶„í¬</div>", unsafe_allow_html=True)
                             
                             fig = px.bar(
                                 process_counts, 
-                                x="공정", 
-                                y="검사자 수",
-                                color="공정",
+                                x="ê³µì •", 
+                                y="ê²€ì‚¬ìž ìˆ˜",
+                                color="ê³µì •",
                                 color_discrete_sequence=px.colors.qualitative.Pastel
                             )
                             
@@ -2696,21 +2696,21 @@ elif st.session_state.page == "user_auth":
                             st.plotly_chart(fig, use_container_width=True)
                             st.markdown("</div>", unsafe_allow_html=True)
                     
-                    # 상태별 사용자 분포 (파이 차트)
+                    # ìƒíƒœë³„ ì‚¬ìš©ìž ë¶„í¬ (íŒŒì´ ì°¨íŠ¸)
                     if status_counts is not None:
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
-                        st.markdown("<div class='emoji-title'>🔄 상태별 검사자 분포</div>", unsafe_allow_html=True)
+                        st.markdown("<div class='emoji-title'>ðŸ”„ ìƒíƒœë³„ ê²€ì‚¬ìž ë¶„í¬</div>", unsafe_allow_html=True)
                         
                         fig = px.pie(
                             status_counts, 
-                            values="검사자 수", 
-                            names="상태",
+                            values="ê²€ì‚¬ìž ìˆ˜", 
+                            names="ìƒíƒœ",
                             hole=0.4,
-                            color="상태",
+                            color="ìƒíƒœ",
                             color_discrete_map={
-                                "활성": "#4CAF50",
-                                "비활성": "#F44336",
-                                "휴면": "#FFC107"
+                                "í™œì„±": "#4CAF50",
+                                "ë¹„í™œì„±": "#F44336",
+                                "íœ´ë©´": "#FFC107"
                             }
                         )
                         
@@ -2724,180 +2724,180 @@ elif st.session_state.page == "user_auth":
                         st.plotly_chart(fig, use_container_width=True)
                         st.markdown("</div>", unsafe_allow_html=True)
                         
-                        # 간단한 현황 요약
+                        # ê°„ë‹¨í•œ í˜„í™© ìš”ì•½
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
-                        st.markdown("<div class='emoji-title'>📊 검사자 현황 요약</div>", unsafe_allow_html=True)
+                        st.markdown("<div class='emoji-title'>ðŸ“Š ê²€ì‚¬ìž í˜„í™© ìš”ì•½</div>", unsafe_allow_html=True)
                         
-                        active_users = len(user_df[user_df["상태"] == "활성"]) if "상태" in user_df.columns else 0
-                        inactive_users = len(user_df[user_df["상태"] != "활성"]) if "상태" in user_df.columns else 0
+                        active_users = len(user_df[user_df["ìƒíƒœ"] == "í™œì„±"]) if "ìƒíƒœ" in user_df.columns else 0
+                        inactive_users = len(user_df[user_df["ìƒíƒœ"] != "í™œì„±"]) if "ìƒíƒœ" in user_df.columns else 0
                         
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.metric("활성 검사자", active_users)
+                            st.metric("í™œì„± ê²€ì‚¬ìž", active_users)
                         with col2:
-                            st.metric("비활성/휴면 검사자", inactive_users)
+                            st.metric("ë¹„í™œì„±/íœ´ë©´ ê²€ì‚¬ìž", inactive_users)
                         
-                        # 최근 등록된 사용자
-                        if "계정생성일" in user_df.columns and len(user_df) > 0:
+                        # ìµœê·¼ ë“±ë¡ëœ ì‚¬ìš©ìž
+                        if "ê³„ì •ìƒì„±ì¼" in user_df.columns and len(user_df) > 0:
                             try:
-                                user_df["계정생성일"] = pd.to_datetime(user_df["계정생성일"], errors='coerce')
-                                recent_users = user_df.sort_values("계정생성일", ascending=False).head(3)
+                                user_df["ê³„ì •ìƒì„±ì¼"] = pd.to_datetime(user_df["ê³„ì •ìƒì„±ì¼"], errors='coerce')
+                                recent_users = user_df.sort_values("ê³„ì •ìƒì„±ì¼", ascending=False).head(3)
                                 
-                                st.subheader("최근 등록된 검사자")
+                                st.subheader("ìµœê·¼ ë“±ë¡ëœ ê²€ì‚¬ìž")
                                 for _, user in recent_users.iterrows():
-                                    user_name = user["이름"] if "이름" in user and pd.notna(user["이름"]) else "이름 없음"
-                                    user_dept = user["부서"] if "부서" in user and pd.notna(user["부서"]) else "부서 없음"
-                                    user_date = user["계정생성일"].strftime("%Y-%m-%d") if pd.notna(user["계정생성일"]) else "날짜 없음"
+                                    user_name = user["ì´ë¦„"] if "ì´ë¦„" in user and pd.notna(user["ì´ë¦„"]) else "ì´ë¦„ ì—†ìŒ"
+                                    user_dept = user["ë¶€ì„œ"] if "ë¶€ì„œ" in user and pd.notna(user["ë¶€ì„œ"]) else "ë¶€ì„œ ì—†ìŒ"
+                                    user_date = user["ê³„ì •ìƒì„±ì¼"].strftime("%Y-%m-%d") if pd.notna(user["ê³„ì •ìƒì„±ì¼"]) else "ë‚ ì§œ ì—†ìŒ"
                                     
                                     st.markdown(f"**{user_name}** ({user_dept}) - {user_date}")
                             except Exception as e:
-                                st.warning(f"최근 사용자 정보 표시 중 오류 발생: {str(e)}")
+                                st.warning(f"ìµœê·¼ ì‚¬ìš©ìž ì •ë³´ í‘œì‹œ ì¤‘ ì˜¤ë¥˜ ë°œìƒ: {str(e)}")
                         
                         st.markdown("</div>", unsafe_allow_html=True)
                 else:
-                    st.warning("사용자 데이터에 '부서' 필드가 없거나 비어있어 통계를 생성할 수 없습니다.")
+                    st.warning("ì‚¬ìš©ìž ë°ì´í„°ì— 'ë¶€ì„œ' í•„ë“œê°€ ì—†ê±°ë‚˜ ë¹„ì–´ìžˆì–´ í†µê³„ë¥¼ ìƒì„±í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.")
             except Exception as e:
-                st.error(f"통계 생성 중 오류가 발생했습니다: {str(e)}")
-                st.info("사용자 데이터 구조를 확인해주세요.")
+                st.error(f"í†µê³„ ìƒì„± ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {str(e)}")
+                st.info("ì‚¬ìš©ìž ë°ì´í„° êµ¬ì¡°ë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”.")
 
 elif st.session_state.page == "inspection_data":
-    # 생산 실적 관리 페이지
-    st.markdown("<div class='title-area'><h1>📊 검사실적 관리</h1></div>", unsafe_allow_html=True)
+    # ìƒì‚° ì‹¤ì  ê´€ë¦¬ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>ðŸ“Š ê²€ì‚¬ì‹¤ì  ê´€ë¦¬</h1></div>", unsafe_allow_html=True)
     
-    # 관리자 권한 확인
-    if st.session_state.user_role != "관리자":
-        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+    # ê´€ë¦¬ìž ê¶Œí•œ í™•ì¸
+    if st.session_state.user_role != "ê´€ë¦¬ìž":
+        st.warning("ì´ íŽ˜ì´ì§€ëŠ” ê´€ë¦¬ìžë§Œ ì ‘ê·¼í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.")
         st.stop()
     
-    # 탭 구성
-    tab1, tab2, tab3 = st.tabs(["📑 실적 데이터 조회", "📝 실적 데이터 입력", "🔍 데이터 검증"])
+    # íƒ­ êµ¬ì„±
+    tab1, tab2, tab3 = st.tabs(["ðŸ“‘ ì‹¤ì  ë°ì´í„° ì¡°íšŒ", "ðŸ“ ì‹¤ì  ë°ì´í„° ìž…ë ¥", "ðŸ” ë°ì´í„° ê²€ì¦"])
     
     with tab1:
-        # 실적 데이터 조회 섹션
-        st.subheader("검사 실적 데이터 조회")
+        # ì‹¤ì  ë°ì´í„° ì¡°íšŒ ì„¹ì…˜
+        st.subheader("ê²€ì‚¬ ì‹¤ì  ë°ì´í„° ì¡°íšŒ")
         
-        # 검색 및 필터 조건
+        # ê²€ìƒ‰ ë° í•„í„° ì¡°ê±´
         col1, col2, col3 = st.columns(3)
         with col1:
-            start_date = st.date_input("시작일", datetime.now() - timedelta(days=30), key="prod_start_date")
+            start_date = st.date_input("ì‹œìž‘ì¼", datetime.now() - timedelta(days=30), key="prod_start_date")
         with col2:
-            end_date = st.date_input("종료일", datetime.now(), key="prod_end_date")
+            end_date = st.date_input("ì¢…ë£Œì¼", datetime.now(), key="prod_end_date")
         with col3:
-            # 실제 데이터에서 공정 목록 추출
+            # ì‹¤ì œ ë°ì´í„°ì—ì„œ ê³µì • ëª©ë¡ ì¶”ì¶œ
             inspection_data = load_inspection_data()
-            process_options = ["전체"]
-            if not inspection_data.empty and "공정" in inspection_data.columns:
-                process_options += sorted(inspection_data["공정"].unique().tolist())
-            process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
+            process_options = ["ì „ì²´"]
+            if not inspection_data.empty and "ê³µì •" in inspection_data.columns:
+                process_options += sorted(inspection_data["ê³µì •"].unique().tolist())
+            process_filter = st.selectbox("ê³µì • í•„í„°", options=process_options, key="prod_process")
         
-        # 데이터 로드 후 표시
+        # ë°ì´í„° ë¡œë“œ í›„ í‘œì‹œ
         if inspection_data.empty:
-            st.info("저장된 검사 실적 데이터가 없습니다. '실적 데이터 입력' 탭에서 데이터를 입력해주세요.")
+            st.info("ì €ìž¥ëœ ê²€ì‚¬ ì‹¤ì  ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤. 'ì‹¤ì  ë°ì´í„° ìž…ë ¥' íƒ­ì—ì„œ ë°ì´í„°ë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.")
         else:
-            # 필요한 경우 날짜 열 변환
-            if "검사일자" in inspection_data.columns and inspection_data["검사일자"].dtype == 'object':
+            # í•„ìš”í•œ ê²½ìš° ë‚ ì§œ ì—´ ë³€í™˜
+            if "ê²€ì‚¬ì¼ìž" in inspection_data.columns and inspection_data["ê²€ì‚¬ì¼ìž"].dtype == 'object':
                 try:
-                    inspection_data["검사일자"] = pd.to_datetime(inspection_data["검사일자"])
+                    inspection_data["ê²€ì‚¬ì¼ìž"] = pd.to_datetime(inspection_data["ê²€ì‚¬ì¼ìž"])
                 except:
                     pass
             
-            # 필터 적용
+            # í•„í„° ì ìš©
             filtered_df = inspection_data.copy()
             
-            # 날짜 필터 적용
-            if "검사일자" in filtered_df.columns:
-                # 날짜 형식 확인
-                if filtered_df["검사일자"].dtype == 'datetime64[ns]':
+            # ë‚ ì§œ í•„í„° ì ìš©
+            if "ê²€ì‚¬ì¼ìž" in filtered_df.columns:
+                # ë‚ ì§œ í˜•ì‹ í™•ì¸
+                if filtered_df["ê²€ì‚¬ì¼ìž"].dtype == 'datetime64[ns]':
                     filtered_df = filtered_df[
-                        (filtered_df["검사일자"].dt.date >= pd.Timestamp(start_date).date()) & 
-                        (filtered_df["검사일자"].dt.date <= pd.Timestamp(end_date).date())
+                        (filtered_df["ê²€ì‚¬ì¼ìž"].dt.date >= pd.Timestamp(start_date).date()) & 
+                        (filtered_df["ê²€ì‚¬ì¼ìž"].dt.date <= pd.Timestamp(end_date).date())
                     ]
                 else:
-                    # 문자열인 경우 처리
+                    # ë¬¸ìžì—´ì¸ ê²½ìš° ì²˜ë¦¬
                     filtered_df = filtered_df[
-                        (pd.to_datetime(filtered_df["검사일자"]).dt.date >= pd.Timestamp(start_date).date()) & 
-                        (pd.to_datetime(filtered_df["검사일자"]).dt.date <= pd.Timestamp(end_date).date())
+                        (pd.to_datetime(filtered_df["ê²€ì‚¬ì¼ìž"]).dt.date >= pd.Timestamp(start_date).date()) & 
+                        (pd.to_datetime(filtered_df["ê²€ì‚¬ì¼ìž"]).dt.date <= pd.Timestamp(end_date).date())
                     ]
             
-            # 공정 필터 적용
-            if process_filter != "전체" and "공정" in filtered_df.columns:
-                filtered_df = filtered_df[filtered_df["공정"] == process_filter]
+            # ê³µì • í•„í„° ì ìš©
+            if process_filter != "ì „ì²´" and "ê³µì •" in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df["ê³µì •"] == process_filter]
             
-            # 검색 기능
-            search_query = st.text_input("모델명 또는 LOT번호 검색", key="prod_search")
+            # ê²€ìƒ‰ ê¸°ëŠ¥
+            search_query = st.text_input("ëª¨ë¸ëª… ë˜ëŠ” LOTë²ˆí˜¸ ê²€ìƒ‰", key="prod_search")
             if search_query:
                 search_condition = False
-                if "모델명" in filtered_df.columns:
-                    search_condition |= filtered_df["모델명"].astype(str).str.contains(search_query, case=False, na=False)
-                if "LOT번호" in filtered_df.columns:
-                    search_condition |= filtered_df["LOT번호"].astype(str).str.contains(search_query, case=False, na=False)
+                if "ëª¨ë¸ëª…" in filtered_df.columns:
+                    search_condition |= filtered_df["ëª¨ë¸ëª…"].astype(str).str.contains(search_query, case=False, na=False)
+                if "LOTë²ˆí˜¸" in filtered_df.columns:
+                    search_condition |= filtered_df["LOTë²ˆí˜¸"].astype(str).str.contains(search_query, case=False, na=False)
                 
                 filtered_df = filtered_df[search_condition]
             
-            # 데이터 정렬 옵션
-            sort_columns = ["검사일자"]
-            if "불량률(%)" in filtered_df.columns:
-                sort_columns.append("불량률(%)")
+            # ë°ì´í„° ì •ë ¬ ì˜µì…˜
+            sort_columns = ["ê²€ì‚¬ì¼ìž"]
+            if "ë¶ˆëŸ‰ë¥ (%)" in filtered_df.columns:
+                sort_columns.append("ë¶ˆëŸ‰ë¥ (%)")
             
             sort_options = []
-            if "검사일자" in filtered_df.columns:
-                sort_options += ["날짜(최신순)", "날짜(오래된순)"]
-            if "불량률(%)" in filtered_df.columns:
-                sort_options += ["불량률(높은순)", "불량률(낮은순)"]
+            if "ê²€ì‚¬ì¼ìž" in filtered_df.columns:
+                sort_options += ["ë‚ ì§œ(ìµœì‹ ìˆœ)", "ë‚ ì§œ(ì˜¤ëž˜ëœìˆœ)"]
+            if "ë¶ˆëŸ‰ë¥ (%)" in filtered_df.columns:
+                sort_options += ["ë¶ˆëŸ‰ë¥ (ë†’ì€ìˆœ)", "ë¶ˆëŸ‰ë¥ (ë‚®ì€ìˆœ)"]
             
             sort_option = st.selectbox(
-                "정렬 기준",
+                "ì •ë ¬ ê¸°ì¤€",
                 options=sort_options,
                 index=0 if sort_options else 0
             )
             
-            # 정렬 적용
-            if sort_option == "날짜(최신순)" and "검사일자" in filtered_df.columns:
-                filtered_df = filtered_df.sort_values(by="검사일자", ascending=False)
-            elif sort_option == "날짜(오래된순)" and "검사일자" in filtered_df.columns:
-                filtered_df = filtered_df.sort_values(by="검사일자", ascending=True)
-            elif sort_option == "불량률(높은순)" and "불량률(%)" in filtered_df.columns:
-                filtered_df = filtered_df.sort_values(by="불량률(%)", ascending=False)
-            elif sort_option == "불량률(낮은순)" and "불량률(%)" in filtered_df.columns:
-                filtered_df = filtered_df.sort_values(by="불량률(%)", ascending=True)
+            # ì •ë ¬ ì ìš©
+            if sort_option == "ë‚ ì§œ(ìµœì‹ ìˆœ)" and "ê²€ì‚¬ì¼ìž" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="ê²€ì‚¬ì¼ìž", ascending=False)
+            elif sort_option == "ë‚ ì§œ(ì˜¤ëž˜ëœìˆœ)" and "ê²€ì‚¬ì¼ìž" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="ê²€ì‚¬ì¼ìž", ascending=True)
+            elif sort_option == "ë¶ˆëŸ‰ë¥ (ë†’ì€ìˆœ)" and "ë¶ˆëŸ‰ë¥ (%)" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="ë¶ˆëŸ‰ë¥ (%)", ascending=False)
+            elif sort_option == "ë¶ˆëŸ‰ë¥ (ë‚®ì€ìˆœ)" and "ë¶ˆëŸ‰ë¥ (%)" in filtered_df.columns:
+                filtered_df = filtered_df.sort_values(by="ë¶ˆëŸ‰ë¥ (%)", ascending=True)
             
-            # 필터링된 생산 실적 표시
+            # í•„í„°ë§ëœ ìƒì‚° ì‹¤ì  í‘œì‹œ
             if filtered_df.empty:
-                st.warning("검색 조건에 맞는 데이터가 없습니다.")
+                st.warning("ê²€ìƒ‰ ì¡°ê±´ì— ë§žëŠ” ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.")
             else:
-                # 날짜 형식 변환 (표시용)
-                if "검사일자" in filtered_df.columns and filtered_df["검사일자"].dtype == 'datetime64[ns]':
-                    filtered_df["검사일자"] = filtered_df["검사일자"].dt.strftime("%Y-%m-%d")
+                # ë‚ ì§œ í˜•ì‹ ë³€í™˜ (í‘œì‹œìš©)
+                if "ê²€ì‚¬ì¼ìž" in filtered_df.columns and filtered_df["ê²€ì‚¬ì¼ìž"].dtype == 'datetime64[ns]':
+                    filtered_df["ê²€ì‚¬ì¼ìž"] = filtered_df["ê²€ì‚¬ì¼ìž"].dt.strftime("%Y-%m-%d")
                 
-                # 컬럼 구성 설정
+                # ì»¬ëŸ¼ êµ¬ì„± ì„¤ì •
                 column_config = {}
                 
-                # 불량률 프로그레스 바 설정
-                if "불량률(%)" in filtered_df.columns:
-                    column_config["불량률(%)"] = st.column_config.ProgressColumn(
-                        "불량률(%)",
-                        help="검사 수량 중 불량 비율",
+                # ë¶ˆëŸ‰ë¥  í”„ë¡œê·¸ë ˆìŠ¤ ë°” ì„¤ì •
+                if "ë¶ˆëŸ‰ë¥ (%)" in filtered_df.columns:
+                    column_config["ë¶ˆëŸ‰ë¥ (%)"] = st.column_config.ProgressColumn(
+                        "ë¶ˆëŸ‰ë¥ (%)",
+                        help="ê²€ì‚¬ ìˆ˜ëŸ‰ ì¤‘ ë¶ˆëŸ‰ ë¹„ìœ¨",
                         format="%.2f%%",
                         min_value=0,
                         max_value=10,
                     )
                 
-                # 달성률 프로그레스 바 설정 (계획수량 대비 검사수량)
-                if "계획수량" in filtered_df.columns and "검사수량" in filtered_df.columns:
-                    # 달성률 계산이 안 되어있으면 계산
-                    if "달성률(%)" not in filtered_df.columns:
-                        filtered_df["달성률(%)"] = (filtered_df["검사수량"] / filtered_df["계획수량"] * 100).round(2)
+                # ë‹¬ì„±ë¥  í”„ë¡œê·¸ë ˆìŠ¤ ë°” ì„¤ì • (ê³„íšìˆ˜ëŸ‰ ëŒ€ë¹„ ê²€ì‚¬ìˆ˜ëŸ‰)
+                if "ê³„íšìˆ˜ëŸ‰" in filtered_df.columns and "ê²€ì‚¬ìˆ˜ëŸ‰" in filtered_df.columns:
+                    # ë‹¬ì„±ë¥  ê³„ì‚°ì´ ì•ˆ ë˜ì–´ìžˆìœ¼ë©´ ê³„ì‚°
+                    if "ë‹¬ì„±ë¥ (%)" not in filtered_df.columns:
+                        filtered_df["ë‹¬ì„±ë¥ (%)"] = (filtered_df["ê²€ì‚¬ìˆ˜ëŸ‰"] / filtered_df["ê³„íšìˆ˜ëŸ‰"] * 100).round(2)
                     
-                    column_config["달성률(%)"] = st.column_config.ProgressColumn(
-                        "달성률(%)",
-                        help="계획 대비 검사 달성률",
+                    column_config["ë‹¬ì„±ë¥ (%)"] = st.column_config.ProgressColumn(
+                        "ë‹¬ì„±ë¥ (%)",
+                        help="ê³„íš ëŒ€ë¹„ ê²€ì‚¬ ë‹¬ì„±ë¥ ",
                         format="%.2f%%",
                         min_value=0,
                         max_value=120,
                         width="medium"
                     )
                 
-                # 데이터 표시
+                # ë°ì´í„° í‘œì‹œ
                 st.dataframe(
                     filtered_df,
                     use_container_width=True,
@@ -2905,111 +2905,111 @@ elif st.session_state.page == "inspection_data":
                     column_config=column_config
                 )
     
-    # 나머지 탭은 구현이 복잡하므로 간단한 안내 메시지로 대체
+    # ë‚˜ë¨¸ì§€ íƒ­ì€ êµ¬í˜„ì´ ë³µìž¡í•˜ë¯€ë¡œ ê°„ë‹¨í•œ ì•ˆë‚´ ë©”ì‹œì§€ë¡œ ëŒ€ì²´
     with tab2:
-        # 실적 데이터 입력 폼 구현
-        st.subheader("검사실적 데이터 입력")
+        # ì‹¤ì  ë°ì´í„° ìž…ë ¥ í¼ êµ¬í˜„
+        st.subheader("ê²€ì‚¬ì‹¤ì  ë°ì´í„° ìž…ë ¥")
         
-        # 기본 정보 입력 폼
+        # ê¸°ë³¸ ì •ë³´ ìž…ë ¥ í¼
         col1, col2 = st.columns(2)
         with col1:
-            # 세션에 저장된 검사원 목록 사용 또는 가져오기
+            # ì„¸ì…˜ì— ì €ìž¥ëœ ê²€ì‚¬ì› ëª©ë¡ ì‚¬ìš© ë˜ëŠ” ê°€ì ¸ì˜¤ê¸°
             if 'inspectors' not in st.session_state or len(st.session_state.inspectors) == 0:
                 try:
                     st.session_state.inspectors = load_inspectors()
                 except Exception as e:
-                    st.error(f"검사원 목록을 불러오는데 실패했습니다: {str(e)}")
-                    # 백업 검사원 목록 설정
+                    st.error(f"ê²€ì‚¬ì› ëª©ë¡ì„ ë¶ˆëŸ¬ì˜¤ëŠ”ë° ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤: {str(e)}")
+                    # ë°±ì—… ê²€ì‚¬ì› ëª©ë¡ ì„¤ì •
                     default_inspectors = [
-                        {"id": "INS001", "name": "홍길동", "department": "CNC_1"},
-                        {"id": "INS002", "name": "김철수", "department": "CNC_2"},
-                        {"id": "INS003", "name": "이영희", "department": "PQC_LINE"},
-                        {"id": "INS004", "name": "박민수", "department": "CNC_1"},
-                        {"id": "INS005", "name": "최지훈", "department": "CNC_2"}
+                        {"id": "INS001", "name": "í™ê¸¸ë™", "department": "CNC_1"},
+                        {"id": "INS002", "name": "ê¹€ì² ìˆ˜", "department": "CNC_2"},
+                        {"id": "INS003", "name": "ì´ì˜í¬", "department": "PQC_LINE"},
+                        {"id": "INS004", "name": "ë°•ë¯¼ìˆ˜", "department": "CNC_1"},
+                        {"id": "INS005", "name": "ìµœì§€í›ˆ", "department": "CNC_2"}
                     ]
                     st.session_state.inspectors = pd.DataFrame(default_inspectors)
             
-            # 검사원 이름 목록 추출
-            inspector_names = ["검사원을 선택하세요"] + st.session_state.inspectors["name"].tolist()
+            # ê²€ì‚¬ì› ì´ë¦„ ëª©ë¡ ì¶”ì¶œ
+            inspector_names = ["ê²€ì‚¬ì›ì„ ì„ íƒí•˜ì„¸ìš”"] + st.session_state.inspectors["name"].tolist()
             
             inspector_name = st.selectbox(
-                "검사원 이름",
+                "ê²€ì‚¬ì› ì´ë¦„",
                 options=inspector_names,
                 index=0,
                 key="input_inspector_name"
             )
             
-            # 검사원 ID 자동 입력
+            # ê²€ì‚¬ì› ID ìžë™ ìž…ë ¥
             inspector_id = ""
-            if inspector_name != "검사원을 선택하세요":
+            if inspector_name != "ê²€ì‚¬ì›ì„ ì„ íƒí•˜ì„¸ìš”":
                 inspector_row = st.session_state.inspectors[st.session_state.inspectors["name"] == inspector_name]
                 if not inspector_row.empty:
                     inspector_id = inspector_row.iloc[0]["id"]
             
-            st.text_input("검사원 ID", value=inspector_id, key="input_inspector_id", disabled=True)
+            st.text_input("ê²€ì‚¬ì› ID", value=inspector_id, key="input_inspector_id", disabled=True)
             
             process = st.selectbox(
-                "공정",
-                options=["공정을 선택하세요", "IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
+                "ê³µì •",
+                options=["ê³µì •ì„ ì„ íƒí•˜ì„¸ìš”", "IQC", "CNC1_PQC", "CNC2_PQC", "OQC", "CNC OQC"],
                 index=0,
                 key="input_process"
             )
             
-            # 모델명 선택 - 생산모델 데이터에서 가져오기
+            # ëª¨ë¸ëª… ì„ íƒ - ìƒì‚°ëª¨ë¸ ë°ì´í„°ì—ì„œ ê°€ì ¸ì˜¤ê¸°
             models_df = load_product_models()
-            model_options = ["모델을 선택하세요"]
+            model_options = ["ëª¨ë¸ì„ ì„ íƒí•˜ì„¸ìš”"]
             
-            if not models_df.empty and "모델명" in models_df.columns:
-                model_options += sorted(models_df["모델명"].unique().tolist())
+            if not models_df.empty and "ëª¨ë¸ëª…" in models_df.columns:
+                model_options += sorted(models_df["ëª¨ë¸ëª…"].unique().tolist())
             else:
-                # 기본 모델 이름 목록
+                # ê¸°ë³¸ ëª¨ë¸ ì´ë¦„ ëª©ë¡
                 model_options += ["BY2", "PA1", "PS SUB6", "E1", "PA3", "B7DUALSIM", "Y2", 
                          "B7R SUB6", "B6S6", "B5S6", "B7SUB", "B6", "B7MMW", "B7R MMW", "PA2", 
                          "B5M", "B7RR", "B7R SUB", "B7R", "B6M", "B7SUB6"]
             
             model_name = st.selectbox(
-                "모델명",
+                "ëª¨ë¸ëª…",
                 options=model_options,
                 index=0,
                 key="input_model"
             )
             
         with col2:
-            inspection_date = st.date_input("검사일자", datetime.now(), key="input_date")
+            inspection_date = st.date_input("ê²€ì‚¬ì¼ìž", datetime.now(), key="input_date")
             
-            lot_number = st.text_input("LOT 번호", placeholder="LOT 번호를 입력하세요", key="input_lot")
+            lot_number = st.text_input("LOT ë²ˆí˜¸", placeholder="LOT ë²ˆí˜¸ë¥¼ ìž…ë ¥í•˜ì„¸ìš”", key="input_lot")
             
-            work_time = st.number_input("작업 시간(분)", min_value=0, value=60, placeholder="작업 시간을 분 단위로 입력하세요", key="input_work_time")
+            work_time = st.number_input("ìž‘ì—… ì‹œê°„(ë¶„)", min_value=0, value=60, placeholder="ìž‘ì—… ì‹œê°„ì„ ë¶„ ë‹¨ìœ„ë¡œ ìž…ë ¥í•˜ì„¸ìš”", key="input_work_time")
         
-        # 수량 정보 입력
+        # ìˆ˜ëŸ‰ ì •ë³´ ìž…ë ¥
         col1, col2, col3 = st.columns(3)
         with col1:
-            plan_quantity = st.number_input("계획 수량", min_value=0, value=100, placeholder="계획 수량을 입력하세요", key="input_plan_qty")
+            plan_quantity = st.number_input("ê³„íš ìˆ˜ëŸ‰", min_value=0, value=100, placeholder="ê³„íš ìˆ˜ëŸ‰ì„ ìž…ë ¥í•˜ì„¸ìš”", key="input_plan_qty")
         with col2:
-            total_quantity = st.number_input("총 검사 수량", min_value=0, value=0, placeholder="총 검사 수량을 입력하세요", key="input_total_qty")
+            total_quantity = st.number_input("ì´ ê²€ì‚¬ ìˆ˜ëŸ‰", min_value=0, value=0, placeholder="ì´ ê²€ì‚¬ ìˆ˜ëŸ‰ì„ ìž…ë ¥í•˜ì„¸ìš”", key="input_total_qty")
         with col3:
-            defect_quantity = st.number_input("불량 수량", min_value=0, value=0, placeholder="불량 수량을 입력하세요", key="input_defect_qty")
+            defect_quantity = st.number_input("ë¶ˆëŸ‰ ìˆ˜ëŸ‰", min_value=0, value=0, placeholder="ë¶ˆëŸ‰ ìˆ˜ëŸ‰ì„ ìž…ë ¥í•˜ì„¸ìš”", key="input_defect_qty")
         
-        # 불량 정보 입력 섹션
+        # ë¶ˆëŸ‰ ì •ë³´ ìž…ë ¥ ì„¹ì…˜
         if defect_quantity > 0:
-            st.subheader("불량 정보")
+            st.subheader("ë¶ˆëŸ‰ ì •ë³´")
             
-            # 불량 유형 선택
+            # ë¶ˆëŸ‰ ìœ í˜• ì„ íƒ
             defect_types = st.multiselect(
-                "불량 유형 선택",
-                options=["ĂN MÒN", "ATN CRACK", "CẮT SÂU, GỜ BẬC", "CHƯA GIA CÔNG HẾT", "CHƯA GIA CÔNG USB", 
-                         "CRACK", "ĐỘ DẦY MAX", "ĐỘ DẦY MIN", "GÃY TOOL", "GỜ BẬC KHE SÓNG", 
-                         "HOLE KÍCH THƯỚC", "KÍCH THƯỚC KHE SÓNG", "LỆCH USB", "Lỗi Khác", "MÒN TOOL, hết CNC", 
-                         "NG 3D (MÁY)", "NG CHIỀU DÀI PHÔI", "NG CHIỀU RỘNG PHÔI", "NG ĐỘ DẦY PHÔI", "NG KÍCH THƯỚC", 
-                         "NG PHÔI", "NG T CUT", "ø1 CRACK", "ø1 CRACK PIN JIG", "SETTING", 
-                         "TẮC NƯỚC", "TÊN LỖI", "THAO TÁC1", "THAO TÁC2", "THAO TÁC3", 
-                         "TOOL RUNG LẮC", "TRÀN NHỰA", "TRỤC A", "VẾT ĐÂM"],
-                placeholder="불량 유형을 선택하세요",
+                "ë¶ˆëŸ‰ ìœ í˜• ì„ íƒ",
+                options=["Ä‚N MÃ’N", "ATN CRACK", "Cáº®T SÃ‚U, Gá»œ Báº¬C", "CHÆ¯A GIA CÃ”NG Háº¾T", "CHÆ¯A GIA CÃ”NG USB", 
+                         "CRACK", "Äá»˜ Dáº¦Y MAX", "Äá»˜ Dáº¦Y MIN", "GÃƒY TOOL", "Gá»œ Báº¬C KHE SÃ“NG", 
+                         "HOLE KÃCH THÆ¯á»šC", "KÃCH THÆ¯á»šC KHE SÃ“NG", "Lá»†CH USB", "Lá»—i KhÃ¡c", "MÃ’N TOOL, háº¿t CNC", 
+                         "NG 3D (MÃY)", "NG CHIá»€U DÃ€I PHÃ”I", "NG CHIá»€U Rá»˜NG PHÃ”I", "NG Äá»˜ Dáº¦Y PHÃ”I", "NG KÃCH THÆ¯á»šC", 
+                         "NG PHÃ”I", "NG T CUT", "Ã¸1 CRACK", "Ã¸1 CRACK PIN JIG", "SETTING", 
+                         "Táº®C NÆ¯á»šC", "TÃŠN Lá»–I", "THAO TÃC1", "THAO TÃC2", "THAO TÃC3", 
+                         "TOOL RUNG Láº®C", "TRÃ€N NHá»°A", "TRá»¤C A", "Váº¾T ÄÃ‚M"],
+                placeholder="ë¶ˆëŸ‰ ìœ í˜•ì„ ì„ íƒí•˜ì„¸ìš”",
                 key="defect_types"
             )
             
             if defect_types:
-                # 불량 유형별 수량 입력
+                # ë¶ˆëŸ‰ ìœ í˜•ë³„ ìˆ˜ëŸ‰ ìž…ë ¥
                 cols = st.columns(min(len(defect_types), 3))
                 defect_details = []
                 total_defects = 0
@@ -3017,7 +3017,7 @@ elif st.session_state.page == "inspection_data":
                 for i, defect_type in enumerate(defect_types):
                     with cols[i % 3]:
                         qty = st.number_input(
-                            f"{defect_type} 수량",
+                            f"{defect_type} ìˆ˜ëŸ‰",
                             min_value=0,
                             max_value=defect_quantity,
                             key=f"defect_{i}"
@@ -3027,388 +3027,388 @@ elif st.session_state.page == "inspection_data":
                             total_defects += qty
                 
                 if total_defects != defect_quantity:
-                    st.warning(f"입력한 불량 수량 합계 ({total_defects})가 총 불량 수량 ({defect_quantity})과 일치하지 않습니다.")
+                    st.warning(f"ìž…ë ¥í•œ ë¶ˆëŸ‰ ìˆ˜ëŸ‰ í•©ê³„ ({total_defects})ê°€ ì´ ë¶ˆëŸ‰ ìˆ˜ëŸ‰ ({defect_quantity})ê³¼ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.")
             
-            # 불량 세부정보를 세션에 저장
+            # ë¶ˆëŸ‰ ì„¸ë¶€ì •ë³´ë¥¼ ì„¸ì…˜ì— ì €ìž¥
             st.session_state.defect_details = defect_details if defect_types else []
         else:
-            # 불량이 없는 경우 세션에서 불량 세부정보 초기화
+            # ë¶ˆëŸ‰ì´ ì—†ëŠ” ê²½ìš° ì„¸ì…˜ì—ì„œ ë¶ˆëŸ‰ ì„¸ë¶€ì •ë³´ ì´ˆê¸°í™”
             st.session_state.defect_details = []
         
-        # 지표 계산 및 표시
+        # ì§€í‘œ ê³„ì‚° ë° í‘œì‹œ
         if total_quantity > 0:
-            st.subheader("검사 지표")
+            st.subheader("ê²€ì‚¬ ì§€í‘œ")
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                # 불량률 계산
+                # ë¶ˆëŸ‰ë¥  ê³„ì‚°
                 defect_rate = round((defect_quantity / total_quantity * 100), 2) if total_quantity > 0 else 0
-                st.metric("불량률", f"{defect_rate}%")
+                st.metric("ë¶ˆëŸ‰ë¥ ", f"{defect_rate}%")
             
             with col2:
-                # 목표 대비 검사율 계산
+                # ëª©í‘œ ëŒ€ë¹„ ê²€ì‚¬ìœ¨ ê³„ì‚°
                 inspection_rate = round((total_quantity / plan_quantity * 100), 2) if plan_quantity > 0 else 0
-                inspection_status = "✅ 목표 달성" if inspection_rate >= 100 else "⏳ 진행 중"
-                st.metric("목표대비 검사율", f"{inspection_rate}%", delta=f"{inspection_status}")
+                inspection_status = "âœ… ëª©í‘œ ë‹¬ì„±" if inspection_rate >= 100 else "â³ ì§„í–‰ ì¤‘"
+                st.metric("ëª©í‘œëŒ€ë¹„ ê²€ì‚¬ìœ¨", f"{inspection_rate}%", delta=f"{inspection_status}")
             
             with col3:
-                # 시간당 검사량 및 목표 달성 예상 시간
+                # ì‹œê°„ë‹¹ ê²€ì‚¬ëŸ‰ ë° ëª©í‘œ ë‹¬ì„± ì˜ˆìƒ ì‹œê°„
                 if work_time > 0:
                     hourly_rate = round((total_quantity / work_time * 60), 1)
                     time_to_complete = round((plan_quantity - total_quantity) / hourly_rate * 60) if hourly_rate > 0 else 0
                     
                     if total_quantity < plan_quantity:
-                        st.metric("시간당 검사량", f"{hourly_rate}개/시간", 
-                                 delta=f"목표 달성까지 약 {time_to_complete}분 소요 예상")
+                        st.metric("ì‹œê°„ë‹¹ ê²€ì‚¬ëŸ‰", f"{hourly_rate}ê°œ/ì‹œê°„", 
+                                 delta=f"ëª©í‘œ ë‹¬ì„±ê¹Œì§€ ì•½ {time_to_complete}ë¶„ ì†Œìš” ì˜ˆìƒ")
                     else:
-                        st.metric("시간당 검사량", f"{hourly_rate}개/시간", delta="목표 달성 완료")
+                        st.metric("ì‹œê°„ë‹¹ ê²€ì‚¬ëŸ‰", f"{hourly_rate}ê°œ/ì‹œê°„", delta="ëª©í‘œ ë‹¬ì„± ì™„ë£Œ")
         
-        # 비고 입력
-        memo = st.text_area("비고", placeholder="특이사항이 있으면 입력하세요", key="input_memo", help="추가 특이사항이 있으면 입력하세요.")
+        # ë¹„ê³  ìž…ë ¥
+        memo = st.text_area("ë¹„ê³ ", placeholder="íŠ¹ì´ì‚¬í•­ì´ ìžˆìœ¼ë©´ ìž…ë ¥í•˜ì„¸ìš”", key="input_memo", help="ì¶”ê°€ íŠ¹ì´ì‚¬í•­ì´ ìžˆìœ¼ë©´ ìž…ë ¥í•˜ì„¸ìš”.")
         
-        # 저장 버튼
-        if st.button("데이터 저장", use_container_width=True):
-            # 입력 검증
-            if inspector_name == "검사원을 선택하세요":
-                st.error("검사원을 선택해주세요.")
-            elif process == "공정을 선택하세요":
-                st.error("공정을 선택해주세요.")    
-            elif model_name == "모델을 선택하세요":
-                st.error("모델을 선택해주세요.")
+        # ì €ìž¥ ë²„íŠ¼
+        if st.button("ë°ì´í„° ì €ìž¥", use_container_width=True):
+            # ìž…ë ¥ ê²€ì¦
+            if inspector_name == "ê²€ì‚¬ì›ì„ ì„ íƒí•˜ì„¸ìš”":
+                st.error("ê²€ì‚¬ì›ì„ ì„ íƒí•´ì£¼ì„¸ìš”.")
+            elif process == "ê³µì •ì„ ì„ íƒí•˜ì„¸ìš”":
+                st.error("ê³µì •ì„ ì„ íƒí•´ì£¼ì„¸ìš”.")    
+            elif model_name == "ëª¨ë¸ì„ ì„ íƒí•˜ì„¸ìš”":
+                st.error("ëª¨ë¸ì„ ì„ íƒí•´ì£¼ì„¸ìš”.")
             elif total_quantity <= 0:
-                st.error("검사 수량을 입력해주세요.")
+                st.error("ê²€ì‚¬ ìˆ˜ëŸ‰ì„ ìž…ë ¥í•´ì£¼ì„¸ìš”.")
             elif defect_quantity > total_quantity:
-                st.error("불량 수량은 총 검사 수량보다 클 수 없습니다.")
+                st.error("ë¶ˆëŸ‰ ìˆ˜ëŸ‰ì€ ì´ ê²€ì‚¬ ìˆ˜ëŸ‰ë³´ë‹¤ í´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.")
             else:
-                # 데이터 준비
+                # ë°ì´í„° ì¤€ë¹„
                 inspection_data = {
-                    "검사원": inspector_name,
-                    "공정": process,
-                    "모델명": model_name,
-                    "검사일자": inspection_date.strftime("%Y-%m-%d"),
-                    "검사시간": time.strftime("%H:%M"),
-                    "LOT번호": lot_number,
-                    "작업시간(분)": work_time,
-                    "계획수량": plan_quantity,
-                    "검사수량": total_quantity,
-                    "불량수량": defect_quantity,
-                    "불량률(%)": defect_rate if total_quantity > 0 else 0,
-                    "달성률(%)": inspection_rate if plan_quantity > 0 else 0,
-                    "비고": memo
+                    "ê²€ì‚¬ì›": inspector_name,
+                    "ê³µì •": process,
+                    "ëª¨ë¸ëª…": model_name,
+                    "ê²€ì‚¬ì¼ìž": inspection_date.strftime("%Y-%m-%d"),
+                    "ê²€ì‚¬ì‹œê°„": time.strftime("%H:%M"),
+                    "LOTë²ˆí˜¸": lot_number,
+                    "ìž‘ì—…ì‹œê°„(ë¶„)": work_time,
+                    "ê³„íšìˆ˜ëŸ‰": plan_quantity,
+                    "ê²€ì‚¬ìˆ˜ëŸ‰": total_quantity,
+                    "ë¶ˆëŸ‰ìˆ˜ëŸ‰": defect_quantity,
+                    "ë¶ˆëŸ‰ë¥ (%)": defect_rate if total_quantity > 0 else 0,
+                    "ë‹¬ì„±ë¥ (%)": inspection_rate if plan_quantity > 0 else 0,
+                    "ë¹„ê³ ": memo
                 }
                 
-                # 불량 세부정보가 있는 경우 함께 저장
+                # ë¶ˆëŸ‰ ì„¸ë¶€ì •ë³´ê°€ ìžˆëŠ” ê²½ìš° í•¨ê»˜ ì €ìž¥
                 if defect_quantity > 0 and hasattr(st.session_state, 'defect_details') and st.session_state.defect_details:
-                    inspection_data["불량세부"] = st.session_state.defect_details
+                    inspection_data["ë¶ˆëŸ‰ì„¸ë¶€"] = st.session_state.defect_details
                 
                 try:
-                    # 데이터베이스에 저장 시도
+                    # ë°ì´í„°ë² ì´ìŠ¤ì— ì €ìž¥ ì‹œë„
                     response = save_inspection_data(inspection_data)
                     
-                    # 불량 상세 저장 (각 불량 유형별로)
+                    # ë¶ˆëŸ‰ ìƒì„¸ ì €ìž¥ (ê° ë¶ˆëŸ‰ ìœ í˜•ë³„ë¡œ)
                     if defect_quantity > 0 and hasattr(st.session_state, 'defect_details'):
                         for defect_item in st.session_state.defect_details:
                             defect_data = {
-                                "불량유형": defect_item["type"],
-                                "수량": defect_item["quantity"],
-                                "검사ID": inspection_data.get("id", ""),  # 검사 ID가 있는 경우
-                                "등록일자": datetime.now().strftime("%Y-%m-%d"),
-                                "등록자": inspector_name,
-                                "비고": memo
+                                "ë¶ˆëŸ‰ìœ í˜•": defect_item["type"],
+                                "ìˆ˜ëŸ‰": defect_item["quantity"],
+                                "ê²€ì‚¬ID": inspection_data.get("id", ""),  # ê²€ì‚¬ IDê°€ ìžˆëŠ” ê²½ìš°
+                                "ë“±ë¡ì¼ìž": datetime.now().strftime("%Y-%m-%d"),
+                                "ë“±ë¡ìž": inspector_name,
+                                "ë¹„ê³ ": memo
                             }
                             try:
                                 save_defect_data(defect_data)
                             except Exception as e:
-                                st.warning(f"불량 세부 데이터 저장 중 오류: {str(e)}")
+                                st.warning(f"ë¶ˆëŸ‰ ì„¸ë¶€ ë°ì´í„° ì €ìž¥ ì¤‘ ì˜¤ë¥˜: {str(e)}")
                     
-                    st.success("검사실적 데이터가 성공적으로 저장되었습니다!")
+                    st.success("ê²€ì‚¬ì‹¤ì  ë°ì´í„°ê°€ ì„±ê³µì ìœ¼ë¡œ ì €ìž¥ë˜ì—ˆìŠµë‹ˆë‹¤!")
                     
-                    # 저장 성공 시 입력 필드 초기화 또는 다른 액션
+                    # ì €ìž¥ ì„±ê³µ ì‹œ ìž…ë ¥ í•„ë“œ ì´ˆê¸°í™” ë˜ëŠ” ë‹¤ë¥¸ ì•¡ì…˜
                     st.balloons()
                     time.sleep(1)
-                    st.experimental_rerun()  # 페이지 새로고침
+                    st.experimental_rerun()  # íŽ˜ì´ì§€ ìƒˆë¡œê³ ì¹¨
                 except Exception as e:
-                    # 로컬 세션에 저장 (데이터베이스 연결 실패 시)
+                    # ë¡œì»¬ ì„¸ì…˜ì— ì €ìž¥ (ë°ì´í„°ë² ì´ìŠ¤ ì—°ê²° ì‹¤íŒ¨ ì‹œ)
                     if 'saved_inspections' not in st.session_state:
                         st.session_state.saved_inspections = []
                     
                     st.session_state.saved_inspections.append(inspection_data)
-                    st.success("검사실적 데이터가 세션에 저장되었습니다. (데이터베이스 연결이 되면 자동으로 동기화됩니다)")
-                    st.info(f"참고: {str(e)}")
+                    st.success("ê²€ì‚¬ì‹¤ì  ë°ì´í„°ê°€ ì„¸ì…˜ì— ì €ìž¥ë˜ì—ˆìŠµë‹ˆë‹¤. (ë°ì´í„°ë² ì´ìŠ¤ ì—°ê²°ì´ ë˜ë©´ ìžë™ìœ¼ë¡œ ë™ê¸°í™”ë©ë‹ˆë‹¤)")
+                    st.info(f"ì°¸ê³ : {str(e)}")
                     time.sleep(1)
-                    st.experimental_rerun()  # 페이지 새로고침
+                    st.experimental_rerun()  # íŽ˜ì´ì§€ ìƒˆë¡œê³ ì¹¨
     
     with tab3:
-        # 간단한 데이터 검증 기능 구현
-        st.subheader("데이터 검증")
+        # ê°„ë‹¨í•œ ë°ì´í„° ê²€ì¦ ê¸°ëŠ¥ êµ¬í˜„
+        st.subheader("ë°ì´í„° ê²€ì¦")
         
-        # 날짜 범위 선택
+        # ë‚ ì§œ ë²”ìœ„ ì„ íƒ
         col1, col2 = st.columns(2)
         with col1:
-            start_date = st.date_input("시작일", datetime.now() - timedelta(days=30), key="verify_start_date")
+            start_date = st.date_input("ì‹œìž‘ì¼", datetime.now() - timedelta(days=30), key="verify_start_date")
         with col2:
-            end_date = st.date_input("종료일", datetime.now(), key="verify_end_date")
+            end_date = st.date_input("ì¢…ë£Œì¼", datetime.now(), key="verify_end_date")
         
-        # 검증 유형 선택
+        # ê²€ì¦ ìœ í˜• ì„ íƒ
         verification_type = st.selectbox(
-            "검증 유형",
-            options=["검증 유형을 선택하세요", "누락 데이터 검사", "불량률 이상치 검사", "LOT 중복 검사", "전체 검사"],
+            "ê²€ì¦ ìœ í˜•",
+            options=["ê²€ì¦ ìœ í˜•ì„ ì„ íƒí•˜ì„¸ìš”", "ëˆ„ë½ ë°ì´í„° ê²€ì‚¬", "ë¶ˆëŸ‰ë¥  ì´ìƒì¹˜ ê²€ì‚¬", "LOT ì¤‘ë³µ ê²€ì‚¬", "ì „ì²´ ê²€ì‚¬"],
             index=0,
             key="verification_type"
         )
         
-        # 데이터 로드 및 검증 버튼
-        if st.button("데이터 검증 실행", key="run_verification"):
-            # 로딩 표시
-            with st.spinner("데이터 검증 중..."):
-                time.sleep(1)  # 검증 작업 시뮬레이션
+        # ë°ì´í„° ë¡œë“œ ë° ê²€ì¦ ë²„íŠ¼
+        if st.button("ë°ì´í„° ê²€ì¦ ì‹¤í–‰", key="run_verification"):
+            # ë¡œë”© í‘œì‹œ
+            with st.spinner("ë°ì´í„° ê²€ì¦ ì¤‘..."):
+                time.sleep(1)  # ê²€ì¦ ìž‘ì—… ì‹œë®¬ë ˆì´ì…˜
                 
-                # 실제 검사 데이터 로드
+                # ì‹¤ì œ ê²€ì‚¬ ë°ì´í„° ë¡œë“œ
                 inspection_data = load_inspection_data()
                 
                 if not inspection_data.empty:
                     df = inspection_data.copy()
                     
-                    # 날짜 필터 적용
-                    if "검사일자" in df.columns:
+                    # ë‚ ì§œ í•„í„° ì ìš©
+                    if "ê²€ì‚¬ì¼ìž" in df.columns:
                         try:
-                            # 날짜 형식 확인 및 변환
-                            if df["검사일자"].dtype != 'datetime64[ns]':
-                                df["검사일자"] = pd.to_datetime(df["검사일자"])
+                            # ë‚ ì§œ í˜•ì‹ í™•ì¸ ë° ë³€í™˜
+                            if df["ê²€ì‚¬ì¼ìž"].dtype != 'datetime64[ns]':
+                                df["ê²€ì‚¬ì¼ìž"] = pd.to_datetime(df["ê²€ì‚¬ì¼ìž"])
                             
-                            # 필터링
+                            # í•„í„°ë§
                             df = df[
-                                (df["검사일자"].dt.date >= pd.Timestamp(start_date).date()) & 
-                                (df["검사일자"].dt.date <= pd.Timestamp(end_date).date())
+                                (df["ê²€ì‚¬ì¼ìž"].dt.date >= pd.Timestamp(start_date).date()) & 
+                                (df["ê²€ì‚¬ì¼ìž"].dt.date <= pd.Timestamp(end_date).date())
                             ]
                         except Exception as e:
-                            st.warning(f"날짜 필터링 중 오류 발생: {str(e)}")
+                            st.warning(f"ë‚ ì§œ í•„í„°ë§ ì¤‘ ì˜¤ë¥˜ ë°œìƒ: {str(e)}")
                     
-                    st.success(f"총 {len(df)}개의 검사 데이터를 검증했습니다.")
+                    st.success(f"ì´ {len(df)}ê°œì˜ ê²€ì‚¬ ë°ì´í„°ë¥¼ ê²€ì¦í–ˆìŠµë‹ˆë‹¤.")
                     
-                    # 선택한 검증 유형에 따른 결과 표시
-                    if verification_type == "누락 데이터 검사" or verification_type == "전체 검사":
-                        # 필수 필드 정의
-                        required_fields = ["검사원", "공정", "모델명", "검사일자", "검사수량"]
+                    # ì„ íƒí•œ ê²€ì¦ ìœ í˜•ì— ë”°ë¥¸ ê²°ê³¼ í‘œì‹œ
+                    if verification_type == "ëˆ„ë½ ë°ì´í„° ê²€ì‚¬" or verification_type == "ì „ì²´ ê²€ì‚¬":
+                        # í•„ìˆ˜ í•„ë“œ ì •ì˜
+                        required_fields = ["ê²€ì‚¬ì›", "ê³µì •", "ëª¨ë¸ëª…", "ê²€ì‚¬ì¼ìž", "ê²€ì‚¬ìˆ˜ëŸ‰"]
                         
-                        # 필수 필드 누락 검사
+                        # í•„ìˆ˜ í•„ë“œ ëˆ„ë½ ê²€ì‚¬
                         missing_mask = df[required_fields].isnull().any(axis=1)
                         missing_data = df[missing_mask]
                         
                         if len(missing_data) > 0:
-                            st.warning(f"{len(missing_data)}개의 검사 데이터에 필수 값이 누락되었습니다.")
+                            st.warning(f"{len(missing_data)}ê°œì˜ ê²€ì‚¬ ë°ì´í„°ì— í•„ìˆ˜ ê°’ì´ ëˆ„ë½ë˜ì—ˆìŠµë‹ˆë‹¤.")
                             st.dataframe(missing_data)
                         else:
-                            st.info("누락된 필수 데이터가 없습니다.")
+                            st.info("ëˆ„ë½ëœ í•„ìˆ˜ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.")
                     
-                    if verification_type == "불량률 이상치 검사" or verification_type == "전체 검사":
-                        if "불량률(%)" in df.columns:
-                            # 이상치 기준: 불량률 5% 초과
+                    if verification_type == "ë¶ˆëŸ‰ë¥  ì´ìƒì¹˜ ê²€ì‚¬" or verification_type == "ì „ì²´ ê²€ì‚¬":
+                        if "ë¶ˆëŸ‰ë¥ (%)" in df.columns:
+                            # ì´ìƒì¹˜ ê¸°ì¤€: ë¶ˆëŸ‰ë¥  5% ì´ˆê³¼
                             outlier_threshold = 5.0
-                            outliers = df[df["불량률(%)"] > outlier_threshold]
+                            outliers = df[df["ë¶ˆëŸ‰ë¥ (%)"] > outlier_threshold]
                             
                             if len(outliers) > 0:
-                                st.warning(f"{len(outliers)}개의 검사 데이터에 불량률 이상치가 있습니다. (기준: {outlier_threshold}% 초과)")
-                                display_cols = ["검사일자", "모델명", "공정", "검사수량", "불량수량", "불량률(%)"]
+                                st.warning(f"{len(outliers)}ê°œì˜ ê²€ì‚¬ ë°ì´í„°ì— ë¶ˆëŸ‰ë¥  ì´ìƒì¹˜ê°€ ìžˆìŠµë‹ˆë‹¤. (ê¸°ì¤€: {outlier_threshold}% ì´ˆê³¼)")
+                                display_cols = ["ê²€ì‚¬ì¼ìž", "ëª¨ë¸ëª…", "ê³µì •", "ê²€ì‚¬ìˆ˜ëŸ‰", "ë¶ˆëŸ‰ìˆ˜ëŸ‰", "ë¶ˆëŸ‰ë¥ (%)"]
                                 display_cols = [col for col in display_cols if col in outliers.columns]
                                 st.dataframe(outliers[display_cols])
                             else:
-                                st.info("불량률 이상치가 없습니다.")
+                                st.info("ë¶ˆëŸ‰ë¥  ì´ìƒì¹˜ê°€ ì—†ìŠµë‹ˆë‹¤.")
                     
-                    if verification_type == "LOT 중복 검사" or verification_type == "전체 검사":
-                        if "LOT번호" in df.columns:
-                            # LOT번호가 비어있지 않은 데이터만 고려
-                            df_with_lot = df[df["LOT번호"].notna() & (df["LOT번호"] != "")]
-                            duplicates = df_with_lot[df_with_lot.duplicated("LOT번호", keep=False)]
+                    if verification_type == "LOT ì¤‘ë³µ ê²€ì‚¬" or verification_type == "ì „ì²´ ê²€ì‚¬":
+                        if "LOTë²ˆí˜¸" in df.columns:
+                            # LOTë²ˆí˜¸ê°€ ë¹„ì–´ìžˆì§€ ì•Šì€ ë°ì´í„°ë§Œ ê³ ë ¤
+                            df_with_lot = df[df["LOTë²ˆí˜¸"].notna() & (df["LOTë²ˆí˜¸"] != "")]
+                            duplicates = df_with_lot[df_with_lot.duplicated("LOTë²ˆí˜¸", keep=False)]
                             
                             if len(duplicates) > 0:
-                                st.warning(f"{len(duplicates)}개의 검사 데이터에 LOT 번호 중복이 있습니다.")
-                                display_cols = ["검사일자", "LOT번호", "모델명", "공정", "검사수량"]
+                                st.warning(f"{len(duplicates)}ê°œì˜ ê²€ì‚¬ ë°ì´í„°ì— LOT ë²ˆí˜¸ ì¤‘ë³µì´ ìžˆìŠµë‹ˆë‹¤.")
+                                display_cols = ["ê²€ì‚¬ì¼ìž", "LOTë²ˆí˜¸", "ëª¨ë¸ëª…", "ê³µì •", "ê²€ì‚¬ìˆ˜ëŸ‰"]
                                 display_cols = [col for col in display_cols if col in duplicates.columns]
-                                st.dataframe(duplicates[display_cols].sort_values(by="LOT번호"))
+                                st.dataframe(duplicates[display_cols].sort_values(by="LOTë²ˆí˜¸"))
                             else:
-                                st.info("LOT 번호 중복이 없습니다.")
+                                st.info("LOT ë²ˆí˜¸ ì¤‘ë³µì´ ì—†ìŠµë‹ˆë‹¤.")
                 else:
-                    # 데이터가 없을 경우
-                    st.info("검사 데이터가 없습니다. '실적 데이터 입력' 탭에서 데이터를 입력해주세요.")
+                    # ë°ì´í„°ê°€ ì—†ì„ ê²½ìš°
+                    st.info("ê²€ì‚¬ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤. 'ì‹¤ì  ë°ì´í„° ìž…ë ¥' íƒ­ì—ì„œ ë°ì´í„°ë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.")
             
-            # 검증 완료 후 요약 정보
+            # ê²€ì¦ ì™„ë£Œ í›„ ìš”ì•½ ì •ë³´
             if not inspection_data.empty:
-                st.subheader("검증 요약")
+                st.subheader("ê²€ì¦ ìš”ì•½")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    # 검사 데이터 수
+                    # ê²€ì‚¬ ë°ì´í„° ìˆ˜
                     filtered_count = len(df) if 'df' in locals() else 0
                     total_count = len(inspection_data)
-                    st.metric("총 검사 데이터", f"{total_count}건", f"조회 기간: {filtered_count}건")
+                    st.metric("ì´ ê²€ì‚¬ ë°ì´í„°", f"{total_count}ê±´", f"ì¡°íšŒ ê¸°ê°„: {filtered_count}ê±´")
                 
                 with col2:
-                    # 평균 불량률
-                    if "불량률(%)" in inspection_data.columns:
-                        avg_defect_rate = inspection_data["불량률(%)"].mean()
-                        st.metric("평균 불량률", f"{avg_defect_rate:.2f}%")
+                    # í‰ê·  ë¶ˆëŸ‰ë¥ 
+                    if "ë¶ˆëŸ‰ë¥ (%)" in inspection_data.columns:
+                        avg_defect_rate = inspection_data["ë¶ˆëŸ‰ë¥ (%)"].mean()
+                        st.metric("í‰ê·  ë¶ˆëŸ‰ë¥ ", f"{avg_defect_rate:.2f}%")
                     else:
-                        st.metric("평균 불량률", "데이터 없음")
+                        st.metric("í‰ê·  ë¶ˆëŸ‰ë¥ ", "ë°ì´í„° ì—†ìŒ")
                 
                 with col3:
-                    # 가장 많은 모델
-                    if "모델명" in inspection_data.columns and not inspection_data.empty:
-                        top_model = inspection_data["모델명"].value_counts().idxmax()
-                        model_count = inspection_data["모델명"].value_counts().max()
-                        st.metric("최다 검사 모델", f"{top_model}", f"{model_count}건")
+                    # ê°€ìž¥ ë§Žì€ ëª¨ë¸
+                    if "ëª¨ë¸ëª…" in inspection_data.columns and not inspection_data.empty:
+                        top_model = inspection_data["ëª¨ë¸ëª…"].value_counts().idxmax()
+                        model_count = inspection_data["ëª¨ë¸ëª…"].value_counts().max()
+                        st.metric("ìµœë‹¤ ê²€ì‚¬ ëª¨ë¸", f"{top_model}", f"{model_count}ê±´")
                     else:
-                        st.metric("최다 검사 모델", "데이터 없음")
+                        st.metric("ìµœë‹¤ ê²€ì‚¬ ëª¨ë¸", "ë°ì´í„° ì—†ìŒ")
                 
-                # 어제와 오늘의 검사 데이터 비교
+                # ì–´ì œì™€ ì˜¤ëŠ˜ì˜ ê²€ì‚¬ ë°ì´í„° ë¹„êµ
                 today = datetime.now().date()
                 yesterday = today - timedelta(days=1)
                 
-                if "검사일자" in inspection_data.columns:
+                if "ê²€ì‚¬ì¼ìž" in inspection_data.columns:
                     try:
-                        # 날짜 형식 변환 (필요한 경우)
-                        if inspection_data["검사일자"].dtype != 'datetime64[ns]':
-                            date_column = pd.to_datetime(inspection_data["검사일자"])
+                        # ë‚ ì§œ í˜•ì‹ ë³€í™˜ (í•„ìš”í•œ ê²½ìš°)
+                        if inspection_data["ê²€ì‚¬ì¼ìž"].dtype != 'datetime64[ns]':
+                            date_column = pd.to_datetime(inspection_data["ê²€ì‚¬ì¼ìž"])
                         else:
-                            date_column = inspection_data["검사일자"]
+                            date_column = inspection_data["ê²€ì‚¬ì¼ìž"]
                         
-                        # 오늘과 어제 데이터 카운트
+                        # ì˜¤ëŠ˜ê³¼ ì–´ì œ ë°ì´í„° ì¹´ìš´íŠ¸
                         today_count = sum(date_column.dt.date == today)
                         yesterday_count = sum(date_column.dt.date == yesterday)
                         
-                        # 변화율 계산
+                        # ë³€í™”ìœ¨ ê³„ì‚°
                         if yesterday_count > 0:
                             change_pct = ((today_count - yesterday_count) / yesterday_count) * 100
-                            change_text = f"{change_pct:.1f}% ({yesterday_count}건 대비)"
+                            change_text = f"{change_pct:.1f}% ({yesterday_count}ê±´ ëŒ€ë¹„)"
                         else:
-                            change_text = "어제 데이터 없음"
+                            change_text = "ì–´ì œ ë°ì´í„° ì—†ìŒ"
                         
-                        st.metric("오늘 검사 건수", f"{today_count}건", change_text)
+                        st.metric("ì˜¤ëŠ˜ ê²€ì‚¬ ê±´ìˆ˜", f"{today_count}ê±´", change_text)
                     except Exception as e:
-                        st.metric("오늘 검사 건수", "계산 오류", f"오류: {str(e)}")
+                        st.metric("ì˜¤ëŠ˜ ê²€ì‚¬ ê±´ìˆ˜", "ê³„ì‚° ì˜¤ë¥˜", f"ì˜¤ë¥˜: {str(e)}")
                 else:
-                    st.metric("오늘 검사 건수", "데이터 없음")
+                    st.metric("ì˜¤ëŠ˜ ê²€ì‚¬ ê±´ìˆ˜", "ë°ì´í„° ì—†ìŒ")
 
 elif st.session_state.page == "quality_report":
-    # 월간 품질 리포트 페이지
-    st.markdown("<div class='title-area'><h1>⭐ 월간 품질 리포트</h1></div>", unsafe_allow_html=True)
+    # ì›”ê°„ í’ˆì§ˆ ë¦¬í¬íŠ¸ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>â­ ì›”ê°„ í’ˆì§ˆ ë¦¬í¬íŠ¸</h1></div>", unsafe_allow_html=True)
     
-    # 날짜 선택
+    # ë‚ ì§œ ì„ íƒ
     col1, col2 = st.columns(2)
     with col1:
-        selected_year = st.selectbox("연도 선택", options=list(range(datetime.now().year-2, datetime.now().year+1)), index=2)
+        selected_year = st.selectbox("ì—°ë„ ì„ íƒ", options=list(range(datetime.now().year-2, datetime.now().year+1)), index=2)
     with col2:
-        selected_month = st.selectbox("월 선택", options=list(range(1, 13)), index=datetime.now().month-1)
+        selected_month = st.selectbox("ì›” ì„ íƒ", options=list(range(1, 13)), index=datetime.now().month-1)
     
-    # 선택된 월의 문자열 표현
-    month_names = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+    # ì„ íƒëœ ì›”ì˜ ë¬¸ìžì—´ í‘œí˜„
+    month_names = ["1ì›”", "2ì›”", "3ì›”", "4ì›”", "5ì›”", "6ì›”", "7ì›”", "8ì›”", "9ì›”", "10ì›”", "11ì›”", "12ì›”"]
     selected_month_name = month_names[selected_month-1]
     
-    # 데이터 로딩 표시
-    with st.spinner(f"{selected_year}년 {selected_month_name} 품질 데이터 분석 중..."):
-        time.sleep(0.5)  # 데이터 로딩 시뮬레이션
+    # ë°ì´í„° ë¡œë”© í‘œì‹œ
+    with st.spinner(f"{selected_year}ë…„ {selected_month_name} í’ˆì§ˆ ë°ì´í„° ë¶„ì„ ì¤‘..."):
+        time.sleep(0.5)  # ë°ì´í„° ë¡œë”© ì‹œë®¬ë ˆì´ì…˜
     
-    # 품질 요약 지표
-    st.subheader(f"{selected_year}년 {selected_month_name} 품질 요약")
+    # í’ˆì§ˆ ìš”ì•½ ì§€í‘œ
+    st.subheader(f"{selected_year}ë…„ {selected_month_name} í’ˆì§ˆ ìš”ì•½")
     
-    # 주요 지표 카드
+    # ì£¼ìš” ì§€í‘œ ì¹´ë“œ
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("<div class='metric-card blue-indicator'>", unsafe_allow_html=True)
-        st.metric("월별 검사 건수", "487건", "+12%")
+        st.metric("ì›”ë³„ ê²€ì‚¬ ê±´ìˆ˜", "487ê±´", "+12%")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<div class='metric-card green-indicator'>", unsafe_allow_html=True)
-        st.metric("불량률", "0.62%", "-0.08%")
+        st.metric("ë¶ˆëŸ‰ë¥ ", "0.62%", "-0.08%")
         st.markdown("</div>", unsafe_allow_html=True)
     with col3:
         st.markdown("<div class='metric-card orange-indicator'>", unsafe_allow_html=True)
-        st.metric("품질 목표 달성률", "97.5%", "+1.2%")
+        st.metric("í’ˆì§ˆ ëª©í‘œ ë‹¬ì„±ë¥ ", "97.5%", "+1.2%")
         st.markdown("</div>", unsafe_allow_html=True)
     with col4:
         st.markdown("<div class='metric-card purple-indicator'>", unsafe_allow_html=True)
-        st.metric("고객 반품률", "0.05%", "-0.02%")
+        st.metric("ê³ ê° ë°˜í’ˆë¥ ", "0.05%", "-0.02%")
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # 품질 트렌드 차트
+    # í’ˆì§ˆ íŠ¸ë Œë“œ ì°¨íŠ¸
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📈 6개월 품질 추이</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ“ˆ 6ê°œì›” í’ˆì§ˆ ì¶”ì´</div>", unsafe_allow_html=True)
     
-    # 샘플 데이터 준비
+    # ìƒ˜í”Œ ë°ì´í„° ì¤€ë¹„
     months = [(datetime.now() - timedelta(days=30*i)).strftime("%Y-%m") for i in range(5, -1, -1)]
-    month_labels = [(datetime.now() - timedelta(days=30*i)).strftime("%Y년 %m월") for i in range(5, -1, -1)]
+    month_labels = [(datetime.now() - timedelta(days=30*i)).strftime("%Yë…„ %mì›”") for i in range(5, -1, -1)]
     
-    # 불량률 데이터 (개선 추세)
+    # ë¶ˆëŸ‰ë¥  ë°ì´í„° (ê°œì„  ì¶”ì„¸)
     defect_rates = [0.82, 0.78, 0.74, 0.69, 0.65, 0.62]
     
-    # 반품률 데이터 (더 낮은 값)
+    # ë°˜í’ˆë¥  ë°ì´í„° (ë” ë‚®ì€ ê°’)
     return_rates = [0.12, 0.10, 0.09, 0.07, 0.06, 0.05]
     
-    # 품질 목표 달성률 데이터 (상승 추세)
+    # í’ˆì§ˆ ëª©í‘œ ë‹¬ì„±ë¥  ë°ì´í„° (ìƒìŠ¹ ì¶”ì„¸)
     quality_achievement = [92.5, 93.2, 94.1, 95.3, 96.2, 97.5]
     
-    # 복합 그래프 생성
+    # ë³µí•© ê·¸ëž˜í”„ ìƒì„±
     fig = go.Figure()
     
-    # 불량률 (선 그래프)
+    # ë¶ˆëŸ‰ë¥  (ì„  ê·¸ëž˜í”„)
     fig.add_trace(go.Scatter(
         x=month_labels,
         y=defect_rates,
-        name="불량률(%)",
+        name="ë¶ˆëŸ‰ë¥ (%)",
         line=dict(color="#4361ee", width=3),
         mode="lines+markers",
         marker=dict(size=8),
         yaxis="y1",
-        hovertemplate='%{x}<br>불량률: %{y:.2f}%<extra></extra>'
+        hovertemplate='%{x}<br>ë¶ˆëŸ‰ë¥ : %{y:.2f}%<extra></extra>'
     ))
     
-    # 반품률 (선 그래프)
+    # ë°˜í’ˆë¥  (ì„  ê·¸ëž˜í”„)
     fig.add_trace(go.Scatter(
         x=month_labels,
         y=return_rates,
-        name="반품률(%)",
+        name="ë°˜í’ˆë¥ (%)",
         line=dict(color="#fb8c00", width=3),
         mode="lines+markers",
         marker=dict(size=8),
         yaxis="y1",
-        hovertemplate='%{x}<br>반품률: %{y:.2f}%<extra></extra>'
+        hovertemplate='%{x}<br>ë°˜í’ˆë¥ : %{y:.2f}%<extra></extra>'
     ))
     
-    # 품질 목표 달성률 (선 그래프, 두 번째 y축)
+    # í’ˆì§ˆ ëª©í‘œ ë‹¬ì„±ë¥  (ì„  ê·¸ëž˜í”„, ë‘ ë²ˆì§¸ yì¶•)
     fig.add_trace(go.Scatter(
         x=month_labels,
         y=quality_achievement,
-        name="품질 목표 달성률(%)",
+        name="í’ˆì§ˆ ëª©í‘œ ë‹¬ì„±ë¥ (%)",
         line=dict(color="#4cb782", width=3),
         mode="lines+markers",
         marker=dict(size=8),
         yaxis="y2",
-        hovertemplate='%{x}<br>품질 달성률: %{y:.1f}%<extra></extra>'
+        hovertemplate='%{x}<br>í’ˆì§ˆ ë‹¬ì„±ë¥ : %{y:.1f}%<extra></extra>'
     ))
     
-    # 불량률 목표선 (1%)
+    # ë¶ˆëŸ‰ë¥  ëª©í‘œì„  (1%)
     fig.add_trace(go.Scatter(
         x=[month_labels[0], month_labels[-1]],
         y=[1.0, 1.0],
-        name="불량률 목표(1%)",
+        name="ë¶ˆëŸ‰ë¥  ëª©í‘œ(1%)",
         line=dict(color="red", width=2, dash="dash"),
         mode="lines",
         yaxis="y1",
         hoverinfo="skip"
     ))
     
-    # 레이아웃 설정
+    # ë ˆì´ì•„ì›ƒ ì„¤ì •
     fig.update_layout(
         title=None,
         xaxis=dict(title=None),
         yaxis=dict(
-            title="불량률/반품률 (%)",
+            title="ë¶ˆëŸ‰ë¥ /ë°˜í’ˆë¥  (%)",
             side="left",
             range=[0, 1.2],
             showgrid=False
         ),
         yaxis2=dict(
-            title="목표 달성률 (%)",
+            title="ëª©í‘œ ë‹¬ì„±ë¥  (%)",
             side="right",
             overlaying="y",
             range=[90, 100],
@@ -3425,37 +3425,37 @@ elif st.session_state.page == "quality_report":
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # 공정별 품질 분석
+    # ê³µì •ë³„ í’ˆì§ˆ ë¶„ì„
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>⚙️ 공정별 품질 분석</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>âš™ï¸ ê³µì •ë³„ í’ˆì§ˆ ë¶„ì„</div>", unsafe_allow_html=True)
     
-    # 공정 데이터
-    processes = ["선삭", "밀링", "연삭", "드릴링", "조립", "검사"]
+    # ê³µì • ë°ì´í„°
+    processes = ["ì„ ì‚­", "ë°€ë§", "ì—°ì‚­", "ë“œë¦´ë§", "ì¡°ë¦½", "ê²€ì‚¬"]
     process_defect_rates = [0.85, 0.65, 0.55, 0.70, 0.45, 0.20]
     process_inspection_counts = [1200, 980, 850, 780, 1500, 2000]
     
-    # 공정별 데이터프레임
+    # ê³µì •ë³„ ë°ì´í„°í”„ë ˆìž„
     process_df = pd.DataFrame({
-        "공정": processes,
-        "불량률(%)": process_defect_rates,
-        "검사건수": process_inspection_counts
+        "ê³µì •": processes,
+        "ë¶ˆëŸ‰ë¥ (%)": process_defect_rates,
+        "ê²€ì‚¬ê±´ìˆ˜": process_inspection_counts
     })
     
     col1, col2 = st.columns(2)
     
     with col1:
-        # 공정별 불량률 막대 그래프
+        # ê³µì •ë³„ ë¶ˆëŸ‰ë¥  ë§‰ëŒ€ ê·¸ëž˜í”„
         fig = px.bar(
             process_df,
-            x="공정",
-            y="불량률(%)",
-            color="공정",
+            x="ê³µì •",
+            y="ë¶ˆëŸ‰ë¥ (%)",
+            color="ê³µì •",
             color_discrete_sequence=px.colors.qualitative.Bold,
-            labels={"불량률(%)": "불량률 (%)"},
+            labels={"ë¶ˆëŸ‰ë¥ (%)": "ë¶ˆëŸ‰ë¥  (%)"},
             text_auto='.2f'
         )
         
-        # 평균 불량률 라인
+        # í‰ê·  ë¶ˆëŸ‰ë¥  ë¼ì¸
         avg_defect = np.mean(process_defect_rates)
         fig.add_shape(
             type="line",
@@ -3466,7 +3466,7 @@ elif st.session_state.page == "quality_report":
         
         fig.add_annotation(
             x=1, y=avg_defect,
-            text=f"평균: {avg_defect:.2f}%",
+            text=f"í‰ê· : {avg_defect:.2f}%",
             showarrow=False,
             yshift=10,
             font=dict(color="#4361ee")
@@ -3484,17 +3484,17 @@ elif st.session_state.page == "quality_report":
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        # 공정별 불량률 및 검사건수 버블 차트
+        # ê³µì •ë³„ ë¶ˆëŸ‰ë¥  ë° ê²€ì‚¬ê±´ìˆ˜ ë²„ë¸” ì°¨íŠ¸
         fig = px.scatter(
             process_df,
-            x="공정",
-            y="불량률(%)",
-            size="검사건수",
-            color="불량률(%)",
+            x="ê³µì •",
+            y="ë¶ˆëŸ‰ë¥ (%)",
+            size="ê²€ì‚¬ê±´ìˆ˜",
+            color="ë¶ˆëŸ‰ë¥ (%)",
             color_continuous_scale="Viridis",
             size_max=50,
-            labels={"불량률(%)": "불량률 (%)"},
-            hover_data={"검사건수": True}
+            labels={"ë¶ˆëŸ‰ë¥ (%)": "ë¶ˆëŸ‰ë¥  (%)"},
+            hover_data={"ê²€ì‚¬ê±´ìˆ˜": True}
         )
         
         fig.update_layout(
@@ -3503,39 +3503,39 @@ elif st.session_state.page == "quality_report":
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             height=300,
-            coloraxis_colorbar=dict(title="불량률 (%)")
+            coloraxis_colorbar=dict(title="ë¶ˆëŸ‰ë¥  (%)")
         )
         
         st.plotly_chart(fig, use_container_width=True)
     
-    # 공정별 품질 지표 테이블
-    process_df["개선필요"] = ["" if rate < 0.7 else "⚠️" for rate in process_df["불량률(%)"]]
-    process_df["품질그룹"] = ["A" if rate < 0.5 else "B" if rate < 0.7 else "C" for rate in process_df["불량률(%)"]]
+    # ê³µì •ë³„ í’ˆì§ˆ ì§€í‘œ í…Œì´ë¸”
+    process_df["ê°œì„ í•„ìš”"] = ["" if rate < 0.7 else "âš ï¸" for rate in process_df["ë¶ˆëŸ‰ë¥ (%)"]]
+    process_df["í’ˆì§ˆê·¸ë£¹"] = ["A" if rate < 0.5 else "B" if rate < 0.7 else "C" for rate in process_df["ë¶ˆëŸ‰ë¥ (%)"]]
     
     st.dataframe(
         process_df,
         use_container_width=True,
         hide_index=True,
         column_config={
-            "불량률(%)": st.column_config.ProgressColumn(
-                "불량률(%)",
-                help="공정별 불량률",
+            "ë¶ˆëŸ‰ë¥ (%)": st.column_config.ProgressColumn(
+                "ë¶ˆëŸ‰ë¥ (%)",
+                help="ê³µì •ë³„ ë¶ˆëŸ‰ë¥ ",
                 format="%.2f%%",
                 min_value=0,
                 max_value=1,
             ),
-            "검사건수": st.column_config.NumberColumn(
-                "검사건수",
-                help="공정별 검사 건수",
-                format="%d건",
+            "ê²€ì‚¬ê±´ìˆ˜": st.column_config.NumberColumn(
+                "ê²€ì‚¬ê±´ìˆ˜",
+                help="ê³µì •ë³„ ê²€ì‚¬ ê±´ìˆ˜",
+                format="%dê±´",
             ),
-            "개선필요": st.column_config.TextColumn(
-                "개선필요",
-                help="불량률 0.7% 이상 공정은 개선 필요"
+            "ê°œì„ í•„ìš”": st.column_config.TextColumn(
+                "ê°œì„ í•„ìš”",
+                help="ë¶ˆëŸ‰ë¥  0.7% ì´ìƒ ê³µì •ì€ ê°œì„  í•„ìš”"
             ),
-            "품질그룹": st.column_config.SelectboxColumn(
-                "품질그룹",
-                help="불량률에 따른 품질 그룹",
+            "í’ˆì§ˆê·¸ë£¹": st.column_config.SelectboxColumn(
+                "í’ˆì§ˆê·¸ë£¹",
+                help="ë¶ˆëŸ‰ë¥ ì— ë”°ë¥¸ í’ˆì§ˆ ê·¸ë£¹",
                 options=["A", "B", "C"],
                 required=True,
             ),
@@ -3544,70 +3544,70 @@ elif st.session_state.page == "quality_report":
     
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # 불량 유형 분석
+    # ë¶ˆëŸ‰ ìœ í˜• ë¶„ì„
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>🔍 불량 유형 분석</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ” ë¶ˆëŸ‰ ìœ í˜• ë¶„ì„</div>", unsafe_allow_html=True)
     
-    defect_types = ["치수불량", "표면거칠기", "칩핑", "소재결함", "가공불량", "조립불량", "기타"]
+    defect_types = ["ì¹˜ìˆ˜ë¶ˆëŸ‰", "í‘œë©´ê±°ì¹ ê¸°", "ì¹©í•‘", "ì†Œìž¬ê²°í•¨", "ê°€ê³µë¶ˆëŸ‰", "ì¡°ë¦½ë¶ˆëŸ‰", "ê¸°íƒ€"]
     defect_counts = [42, 35, 28, 15, 22, 18, 10]
     
     defect_df = pd.DataFrame({
-        "불량유형": defect_types,
-        "발생건수": defect_counts,
-        "비율(%)": [(count / sum(defect_counts) * 100).round(2) for count in defect_counts]
+        "ë¶ˆëŸ‰ìœ í˜•": defect_types,
+        "ë°œìƒê±´ìˆ˜": defect_counts,
+        "ë¹„ìœ¨(%)": [(count / sum(defect_counts) * 100).round(2) for count in defect_counts]
     })
     
-    # 불량 유형별 파레토 차트
+    # ë¶ˆëŸ‰ ìœ í˜•ë³„ íŒŒë ˆí†  ì°¨íŠ¸
     fig = go.Figure()
     
-    # 막대 그래프 (불량 건수)
+    # ë§‰ëŒ€ ê·¸ëž˜í”„ (ë¶ˆëŸ‰ ê±´ìˆ˜)
     fig.add_trace(go.Bar(
-        x=defect_df["불량유형"],
-        y=defect_df["발생건수"],
+        x=defect_df["ë¶ˆëŸ‰ìœ í˜•"],
+        y=defect_df["ë°œìƒê±´ìˆ˜"],
         marker_color="#4361ee",
-        name="발생건수",
-        text=defect_df["발생건수"],
+        name="ë°œìƒê±´ìˆ˜",
+        text=defect_df["ë°œìƒê±´ìˆ˜"],
         textposition="auto"
     ))
     
-    # 누적 비율 계산
-    defect_df = defect_df.sort_values(by="발생건수", ascending=False)
-    cum_percent = np.cumsum(defect_df["발생건수"]) / sum(defect_df["발생건수"]) * 100
+    # ëˆ„ì  ë¹„ìœ¨ ê³„ì‚°
+    defect_df = defect_df.sort_values(by="ë°œìƒê±´ìˆ˜", ascending=False)
+    cum_percent = np.cumsum(defect_df["ë°œìƒê±´ìˆ˜"]) / sum(defect_df["ë°œìƒê±´ìˆ˜"]) * 100
     
-    # 선 그래프 (누적 비율)
+    # ì„  ê·¸ëž˜í”„ (ëˆ„ì  ë¹„ìœ¨)
     fig.add_trace(go.Scatter(
-        x=defect_df["불량유형"],
+        x=defect_df["ë¶ˆëŸ‰ìœ í˜•"],
         y=cum_percent,
         mode="lines+markers",
         marker=dict(size=8),
         line=dict(color="#fb8c00", width=3),
-        name="누적 비율(%)",
+        name="ëˆ„ì  ë¹„ìœ¨(%)",
         yaxis="y2",
-        hovertemplate='%{x}<br>누적 비율: %{y:.1f}%<extra></extra>'
+        hovertemplate='%{x}<br>ëˆ„ì  ë¹„ìœ¨: %{y:.1f}%<extra></extra>'
     ))
     
-    # 80% 기준선
+    # 80% ê¸°ì¤€ì„ 
     fig.add_trace(go.Scatter(
-        x=[defect_df["불량유형"].iloc[0], defect_df["불량유형"].iloc[-1]],
+        x=[defect_df["ë¶ˆëŸ‰ìœ í˜•"].iloc[0], defect_df["ë¶ˆëŸ‰ìœ í˜•"].iloc[-1]],
         y=[80, 80],
         mode="lines",
         line=dict(color="red", width=2, dash="dash"),
-        name="80% 기준",
+        name="80% ê¸°ì¤€",
         yaxis="y2",
         hoverinfo="skip"
     ))
     
-    # 레이아웃 설정
+    # ë ˆì´ì•„ì›ƒ ì„¤ì •
     fig.update_layout(
         title=None,
-        xaxis=dict(title="불량 유형"),
+        xaxis=dict(title="ë¶ˆëŸ‰ ìœ í˜•"),
         yaxis=dict(
-            title="발생 건수",
+            title="ë°œìƒ ê±´ìˆ˜",
             side="left",
             showgrid=False
         ),
         yaxis2=dict(
-            title="누적 비율 (%)",
+            title="ëˆ„ì  ë¹„ìœ¨ (%)",
             side="right",
             overlaying="y",
             range=[0, 105],
@@ -3627,73 +3627,73 @@ elif st.session_state.page == "quality_report":
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.subheader("핵심 개선 대상")
-        st.markdown("**주요 불량 유형 (80% 비중)**")
+        st.subheader("í•µì‹¬ ê°œì„  ëŒ€ìƒ")
+        st.markdown("**ì£¼ìš” ë¶ˆëŸ‰ ìœ í˜• (80% ë¹„ì¤‘)**")
         
-        # 누적 80%까지의 불량 유형
+        # ëˆ„ì  80%ê¹Œì§€ì˜ ë¶ˆëŸ‰ ìœ í˜•
         critical_defects = defect_df[cum_percent <= 80]
         
         for idx, row in critical_defects.iterrows():
-            st.markdown(f"⚠️ **{row['불량유형']}**: {row['발생건수']}건 ({row['비율(%)']}%)")
+            st.markdown(f"âš ï¸ **{row['ë¶ˆëŸ‰ìœ í˜•']}**: {row['ë°œìƒê±´ìˆ˜']}ê±´ ({row['ë¹„ìœ¨(%)']}%)")
         
         st.markdown("---")
-        st.markdown("**신규 불량 탐지**")
+        st.markdown("**ì‹ ê·œ ë¶ˆëŸ‰ íƒì§€**")
         
-        new_defects = ["표면거칠기", "조립불량"]
+        new_defects = ["í‘œë©´ê±°ì¹ ê¸°", "ì¡°ë¦½ë¶ˆëŸ‰"]
         for defect in new_defects:
-            st.markdown(f"🆕 **{defect}**: 전월 대비 증가")
+            st.markdown(f"ðŸ†• **{defect}**: ì „ì›” ëŒ€ë¹„ ì¦ê°€")
     
-    # 불량 유형별 개선 권고 사항
+    # ë¶ˆëŸ‰ ìœ í˜•ë³„ ê°œì„  ê¶Œê³  ì‚¬í•­
     improvement_data = {
-        "불량유형": ["치수불량", "표면거칠기", "칩핑"],
-        "근본원인": ["공구 마모", "가공 조건 부적절", "소재 품질 불량"],
-        "개선방안": ["공구 교체 주기 단축", "가공 속도 및 이송 조정", "소재 공급업체 품질 관리 강화"],
-        "담당부서": ["생산부", "기술부", "품질부"],
-        "우선순위": ["상", "상", "중"]
+        "ë¶ˆëŸ‰ìœ í˜•": ["ì¹˜ìˆ˜ë¶ˆëŸ‰", "í‘œë©´ê±°ì¹ ê¸°", "ì¹©í•‘"],
+        "ê·¼ë³¸ì›ì¸": ["ê³µêµ¬ ë§ˆëª¨", "ê°€ê³µ ì¡°ê±´ ë¶€ì ì ˆ", "ì†Œìž¬ í’ˆì§ˆ ë¶ˆëŸ‰"],
+        "ê°œì„ ë°©ì•ˆ": ["ê³µêµ¬ êµì²´ ì£¼ê¸° ë‹¨ì¶•", "ê°€ê³µ ì†ë„ ë° ì´ì†¡ ì¡°ì •", "ì†Œìž¬ ê³µê¸‰ì—…ì²´ í’ˆì§ˆ ê´€ë¦¬ ê°•í™”"],
+        "ë‹´ë‹¹ë¶€ì„œ": ["ìƒì‚°ë¶€", "ê¸°ìˆ ë¶€", "í’ˆì§ˆë¶€"],
+        "ìš°ì„ ìˆœìœ„": ["ìƒ", "ìƒ", "ì¤‘"]
     }
     
     improvement_df = pd.DataFrame(improvement_data)
     
-    st.subheader("주요 불량 개선 권고사항")
+    st.subheader("ì£¼ìš” ë¶ˆëŸ‰ ê°œì„  ê¶Œê³ ì‚¬í•­")
     st.dataframe(improvement_df, use_container_width=True, hide_index=True)
     
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # 월간 품질 요약 보고서
+    # ì›”ê°„ í’ˆì§ˆ ìš”ì•½ ë³´ê³ ì„œ
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("<div class='emoji-title'>📋 월간 품질 요약 보고서</div>", unsafe_allow_html=True)
+    st.markdown("<div class='emoji-title'>ðŸ“‹ ì›”ê°„ í’ˆì§ˆ ìš”ì•½ ë³´ê³ ì„œ</div>", unsafe_allow_html=True)
     
     st.markdown(f"""
-    ### {selected_year}년 {selected_month_name} 품질 성과 요약
+    ### {selected_year}ë…„ {selected_month_name} í’ˆì§ˆ ì„±ê³¼ ìš”ì•½
     
-    - **전체 불량률**: 0.62% (전월 대비 0.08%p 감소)
-    - **불량 유형 분석**: 치수불량과 표면거칠기가 전체 불량의 약 45%를 차지함
-    - **공정별 분석**: 선삭 공정이 가장 높은 불량률(0.85%)을 보임
-    - **품질 개선 활동**: 공구 교체 주기 단축, 가공 조건 최적화로 표면거칠기 불량 감소
-    - **권고 사항**: 치수불량 개선을 위한 공정 모니터링 시스템 도입 검토
+    - **ì „ì²´ ë¶ˆëŸ‰ë¥ **: 0.62% (ì „ì›” ëŒ€ë¹„ 0.08%p ê°ì†Œ)
+    - **ë¶ˆëŸ‰ ìœ í˜• ë¶„ì„**: ì¹˜ìˆ˜ë¶ˆëŸ‰ê³¼ í‘œë©´ê±°ì¹ ê¸°ê°€ ì „ì²´ ë¶ˆëŸ‰ì˜ ì•½ 45%ë¥¼ ì°¨ì§€í•¨
+    - **ê³µì •ë³„ ë¶„ì„**: ì„ ì‚­ ê³µì •ì´ ê°€ìž¥ ë†’ì€ ë¶ˆëŸ‰ë¥ (0.85%)ì„ ë³´ìž„
+    - **í’ˆì§ˆ ê°œì„  í™œë™**: ê³µêµ¬ êµì²´ ì£¼ê¸° ë‹¨ì¶•, ê°€ê³µ ì¡°ê±´ ìµœì í™”ë¡œ í‘œë©´ê±°ì¹ ê¸° ë¶ˆëŸ‰ ê°ì†Œ
+    - **ê¶Œê³  ì‚¬í•­**: ì¹˜ìˆ˜ë¶ˆëŸ‰ ê°œì„ ì„ ìœ„í•œ ê³µì • ëª¨ë‹ˆí„°ë§ ì‹œìŠ¤í…œ ë„ìž… ê²€í† 
     
-    ### 다음 달 품질 개선 계획
+    ### ë‹¤ìŒ ë‹¬ í’ˆì§ˆ ê°œì„  ê³„íš
     
-    1. 선삭 공정 가공 조건 최적화 연구
-    2. 치수불량 개선을 위한 작업자 교육 프로그램 실시
-    3. 새로운 측정 장비 도입으로 불량 탐지율 향상
+    1. ì„ ì‚­ ê³µì • ê°€ê³µ ì¡°ê±´ ìµœì í™” ì—°êµ¬
+    2. ì¹˜ìˆ˜ë¶ˆëŸ‰ ê°œì„ ì„ ìœ„í•œ ìž‘ì—…ìž êµìœ¡ í”„ë¡œê·¸ëž¨ ì‹¤ì‹œ
+    3. ìƒˆë¡œìš´ ì¸¡ì • ìž¥ë¹„ ë„ìž…ìœ¼ë¡œ ë¶ˆëŸ‰ íƒì§€ìœ¨ í–¥ìƒ
     """)
     
-    # 보고서 다운로드 버튼
+    # ë³´ê³ ì„œ ë‹¤ìš´ë¡œë“œ ë²„íŠ¼
     download_col1, download_col2 = st.columns(2)
     with download_col1:
         st.download_button(
-            label="📄 PDF 보고서 다운로드",
+            label="ðŸ“„ PDF ë³´ê³ ì„œ ë‹¤ìš´ë¡œë“œ",
             data=b"Sample PDF Report",
-            file_name=f"품질보고서_{selected_year}_{selected_month}.pdf",
+            file_name=f"í’ˆì§ˆë³´ê³ ì„œ_{selected_year}_{selected_month}.pdf",
             mime="application/pdf"
         )
     
     with download_col2:
         st.download_button(
-            label="📊 Excel 데이터 다운로드",
+            label="ðŸ“Š Excel ë°ì´í„° ë‹¤ìš´ë¡œë“œ",
             data=b"Sample Excel Data",
-            file_name=f"품질데이터_{selected_year}_{selected_month}.xlsx",
+            file_name=f"í’ˆì§ˆë°ì´í„°_{selected_year}_{selected_month}.xlsx",
             mime="application/vnd.ms-excel"
         )
     
@@ -3704,8 +3704,8 @@ def save_inspector(inspector_data):
         response = supabase.table('inspectors').insert(inspector_data).execute()
         return response.data[0] if response.data else None
     except Exception as e:
-        st.error(f"검사원 정보 저장 중 오류: {str(e)}")
-        # 세션에 데이터 저장(백업)
+        st.error(f"ê²€ì‚¬ì› ì •ë³´ ì €ìž¥ ì¤‘ ì˜¤ë¥˜: {str(e)}")
+        # ì„¸ì…˜ì— ë°ì´í„° ì €ìž¥(ë°±ì—…)
         if 'saved_inspectors' not in st.session_state:
             st.session_state.saved_inspectors = []
         st.session_state.saved_inspectors.append(inspector_data)
@@ -3716,7 +3716,7 @@ def update_inspector(inspector_id, updated_data):
         response = supabase.table('inspectors').update(updated_data).eq('id', inspector_id).execute()
         return response.data[0] if response.data else None
     except Exception as e:
-        st.error(f"검사원 정보 업데이트 중 오류: {str(e)}")
+        st.error(f"ê²€ì‚¬ì› ì •ë³´ ì—…ë°ì´íŠ¸ ì¤‘ ì˜¤ë¥˜: {str(e)}")
         raise e
 
 def delete_inspector(inspector_id):
@@ -3724,35 +3724,35 @@ def delete_inspector(inspector_id):
         response = supabase.table('inspectors').delete().eq('id', inspector_id).execute()
         return True
     except Exception as e:
-        st.error(f"검사원 정보 삭제 중 오류: {str(e)}")
+        st.error(f"ê²€ì‚¬ì› ì •ë³´ ì‚­ì œ ì¤‘ ì˜¤ë¥˜: {str(e)}")
         return False
 
 def inspector_management_ui():
-    st.title("검사원 관리")
+    st.title("ê²€ì‚¬ì› ê´€ë¦¬")
     
-    # 검사원 목록 표시
+    # ê²€ì‚¬ì› ëª©ë¡ í‘œì‹œ
     inspectors = load_inspectors()
     st.dataframe(inspectors)
     
-    # 새 검사원 등록 폼
+    # ìƒˆ ê²€ì‚¬ì› ë“±ë¡ í¼
     with st.form("new_inspector_form"):
-        st.subheader("새 검사원 등록")
+        st.subheader("ìƒˆ ê²€ì‚¬ì› ë“±ë¡")
         col1, col2 = st.columns(2)
         
         with col1:
-            new_id = st.text_input("검사원 ID")
-            new_name = st.text_input("이름")
+            new_id = st.text_input("ê²€ì‚¬ì› ID")
+            new_name = st.text_input("ì´ë¦„")
         
         with col2:
-            new_dept = st.selectbox("부서", options=["CNC_1", "CNC_2", "PQC_LINE"])
-            new_process = st.selectbox("공정", options=["선삭", "밀링", "검사", "기타"])
+            new_dept = st.selectbox("ë¶€ì„œ", options=["CNC_1", "CNC_2", "PQC_LINE"])
+            new_process = st.selectbox("ê³µì •", options=["ì„ ì‚­", "ë°€ë§", "ê²€ì‚¬", "ê¸°íƒ€"])
         
-        new_years = st.number_input("근속년수", min_value=0.0, step=0.5)
-        submitted = st.form_submit_button("등록")
+        new_years = st.number_input("ê·¼ì†ë…„ìˆ˜", min_value=0.0, step=0.5)
+        submitted = st.form_submit_button("ë“±ë¡")
         
         if submitted:
             if not new_id or not new_name:
-                st.error("검사원 ID와 이름은 필수입니다.")
+                st.error("ê²€ì‚¬ì› IDì™€ ì´ë¦„ì€ í•„ìˆ˜ìž…ë‹ˆë‹¤.")
             else:
                 new_inspector = {
                     "id": new_id,
@@ -3764,14 +3764,14 @@ def inspector_management_ui():
                 
                 try:
                     save_inspector(new_inspector)
-                    st.success(f"{new_name} 검사원이 성공적으로 등록되었습니다.")
-                    st.rerun()  # 페이지 새로고침
+                    st.success(f"{new_name} ê²€ì‚¬ì›ì´ ì„±ê³µì ìœ¼ë¡œ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.")
+                    st.rerun()  # íŽ˜ì´ì§€ ìƒˆë¡œê³ ì¹¨
                 except Exception as e:
-                    st.error(f"등록 실패: {str(e)}")
+                    st.error(f"ë“±ë¡ ì‹¤íŒ¨: {str(e)}")
 
 def sync_offline_data():
     if 'saved_inspectors' in st.session_state and st.session_state.saved_inspectors:
-        with st.spinner("오프라인 데이터 동기화 중..."):
+        with st.spinner("ì˜¤í”„ë¼ì¸ ë°ì´í„° ë™ê¸°í™” ì¤‘..."):
             success_count = 0
             for inspector in st.session_state.saved_inspectors[:]:
                 try:
@@ -3782,98 +3782,98 @@ def sync_offline_data():
                     continue
             
             if success_count > 0:
-                st.success(f"{success_count}개의 검사원 데이터가 동기화되었습니다.")
+                st.success(f"{success_count}ê°œì˜ ê²€ì‚¬ì› ë°ì´í„°ê°€ ë™ê¸°í™”ë˜ì—ˆìŠµë‹ˆë‹¤.")
             
             if st.session_state.saved_inspectors:
-                st.warning(f"{len(st.session_state.saved_inspectors)}개의 데이터는 여전히 동기화되지 않았습니다.")
+                st.warning(f"{len(st.session_state.saved_inspectors)}ê°œì˜ ë°ì´í„°ëŠ” ì—¬ì „ížˆ ë™ê¸°í™”ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.")
 
-# 생산모델 데이터 가져오기
+# ìƒì‚°ëª¨ë¸ ë°ì´í„° ê°€ì ¸ì˜¤ê¸°
 def load_product_models():
     """
-    생산모델 데이터를 로드합니다.
+    ìƒì‚°ëª¨ë¸ ë°ì´í„°ë¥¼ ë¡œë“œí•©ë‹ˆë‹¤.
     """
     try:
-        # CSV 파일이 있는지 먼저 확인
+        # CSV íŒŒì¼ì´ ìžˆëŠ”ì§€ ë¨¼ì € í™•ì¸
         if os.path.exists("data/product_models.csv"):
             df = pd.read_csv("data/product_models.csv")
             return df
-        # JSON 파일이 있는지 확인
+        # JSON íŒŒì¼ì´ ìžˆëŠ”ì§€ í™•ì¸
         elif (DATA_DIR / "product_models.json").exists():
             with open(DATA_DIR / "product_models.json", 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 if "models" in data:
                     df = pd.DataFrame(data["models"])
-                    # 저장 형식을 CSV로 통일
+                    # ì €ìž¥ í˜•ì‹ì„ CSVë¡œ í†µì¼
                     df.to_csv("data/product_models.csv", index=False)
                     return df
         
-        # 데이터가 없으면 빈 DataFrame 생성
-        return pd.DataFrame(columns=["id", "모델명", "공정"])
+        # ë°ì´í„°ê°€ ì—†ìœ¼ë©´ ë¹ˆ DataFrame ìƒì„±
+        return pd.DataFrame(columns=["id", "ëª¨ë¸ëª…", "ê³µì •"])
     except Exception as e:
-        print(f"생산모델 데이터 로드 중 오류: {str(e)}")
-        return pd.DataFrame(columns=["id", "모델명", "공정"])
+        print(f"ìƒì‚°ëª¨ë¸ ë°ì´í„° ë¡œë“œ ì¤‘ ì˜¤ë¥˜: {str(e)}")
+        return pd.DataFrame(columns=["id", "ëª¨ë¸ëª…", "ê³µì •"])
 
-# 생산모델 데이터 저장
+# ìƒì‚°ëª¨ë¸ ë°ì´í„° ì €ìž¥
 def save_product_models(df):
     """
-    생산모델 데이터를 저장합니다.
+    ìƒì‚°ëª¨ë¸ ë°ì´í„°ë¥¼ ì €ìž¥í•©ë‹ˆë‹¤.
     
     Args:
-        df (pandas.DataFrame): 저장할 생산모델 데이터
+        df (pandas.DataFrame): ì €ìž¥í•  ìƒì‚°ëª¨ë¸ ë°ì´í„°
         
     Returns:
-        bool: 저장 성공 여부
+        bool: ì €ìž¥ ì„±ê³µ ì—¬ë¶€
     """
     try:
-        # 데이터 디렉토리 확인
+        # ë°ì´í„° ë””ë ‰í† ë¦¬ í™•ì¸
         if not os.path.exists("data"):
             os.makedirs("data")
             
-        # 데이터 저장 (CSV 형식)
+        # ë°ì´í„° ì €ìž¥ (CSV í˜•ì‹)
         df.to_csv("data/product_models.csv", index=False)
         return True
     except Exception as e:
-        print(f"생산모델 데이터 저장 중 오류: {str(e)}")
+        print(f"ìƒì‚°ëª¨ë¸ ë°ì´í„° ì €ìž¥ ì¤‘ ì˜¤ë¥˜: {str(e)}")
         return False
 
-# 여기서부터 제품 모델 관리 페이지 코드
+# ì—¬ê¸°ì„œë¶€í„° ì œí’ˆ ëª¨ë¸ ê´€ë¦¬ íŽ˜ì´ì§€ ì½”ë“œ
 
 if st.session_state.page == "product_model":
-    # 생산모델 관리 페이지
-    st.markdown("<div class='title-area'><h1>📦 생산모델 관리</h1></div>", unsafe_allow_html=True)
+    # ìƒì‚°ëª¨ë¸ ê´€ë¦¬ íŽ˜ì´ì§€
+    st.markdown("<div class='title-area'><h1>ðŸ“¦ ìƒì‚°ëª¨ë¸ ê´€ë¦¬</h1></div>", unsafe_allow_html=True)
     
-    # 관리자 권한 확인
-    if st.session_state.user_role != "관리자":
-        st.warning("이 페이지는 관리자만 접근할 수 있습니다.")
+    # ê´€ë¦¬ìž ê¶Œí•œ í™•ì¸
+    if st.session_state.user_role != "ê´€ë¦¬ìž":
+        st.warning("ì´ íŽ˜ì´ì§€ëŠ” ê´€ë¦¬ìžë§Œ ì ‘ê·¼í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.")
         st.stop()
     
-    # 생산모델 데이터 로드
+    # ìƒì‚°ëª¨ë¸ ë°ì´í„° ë¡œë“œ
     product_models_df = load_product_models()
     
-    # 탭 생성
-    tab1, tab2 = st.tabs(["📋 생산모델 목록", "➕ 생산모델 추가/수정"])
+    # íƒ­ ìƒì„±
+    tab1, tab2 = st.tabs(["ðŸ“‹ ìƒì‚°ëª¨ë¸ ëª©ë¡", "âž• ìƒì‚°ëª¨ë¸ ì¶”ê°€/ìˆ˜ì •"])
     
     with tab1:
-        st.subheader("생산모델 목록")
+        st.subheader("ìƒì‚°ëª¨ë¸ ëª©ë¡")
         
-        # 검색 필터
+        # ê²€ìƒ‰ í•„í„°
         col1, col2 = st.columns(2)
         with col1:
-            search_model = st.text_input("모델명 검색", placeholder="검색어를 입력하세요")
+            search_model = st.text_input("ëª¨ë¸ëª… ê²€ìƒ‰", placeholder="ê²€ìƒ‰ì–´ë¥¼ ìž…ë ¥í•˜ì„¸ìš”")
         with col2:
-            process_options = ["전체"]
-            if not product_models_df.empty and "공정" in product_models_df.columns:
-                process_options += sorted(product_models_df["공정"].unique().tolist())
-            process_filter = st.selectbox("공정 필터", options=process_options)
+            process_options = ["ì „ì²´"]
+            if not product_models_df.empty and "ê³µì •" in product_models_df.columns:
+                process_options += sorted(product_models_df["ê³µì •"].unique().tolist())
+            process_filter = st.selectbox("ê³µì • í•„í„°", options=process_options)
         
-        # 필터링 적용
+        # í•„í„°ë§ ì ìš©
         filtered_df = product_models_df.copy()
         if search_model and not filtered_df.empty:
-            filtered_df = filtered_df[filtered_df["모델명"].str.contains(search_model, case=False)]
-        if process_filter != "전체" and not filtered_df.empty:
-            filtered_df = filtered_df[filtered_df["공정"] == process_filter]
+            filtered_df = filtered_df[filtered_df["ëª¨ë¸ëª…"].str.contains(search_model, case=False)]
+        if process_filter != "ì „ì²´" and not filtered_df.empty:
+            filtered_df = filtered_df[filtered_df["ê³µì •"] == process_filter]
         
-        # 결과 표시
+        # ê²°ê³¼ í‘œì‹œ
         if not filtered_df.empty:
             st.dataframe(
                 filtered_df,
@@ -3881,70 +3881,70 @@ if st.session_state.page == "product_model":
                 hide_index=True,
                 column_config={
                     "id": st.column_config.NumberColumn("ID", format="%d"),
-                    "모델명": st.column_config.TextColumn("모델명"),
-                    "공정": st.column_config.TextColumn("공정")
+                    "ëª¨ë¸ëª…": st.column_config.TextColumn("ëª¨ë¸ëª…"),
+                    "ê³µì •": st.column_config.TextColumn("ê³µì •")
                 }
             )
         else:
-            st.info("검색 조건에 맞는 생산모델이 없습니다.")
+            st.info("ê²€ìƒ‰ ì¡°ê±´ì— ë§žëŠ” ìƒì‚°ëª¨ë¸ì´ ì—†ìŠµë‹ˆë‹¤.")
     
     with tab2:
-        st.subheader("생산모델 추가/수정")
+        st.subheader("ìƒì‚°ëª¨ë¸ ì¶”ê°€/ìˆ˜ì •")
         
-        # 작업 선택을 별도 컴포넌트로 분리
+        # ìž‘ì—… ì„ íƒì„ ë³„ë„ ì»´í¬ë„ŒíŠ¸ë¡œ ë¶„ë¦¬
         edit_mode = st.radio(
-            "작업 선택", 
-            ["새 모델 추가", "기존 모델 수정", "모델 삭제"], 
+            "ìž‘ì—… ì„ íƒ", 
+            ["ìƒˆ ëª¨ë¸ ì¶”ê°€", "ê¸°ì¡´ ëª¨ë¸ ìˆ˜ì •", "ëª¨ë¸ ì‚­ì œ"], 
             horizontal=True
         )
         
         st.markdown("---")
         
-        # 새 모델 추가 양식
-        if edit_mode == "새 모델 추가":
-            st.subheader("새 모델 추가")
+        # ìƒˆ ëª¨ë¸ ì¶”ê°€ ì–‘ì‹
+        if edit_mode == "ìƒˆ ëª¨ë¸ ì¶”ê°€":
+            st.subheader("ìƒˆ ëª¨ë¸ ì¶”ê°€")
             
             with st.form("add_model_form"):
-                # 새 ID 생성 (기존 최대 ID + 1)
+                # ìƒˆ ID ìƒì„± (ê¸°ì¡´ ìµœëŒ€ ID + 1)
                 new_id = 1
                 if not product_models_df.empty and "id" in product_models_df.columns:
                     new_id = int(product_models_df["id"].max()) + 1
                 
-                st.number_input("모델 ID", value=new_id, disabled=True, key="new_model_id")
-                model_name = st.text_input("모델명", placeholder="예: PA1, B7SUB6", key="new_model_name")
-                process_name = st.text_input("공정", placeholder="예: C1, C2, 연삭", key="new_process")
+                st.number_input("ëª¨ë¸ ID", value=new_id, disabled=True, key="new_model_id")
+                model_name = st.text_input("ëª¨ë¸ëª…", placeholder="ì˜ˆ: PA1, B7SUB6", key="new_model_name")
+                process_name = st.text_input("ê³µì •", placeholder="ì˜ˆ: C1, C2, ì—°ì‚­", key="new_process")
                 
-                add_button = st.form_submit_button("생산모델 추가", use_container_width=True)
+                add_button = st.form_submit_button("ìƒì‚°ëª¨ë¸ ì¶”ê°€", use_container_width=True)
                 
                 if add_button:
                     if not model_name or not process_name:
-                        st.error("모든 필드를 입력해주세요.")
+                        st.error("ëª¨ë“  í•„ë“œë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.")
                     else:
-                        # 새 모델 추가
-                        new_model = {"id": new_id, "모델명": model_name, "공정": process_name}
+                        # ìƒˆ ëª¨ë¸ ì¶”ê°€
+                        new_model = {"id": new_id, "ëª¨ë¸ëª…": model_name, "ê³µì •": process_name}
                         updated_df = pd.concat([product_models_df, pd.DataFrame([new_model])], ignore_index=True)
                         
-                        # 저장
+                        # ì €ìž¥
                         if save_product_models(updated_df):
-                            st.success("생산모델이 성공적으로 추가되었습니다!")
+                            st.success("ìƒì‚°ëª¨ë¸ì´ ì„±ê³µì ìœ¼ë¡œ ì¶”ê°€ë˜ì—ˆìŠµë‹ˆë‹¤!")
                             st.experimental_rerun()
                         else:
-                            st.error("생산모델 저장 중 오류가 발생했습니다.")
+                            st.error("ìƒì‚°ëª¨ë¸ ì €ìž¥ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.")
         
-        # 기존 모델 수정 양식
-        elif edit_mode == "기존 모델 수정":
-            st.subheader("기존 모델 수정")
+        # ê¸°ì¡´ ëª¨ë¸ ìˆ˜ì • ì–‘ì‹
+        elif edit_mode == "ê¸°ì¡´ ëª¨ë¸ ìˆ˜ì •":
+            st.subheader("ê¸°ì¡´ ëª¨ë¸ ìˆ˜ì •")
             
-            # 수정할 모델이 있는지 확인
+            # ìˆ˜ì •í•  ëª¨ë¸ì´ ìžˆëŠ”ì§€ í™•ì¸
             if product_models_df.empty:
-                st.warning("수정할 생산모델이 없습니다. 먼저 모델을 추가해주세요.")
+                st.warning("ìˆ˜ì •í•  ìƒì‚°ëª¨ë¸ì´ ì—†ìŠµë‹ˆë‹¤. ë¨¼ì € ëª¨ë¸ì„ ì¶”ê°€í•´ì£¼ì„¸ìš”.")
             else:
-                # 수정할 모델 선택
+                # ìˆ˜ì •í•  ëª¨ë¸ ì„ íƒ
                 model_ids = product_models_df["id"].astype(str).tolist()
-                model_labels = [f"{row['id']} - {row['모델명']} ({row['공정']})" for _, row in product_models_df.iterrows()]
+                model_labels = [f"{row['id']} - {row['ëª¨ë¸ëª…']} ({row['ê³µì •']})" for _, row in product_models_df.iterrows()]
                 
                 selected_id_index = st.selectbox(
-                    "수정할 모델 선택", 
+                    "ìˆ˜ì •í•  ëª¨ë¸ ì„ íƒ", 
                     range(len(model_ids)), 
                     format_func=lambda i: model_labels[i],
                     key="edit_model_select"
@@ -3954,42 +3954,42 @@ if st.session_state.page == "product_model":
                 selected_row = product_models_df[product_models_df["id"] == selected_id].iloc[0]
                 
                 with st.form("edit_model_form"):
-                    st.number_input("모델 ID", value=selected_id, disabled=True, key="edit_model_id")
-                    edited_model_name = st.text_input("모델명", value=selected_row["모델명"], key="edit_model_name")
-                    edited_process = st.text_input("공정", value=selected_row["공정"], key="edit_process")
+                    st.number_input("ëª¨ë¸ ID", value=selected_id, disabled=True, key="edit_model_id")
+                    edited_model_name = st.text_input("ëª¨ë¸ëª…", value=selected_row["ëª¨ë¸ëª…"], key="edit_model_name")
+                    edited_process = st.text_input("ê³µì •", value=selected_row["ê³µì •"], key="edit_process")
                     
-                    edit_button = st.form_submit_button("변경사항 저장", use_container_width=True)
+                    edit_button = st.form_submit_button("ë³€ê²½ì‚¬í•­ ì €ìž¥", use_container_width=True)
                     
                     if edit_button:
                         if not edited_model_name or not edited_process:
-                            st.error("모든 필드를 입력해주세요.")
+                            st.error("ëª¨ë“  í•„ë“œë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.")
                         else:
-                            # 모델 업데이트
+                            # ëª¨ë¸ ì—…ë°ì´íŠ¸
                             updated_df = product_models_df.copy()
-                            updated_df.loc[updated_df["id"] == selected_id, "모델명"] = edited_model_name
-                            updated_df.loc[updated_df["id"] == selected_id, "공정"] = edited_process
+                            updated_df.loc[updated_df["id"] == selected_id, "ëª¨ë¸ëª…"] = edited_model_name
+                            updated_df.loc[updated_df["id"] == selected_id, "ê³µì •"] = edited_process
                             
-                            # 저장
+                            # ì €ìž¥
                             if save_product_models(updated_df):
-                                st.success("생산모델이 성공적으로 수정되었습니다!")
+                                st.success("ìƒì‚°ëª¨ë¸ì´ ì„±ê³µì ìœ¼ë¡œ ìˆ˜ì •ë˜ì—ˆìŠµë‹ˆë‹¤!")
                                 st.experimental_rerun()
                             else:
-                                st.error("생산모델 수정 중 오류가 발생했습니다.")
+                                st.error("ìƒì‚°ëª¨ë¸ ìˆ˜ì • ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.")
         
-        # 모델 삭제 양식
-        else:  # 모델 삭제
-            st.subheader("모델 삭제")
+        # ëª¨ë¸ ì‚­ì œ ì–‘ì‹
+        else:  # ëª¨ë¸ ì‚­ì œ
+            st.subheader("ëª¨ë¸ ì‚­ì œ")
             
-            # 삭제할 모델이 있는지 확인
+            # ì‚­ì œí•  ëª¨ë¸ì´ ìžˆëŠ”ì§€ í™•ì¸
             if product_models_df.empty:
-                st.warning("삭제할 생산모델이 없습니다.")
+                st.warning("ì‚­ì œí•  ìƒì‚°ëª¨ë¸ì´ ì—†ìŠµë‹ˆë‹¤.")
             else:
-                # 삭제할 모델 선택
+                # ì‚­ì œí•  ëª¨ë¸ ì„ íƒ
                 model_ids = product_models_df["id"].astype(str).tolist()
-                model_labels = [f"{row['id']} - {row['모델명']} ({row['공정']})" for _, row in product_models_df.iterrows()]
+                model_labels = [f"{row['id']} - {row['ëª¨ë¸ëª…']} ({row['ê³µì •']})" for _, row in product_models_df.iterrows()]
                 
                 selected_id_index = st.selectbox(
-                    "삭제할 모델 선택", 
+                    "ì‚­ì œí•  ëª¨ë¸ ì„ íƒ", 
                     range(len(model_ids)), 
                     format_func=lambda i: model_labels[i],
                     key="delete_model_select"
@@ -3998,148 +3998,23 @@ if st.session_state.page == "product_model":
                 selected_id = int(model_ids[selected_id_index])
                 selected_row = product_models_df[product_models_df["id"] == selected_id].iloc[0]
                 
-                st.info(f"선택한 모델: {selected_row['모델명']} (공정: {selected_row['공정']})")
+                st.info(f"ì„ íƒí•œ ëª¨ë¸: {selected_row['ëª¨ë¸ëª…']} (ê³µì •: {selected_row['ê³µì •']})")
                 
                 with st.form("delete_model_form"):
-                    confirm_delete = st.checkbox("삭제를 확인합니다", key="confirm_delete")
-                    delete_button = st.form_submit_button("모델 삭제", use_container_width=True)
+                    confirm_delete = st.checkbox("ì‚­ì œë¥¼ í™•ì¸í•©ë‹ˆë‹¤", key="confirm_delete")
+                    delete_button = st.form_submit_button("ëª¨ë¸ ì‚­ì œ", use_container_width=True)
                     
                     if delete_button:
                         if not confirm_delete:
-                            st.error("삭제를 확인하려면 체크박스를 선택해주세요.")
+                            st.error("ì‚­ì œë¥¼ í™•ì¸í•˜ë ¤ë©´ ì²´í¬ë°•ìŠ¤ë¥¼ ì„ íƒí•´ì£¼ì„¸ìš”.")
                         else:
-                            # 모델 삭제
+                            # ëª¨ë¸ ì‚­ì œ
                             updated_df = product_models_df[product_models_df["id"] != selected_id].reset_index(drop=True)
                             
-                            # 저장
+                            # ì €ìž¥
                             if save_product_models(updated_df):
-                                st.success("생산모델이 성공적으로 삭제되었습니다!")
+                                st.success("ìƒì‚°ëª¨ë¸ì´ ì„±ê³µì ìœ¼ë¡œ ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤!")
                                 st.experimental_rerun()
                             else:
-                                st.error("생산모델 삭제 중 오류가 발생했습니다.")
+                                st.error("ìƒì‚°ëª¨ë¸ ì‚­ì œ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.")
 
-elif st.session_state.page == "another_page":
-    # 다른 페이지 로직
-    pass
-
-# 검사 데이터 로드 함수
-def load_inspection_data():
-    """
-    저장된 검사 데이터를 로드합니다. 
-    Supabase에서 먼저 시도하고, 실패하면 로컬 JSON 파일 또는 세션에서 로드합니다.
-    """
-    try:
-        # Supabase에서 검사 데이터 로드 시도
-        try:
-            response = supabase.table('inspection_data').select("*").execute()
-            
-            if response.data:
-                # 영문 필드명을 한글로 변환
-                field_mapping = {
-                    "inspector_name": "검사원",
-                    "process": "공정",
-                    "model_name": "모델명",
-                    "inspection_date": "검사일자",
-                    "inspection_time": "검사시간",
-                    "lot_number": "LOT번호",
-                    "work_time_minutes": "작업시간(분)",
-                    "planned_quantity": "계획수량",
-                    "total_inspected": "검사수량",
-                    "total_defects": "불량수량",
-                    "defect_rate": "불량률(%)",
-                    "remarks": "비고"
-                }
-                
-                # 데이터 변환
-                korean_data = []
-                for item in response.data:
-                    korean_item = {}
-                    for k, v in item.items():
-                        if k in field_mapping:
-                            korean_item[field_mapping[k]] = v
-                        else:
-                            korean_item[k] = v
-                    korean_data.append(korean_item)
-                
-                return pd.DataFrame(korean_data)
-        except Exception as db_err:
-            print(f"Supabase에서 데이터 로드 중 오류: {str(db_err)}")
-            
-        # 샘플 데이터 생성 (테스트용)
-        try:
-            # 데이터 디렉토리 확인
-            data_dir = DATA_DIR
-            
-            # JSON 파일에서 로드 시도
-            inspection_file = data_dir / "inspection_data.json"
-            if inspection_file.exists():
-                with open(inspection_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    if "inspections" in data and data["inspections"]:
-                        return pd.DataFrame(data["inspections"])
-        except Exception as json_err:
-            print(f"JSON 파일 로드 중 오류: {str(json_err)}")
-        
-        # 세션에 저장된 데이터 확인
-        if 'saved_inspections' in st.session_state and st.session_state.saved_inspections:
-            return pd.DataFrame(st.session_state.saved_inspections)
-        
-        # 샘플 데이터 생성 (테스트용)
-        sample_data = [
-            {
-                "검사일자": "2025-04-15",
-                "검사원": "홍길동",
-                "공정": "CNC1_PQC",
-                "모델명": "BY2",
-                "LOT번호": "LOT20250415001",
-                "계획수량": 100,
-                "검사수량": 95,
-                "불량수량": 2,
-                "불량률(%)": 2.11,
-                "작업시간(분)": 120
-            },
-            {
-                "검사일자": "2025-04-14",
-                "검사원": "김철수",
-                "공정": "CNC2_PQC",
-                "모델명": "PA1",
-                "LOT번호": "LOT20250414001",
-                "계획수량": 150,
-                "검사수량": 145,
-                "불량수량": 1,
-                "불량률(%)": 0.69,
-                "작업시간(분)": 180
-            },
-            {
-                "검사일자": "2025-04-13",
-                "검사원": "이영희",
-                "공정": "OQC",
-                "모델명": "B6S6",
-                "LOT번호": "LOT20250413001",
-                "계획수량": 80,
-                "검사수량": 80,
-                "불량수량": 0,
-                "불량률(%)": 0.0,
-                "작업시간(분)": 90
-            }
-        ]
-        return pd.DataFrame(sample_data)
-    
-    except Exception as e:
-        print(f"검사 데이터 로드 중 오류: {str(e)}")
-        # 기본 샘플 데이터 반환
-        sample_data = [
-            {
-                "검사일자": "2025-04-15",
-                "검사원": "홍길동",
-                "공정": "CNC1_PQC",
-                "모델명": "BY2",
-                "LOT번호": "LOT20250415001",
-                "계획수량": 100,
-                "검사수량": 95,
-                "불량수량": 2,
-                "불량률(%)": 2.11,
-                "작업시간(분)": 120
-            }
-        ]
-        return pd.DataFrame(sample_data)
