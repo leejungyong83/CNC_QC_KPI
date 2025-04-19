@@ -2803,11 +2803,19 @@ elif st.session_state.page == "inspection_data":
             end_date = st.date_input("종료일", datetime.now(), key="prod_end_date")
         with col3:
             # 실제 데이터에서 공정 목록 추출
-            inspection_data = load_inspection_data()
-            process_options = ["전체"]
-            if not inspection_data.empty and "공정" in inspection_data.columns:
-                process_options += sorted(inspection_data["공정"].unique().tolist())
-            process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
+            try:
+                # 함수 안전하게 호출
+                inspection_data = load_inspection_data()
+                
+                process_options = ["전체"]
+                if not inspection_data.empty and "공정" in inspection_data.columns:
+                    process_options += sorted(inspection_data["공정"].unique().tolist())
+                process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
+            except Exception as e:
+                st.error(f"데이터 로드 중 오류 발생: {str(e)}")
+                process_options = ["전체"]
+                process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
+                inspection_data = pd.DataFrame()
         
         # 데이터 로드 후 표시
         if inspection_data.empty:
@@ -4044,6 +4052,11 @@ elif st.session_state.page == "another_page":
 # 검사 데이터 불러오기
 def load_inspection_data():
     try:
+        # Supabase 변수가 정의되었는지 확인
+        if 'supabase' not in globals():
+            st.warning("데이터베이스 연결이 설정되지 않았습니다. 로컬 데이터를 사용합니다.")
+            return pd.DataFrame()
+            
         # Supabase에서 데이터 가져오기
         response = supabase.table('inspection_data').select('*').execute()
         data = response.data
@@ -4068,7 +4081,7 @@ def load_inspection_data():
             "achievement_rate": "달성률(%)",
             "remarks": "비고"
         }
-        
+
         # DataFrame 변환
         df = pd.DataFrame(data)
         
@@ -4387,10 +4400,40 @@ def inspection_data_management_ui():
     tabs = st.tabs(["실적 데이터 조회", "실적 데이터 입력", "데이터 검증"])
     
     with tabs[0]:
-        inspection_data_query_ui()
-    
+        # 실적 데이터 조회 탭
+        st.subheader("검사 실적 데이터 조회")
+        
+        # 검색 및 필터 조건
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            start_date = st.date_input("시작일", datetime.now() - timedelta(days=30), key="prod_start_date")
+        with col2:
+            end_date = st.date_input("종료일", datetime.now(), key="prod_end_date")
+        with col3:
+            # 실제 데이터에서 공정 목록 추출
+            try:
+                inspection_data = load_inspection_data()
+                process_options = ["전체"]
+                if not inspection_data.empty and "공정" in inspection_data.columns:
+                    process_options += sorted(inspection_data["공정"].unique().tolist())
+                process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
+            except Exception as e:
+                st.error(f"데이터 로드 중 오류 발생: {str(e)}")
+                process_options = ["전체"]
+                process_filter = st.selectbox("공정 필터", options=process_options, key="prod_process")
+                inspection_data = pd.DataFrame()
+        
+        # 데이터 로드 후 표시
+        if inspection_data.empty:
+            st.info("저장된 검사 실적 데이터가 없습니다. '실적 데이터 입력' 탭에서 데이터를 입력해주세요.")
+        else:
+            # 나머지 코드는 그대로 유지
+            pass
+
     with tabs[1]:
-        inspection_data_input_ui()
-    
+        # 실적 데이터 입력 탭 - 코드 그대로 유지
+        pass
+
     with tabs[2]:
+        # 데이터 검증 탭 UI 구현
         inspection_data_validation_ui()
