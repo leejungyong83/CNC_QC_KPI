@@ -4017,3 +4017,129 @@ if st.session_state.page == "product_model":
 elif st.session_state.page == "another_page":
     # 다른 페이지 로직
     pass
+
+# 검사 데이터 로드 함수
+def load_inspection_data():
+    """
+    저장된 검사 데이터를 로드합니다. 
+    Supabase에서 먼저 시도하고, 실패하면 로컬 JSON 파일 또는 세션에서 로드합니다.
+    """
+    try:
+        # Supabase에서 검사 데이터 로드 시도
+        try:
+            response = supabase.table('inspection_data').select("*").execute()
+            
+            if response.data:
+                # 영문 필드명을 한글로 변환
+                field_mapping = {
+                    "inspector_name": "검사원",
+                    "process": "공정",
+                    "model_name": "모델명",
+                    "inspection_date": "검사일자",
+                    "inspection_time": "검사시간",
+                    "lot_number": "LOT번호",
+                    "work_time_minutes": "작업시간(분)",
+                    "planned_quantity": "계획수량",
+                    "total_inspected": "검사수량",
+                    "total_defects": "불량수량",
+                    "defect_rate": "불량률(%)",
+                    "remarks": "비고"
+                }
+                
+                # 데이터 변환
+                korean_data = []
+                for item in response.data:
+                    korean_item = {}
+                    for k, v in item.items():
+                        if k in field_mapping:
+                            korean_item[field_mapping[k]] = v
+                        else:
+                            korean_item[k] = v
+                    korean_data.append(korean_item)
+                
+                return pd.DataFrame(korean_data)
+        except Exception as db_err:
+            print(f"Supabase에서 데이터 로드 중 오류: {str(db_err)}")
+            
+        # 샘플 데이터 생성 (테스트용)
+        try:
+            # 데이터 디렉토리 확인
+            data_dir = Path("data")
+            if not data_dir.exists():
+                data_dir = Path.cwd() / "data"
+                if not data_dir.exists():
+                    data_dir.mkdir(parents=True, exist_ok=True)
+            
+            # JSON 파일에서 로드 시도
+            inspection_file = data_dir / "inspection_data.json"
+            if inspection_file.exists():
+                with open(inspection_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if "inspections" in data and data["inspections"]:
+                        return pd.DataFrame(data["inspections"])
+        except Exception as json_err:
+            print(f"JSON 파일 로드 중 오류: {str(json_err)}")
+        
+        # 세션에 저장된 데이터 확인
+        if 'saved_inspections' in st.session_state and st.session_state.saved_inspections:
+            return pd.DataFrame(st.session_state.saved_inspections)
+        
+        # 샘플 데이터 생성 (테스트용)
+        sample_data = [
+            {
+                "검사일자": "2025-04-15",
+                "검사원": "홍길동",
+                "공정": "CNC1_PQC",
+                "모델명": "BY2",
+                "LOT번호": "LOT20250415001",
+                "계획수량": 100,
+                "검사수량": 95,
+                "불량수량": 2,
+                "불량률(%)": 2.11,
+                "작업시간(분)": 120
+            },
+            {
+                "검사일자": "2025-04-14",
+                "검사원": "김철수",
+                "공정": "CNC2_PQC",
+                "모델명": "PA1",
+                "LOT번호": "LOT20250414001",
+                "계획수량": 150,
+                "검사수량": 145,
+                "불량수량": 1,
+                "불량률(%)": 0.69,
+                "작업시간(분)": 180
+            },
+            {
+                "검사일자": "2025-04-13",
+                "검사원": "이영희",
+                "공정": "OQC",
+                "모델명": "B6S6",
+                "LOT번호": "LOT20250413001",
+                "계획수량": 80,
+                "검사수량": 80,
+                "불량수량": 0,
+                "불량률(%)": 0.0,
+                "작업시간(분)": 90
+            }
+        ]
+        return pd.DataFrame(sample_data)
+    
+    except Exception as e:
+        print(f"검사 데이터 로드 중 오류: {str(e)}")
+        # 기본 샘플 데이터 반환
+        sample_data = [
+            {
+                "검사일자": "2025-04-15",
+                "검사원": "홍길동",
+                "공정": "CNC1_PQC",
+                "모델명": "BY2",
+                "LOT번호": "LOT20250415001",
+                "계획수량": 100,
+                "검사수량": 95,
+                "불량수량": 2,
+                "불량률(%)": 2.11,
+                "작업시간(분)": 120
+            }
+        ]
+        return pd.DataFrame(sample_data)
