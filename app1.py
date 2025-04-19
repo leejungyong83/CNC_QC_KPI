@@ -19,6 +19,76 @@ import re
 import random
 from PIL import Image
 
+# 초기화 함수 임포트
+try:
+    from init_functions import init_inspection_data, init_product_models
+    print("초기화 함수를 init_functions.py에서 불러왔습니다.")
+except ImportError:
+    # 파일 로드에 실패했을 경우를 대비한 내부 함수 정의
+    def init_inspection_data():
+        """검사 데이터 초기화 함수"""
+        try:
+            # CSV 파일 확인
+            csv_path = "data/inspection_data.csv"
+            if os.path.exists(csv_path):
+                return pd.read_csv(csv_path)
+                
+            # 기본 빈 데이터 반환
+            empty_df = pd.DataFrame(columns=["검사원", "공정", "모델명", "검사일자", "검사시간", "LOT번호"])
+            try:
+                os.makedirs("data", exist_ok=True)
+                empty_df.to_csv(csv_path, index=False)
+            except:
+                pass
+                
+            return empty_df
+        except Exception as e:
+            print(f"검사 데이터 초기화 오류: {str(e)}")
+            return pd.DataFrame(columns=["검사원", "공정", "모델명", "검사일자", "검사시간", "LOT번호"])
+
+    def init_product_models():
+        """생산모델 데이터 초기화 함수"""
+        try:
+            # CSV 파일 확인
+            csv_path = "data/product_models.csv"
+            if os.path.exists(csv_path):
+                return pd.read_csv(csv_path)
+            
+            # 기본 데이터 생성
+            default_models = [
+                {"id": 1, "모델명": "PA1", "공정": "C1"},
+                {"id": 2, "모델명": "PA1", "공정": "C2"},
+                {"id": 3, "모델명": "PA2", "공정": "C1"},
+                {"id": 4, "모델명": "PA2", "공정": "C2"},
+                {"id": 5, "모델명": "B6", "공정": "C1"},
+                {"id": 6, "모델명": "B6M", "공정": "C1"},
+                {"id": 7, "모델명": "B7SUB6", "공정": "C1"},
+                {"id": 8, "모델명": "B7SUB6", "공정": "C2"}
+            ]
+            df = pd.DataFrame(default_models)
+            
+            # 데이터 디렉토리 확인 및 생성
+            os.makedirs("data", exist_ok=True)
+            
+            # 기본 데이터 저장 시도
+            try:
+                df.to_csv(csv_path, index=False)
+            except:
+                pass
+                
+            return df
+        except Exception as e:
+            print(f"생산모델 데이터 초기화 오류: {str(e)}")
+            return pd.DataFrame(columns=["id", "모델명", "공정"])
+    
+    print("초기화 함수를 내부에 정의했습니다.")
+
+# 데이터 파일 경로 설정
+DATA_DIR = Path(__file__).resolve().parent / "data"
+if 'data_path' in st.secrets.get('database', {}):
+    DATA_DIR = Path(st.secrets['database']['data_path'])
+DATA_DIR.mkdir(exist_ok=True)
+
 # Supabase 초기화
 try:
     # Supabase 연결 (가장 기본적인 형태)
@@ -27,9 +97,10 @@ try:
         "https://czfvtkbndsfoznmknwsx.supabase.co",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6ZnZ0a2JuZHNmb3pubWtud3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTE1NDIsImV4cCI6MjA1ODcyNzU0Mn0.IpbN__1zImksnMo22CghSLTA-UCGoI67hHoDkrNpQGE"
     )
+    print("Supabase 연결 성공")
 except Exception as e:
-    st.error(f"데이터베이스 연결에 실패했습니다: {str(e)}")
-    st.stop()
+    print(f"데이터베이스 연결에 실패했습니다: {str(e)}")
+    supabase = None
 
 # 페이지 설정
 st.set_page_config(
@@ -111,13 +182,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 데이터 파일 경로 설정
-if 'data_path' in st.secrets.get('database', {}):
-    DATA_DIR = Path(st.secrets['database']['data_path'])
-else:
-    DATA_DIR = Path(__file__).resolve().parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
-
-# 데이터 파일 경로
 INSPECTION_DATA_FILE = DATA_DIR / "inspection_data.json"
 INSPECTOR_DATA_FILE = DATA_DIR / "inspector_data.json"
 DEFECT_DATA_FILE = DATA_DIR / "defect_data.json"
